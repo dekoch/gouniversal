@@ -1,0 +1,37 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>{{.Lang.Name}}:</th>
+                <td><input type="text" class="form-control" name="name" value="{{.Group.Name}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.State}}:</th>
+                <td><input type="text" class="form-control" name="state" value="{{.Group.State}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.Comment}}:</th>
+                <td><input type="text" class="form-control" name="comment" value="{{.Group.Comment}}"></td>
+            </tr>
+            <tr>
+                <th>UUID:</th>
+                <td>{{.Group.UUID}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="card">
+        <div class="card-header">
+            {{.Lang.Pages}}
+        </div>
+        <div class="card-body">
+            <table class="table table-sm">
+                <tbody>
+                    {{.Pages}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title={{.Lang.Apply}}></button>
+    <button class="btn btn-danger fa fa-trash" type="submit" name="edit" value="delete" title={{.Lang.Delete}}></button>
+</form>

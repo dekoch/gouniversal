@@ -1,0 +1,45 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>{{.Lang.LoginName}}:</th>
+                <td><input type="text" class="form-control" name="loginname" value="{{.User.LoginName}}"></td>
+            </tr> 
+            <tr>
+                <th>{{.Lang.Name}}:</th>
+                <td><input type="text" class="form-control" name="name" value="{{.User.Name}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.State}}:</th>
+                <td><input type="text" class="form-control" name="state" value="{{.User.State}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.State}}:</th>
+                <td>{{.CmbLang}}</td>
+            </tr>
+            <tr>
+                <th>{{.Lang.Password}}:</th>
+                <td><input type="password" class="form-control" name="pwd"></td>
+            </tr>
+            <tr>
+                <th>UUID:</th>
+                <td>{{.User.UUID}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="card">
+        <div class="card-header">
+            {{.Lang.Groups}}
+        </div>
+        <div class="card-body">
+            <table class="table table-sm">
+                <tbody>
+                    {{.Groups}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title={{.Lang.Apply}}></button>
+    <button class="btn btn-danger fa fa-trash" type="submit" name="edit" value="delete" title={{.Lang.Delete}}></button>
+</form>
