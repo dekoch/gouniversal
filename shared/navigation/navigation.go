@@ -1,9 +1,9 @@
 package navigation
 
 import (
-	"gouniversal/program/types"
-	"gouniversal/program/ui/sitemap"
 	"gouniversal/program/userManagement"
+	"gouniversal/shared/sitemap"
+	"gouniversal/shared/types"
 	"strings"
 )
 
@@ -19,14 +19,6 @@ type Navigation struct {
 }
 
 func (nav Navigation) CanGoBack() bool {
-
-	/*fmt.Println(strings.Count(nav.Path, ":"))
-
-	if strings.Count(nav.Path, ":") > 0 {
-		return true
-	}*/
-
-	//fmt.Println(strings.Count(nav.CurrentPath, ":"))
 
 	if strings.Count(nav.CurrentPath, ":") > 0 {
 		return true

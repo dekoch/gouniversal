@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
-	"gouniversal/program/ui/navigation"
 	"gouniversal/program/ui/pageSettings/pageAbout"
 	"gouniversal/program/ui/pageSettings/pageGeneral"
 	"gouniversal/program/ui/pageSettings/pageGroup"
 	"gouniversal/program/ui/pageSettings/pageUser"
-	"gouniversal/program/ui/uifunc"
-	"gouniversal/program/ui/uiglobal"
+	"gouniversal/shared/functions"
+	"gouniversal/shared/navigation"
+	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 )
 
-func RegisterPage(page *uiglobal.Page, nav *navigation.Navigation) {
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	//nav.Sitemap.Register("Program:Settings", page.Lang.Settings.Title)
 	pageGeneral.RegisterPage(page, nav)
@@ -24,7 +24,7 @@ func RegisterPage(page *uiglobal.Page, nav *navigation.Navigation) {
 	pageAbout.RegisterPage(page, nav)
 }
 
-func showTop(page *uiglobal.Page, nav *navigation.Navigation) {
+func showTop(page *types.Page, nav *navigation.Navigation) {
 
 	type sidebar struct {
 		Lang  lang.Settings
@@ -39,10 +39,10 @@ func showTop(page *uiglobal.Page, nav *navigation.Navigation) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	page.Content += uifunc.TemplToString(templ, sb)
+	page.Content += functions.TemplToString(templ, sb)
 }
 
-func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	//showTop(page, nav)
 
@@ -72,5 +72,5 @@ func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	page.Content += uifunc.TemplToString(templ, sb)*/
+	page.Content += functions.TemplToString(templ, sb)*/
 }

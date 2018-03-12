@@ -2,11 +2,12 @@ package userManagement
 
 import (
 	"encoding/json"
-	"gouniversal/config"
-	"gouniversal/io/file"
 	"gouniversal/program/global"
 	"gouniversal/program/groupManagement"
-	"gouniversal/program/types"
+	"gouniversal/program/programTypes"
+	"gouniversal/shared/config"
+	"gouniversal/shared/io/file"
+	"gouniversal/shared/types"
 	"log"
 	"os"
 
@@ -15,7 +16,7 @@ import (
 
 const UserFile = "data/config/user"
 
-func SaveUser(uc types.UserConfigFile) error {
+func SaveUser(uc programTypes.UserConfigFile) error {
 
 	uc.Header = config.BuildHeader("user", "users", 1.0, "user config file")
 
@@ -49,9 +50,9 @@ func SaveUser(uc types.UserConfigFile) error {
 	return err
 }
 
-func LoadUser() types.UserConfigFile {
+func LoadUser() programTypes.UserConfigFile {
 
-	var uc types.UserConfigFile
+	var uc programTypes.UserConfigFile
 
 	if _, err := os.Stat(UserFile); os.IsNotExist(err) {
 		// if not found, create default file

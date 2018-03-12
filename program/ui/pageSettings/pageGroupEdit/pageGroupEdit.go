@@ -5,10 +5,11 @@ import (
 	"gouniversal/program/global"
 	"gouniversal/program/groupManagement"
 	"gouniversal/program/lang"
-	"gouniversal/program/types"
-	"gouniversal/program/ui/navigation"
+	"gouniversal/program/programTypes"
 	"gouniversal/program/ui/uifunc"
-	"gouniversal/program/ui/uiglobal"
+	"gouniversal/shared/functions"
+	"gouniversal/shared/navigation"
+	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -17,16 +18,16 @@ import (
 	"github.com/google/uuid"
 )
 
-func RegisterPage(page *uiglobal.Page, nav *navigation.Navigation) {
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Program:Settings:Group:Edit", page.Lang.Settings.Group.GroupEdit.Title)
 }
 
-func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type groupedit struct {
 		Lang  lang.SettingsGroupEdit
-		Group types.Group
+		Group programTypes.Group
 		Pages template.HTML
 	}
 	var ge groupedit
@@ -93,7 +94,7 @@ func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	page.Content += uifunc.TemplToString(templ, ge)
+	page.Content += functions.TemplToString(templ, ge)
 }
 
 func newGroup() string {
@@ -103,7 +104,7 @@ func newGroup() string {
 
 	u := uuid.Must(uuid.NewRandom())
 
-	newgroup := make([]types.Group, 1)
+	newgroup := make([]programTypes.Group, 1)
 	newgroup[0].UUID = u.String()
 	newgroup[0].Name = u.String()
 
@@ -154,8 +155,8 @@ func deleteGroup(u string) {
 	global.GroupConfig.Mut.Lock()
 	defer global.GroupConfig.Mut.Unlock()
 
-	var gl []types.Group
-	n := make([]types.Group, 1)
+	var gl []programTypes.Group
+	n := make([]programTypes.Group, 1)
 
 	for i := 0; i < len(global.GroupConfig.File.Group); i++ {
 

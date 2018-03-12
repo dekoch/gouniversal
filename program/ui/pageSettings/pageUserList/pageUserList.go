@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
-	"gouniversal/program/ui/navigation"
-	"gouniversal/program/ui/uifunc"
-	"gouniversal/program/ui/uiglobal"
+	"gouniversal/shared/functions"
+	"gouniversal/shared/navigation"
+	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 	"strconv"
 )
 
-func RegisterPage(page *uiglobal.Page, nav *navigation.Navigation) {
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Program:Settings:User:List", page.Lang.Settings.User.UserList.Title)
 }
 
-func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type userlist struct {
 		Lang     lang.SettingsUserList
@@ -53,5 +53,5 @@ func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	page.Content += uifunc.TemplToString(templ, ul)
+	page.Content += functions.TemplToString(templ, ul)
 }

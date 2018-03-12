@@ -1,7 +1,8 @@
-package types
+package programTypes
 
 import (
-	"gouniversal/config"
+	"gouniversal/shared/config"
+	"gouniversal/shared/types"
 	"sync"
 )
 
@@ -9,20 +10,9 @@ type ProgramConfig struct {
 	Header config.FileHeader
 }
 
-type User struct {
-	UUID      string
-	LoginName string
-	Name      string
-	PWDHash   string
-	Groups    []string
-	State     int
-	Lang      string
-	Comment   string
-}
-
 type UserConfigFile struct {
 	Header config.FileHeader
-	User   []User
+	User   []types.User
 }
 
 type UserConfig struct {
@@ -54,14 +44,6 @@ type UiConfig struct {
 	FileRoot string
 	Port     int
 	Recovery bool
-}
-
-type PageContent struct {
-	Title string
-}
-
-type PageSettings struct {
-	Title string
 }
 
 type Console struct {

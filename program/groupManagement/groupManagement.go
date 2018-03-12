@@ -2,24 +2,24 @@ package groupManagement
 
 import (
 	"encoding/json"
-	"gouniversal/config"
-	"gouniversal/io/file"
 	"gouniversal/program/global"
-	"gouniversal/program/types"
+	"gouniversal/program/programTypes"
+	"gouniversal/shared/config"
+	"gouniversal/shared/io/file"
 	"log"
 	"os"
 )
 
 const GroupFile = "data/config/group"
 
-func SaveGroup(gc types.GroupConfigFile) error {
+func SaveGroup(gc programTypes.GroupConfigFile) error {
 
 	gc.Header = config.BuildHeader("group", "groups", 1.0, "group config file")
 
 	if _, err := os.Stat(GroupFile); os.IsNotExist(err) {
 		// if not found, create default file
 
-		newgroup := make([]types.Group, 1)
+		newgroup := make([]programTypes.Group, 1)
 
 		newgroup[0].UUID = "admin"
 		newgroup[0].Name = "admin"
@@ -41,9 +41,9 @@ func SaveGroup(gc types.GroupConfigFile) error {
 	return err
 }
 
-func LoadGroup() types.GroupConfigFile {
+func LoadGroup() programTypes.GroupConfigFile {
 
-	var gc types.GroupConfigFile
+	var gc programTypes.GroupConfigFile
 
 	if _, err := os.Stat(GroupFile); os.IsNotExist(err) {
 		// if not found, create default file

@@ -1,17 +1,17 @@
 package pageAbout
 
 import (
-	"gouniversal/program/ui/navigation"
-	"gouniversal/program/ui/uiglobal"
+	"gouniversal/shared/navigation"
+	"gouniversal/shared/types"
 	"net/http"
 )
 
-func RegisterPage(page *uiglobal.Page, nav *navigation.Navigation) {
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Program:Settings:About", page.Lang.Settings.About.Title)
 }
 
-func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	page.Content += "written with Go"
 }

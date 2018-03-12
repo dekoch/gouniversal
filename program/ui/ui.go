@@ -3,18 +3,19 @@ package ui
 import (
 	"encoding/json"
 	"fmt"
-	"gouniversal/config"
-	"gouniversal/io/file"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
-	"gouniversal/program/types"
-	"gouniversal/program/ui/navigation"
+	"gouniversal/program/programTypes"
 	"gouniversal/program/ui/pageHome"
 	"gouniversal/program/ui/pageLogin"
 	"gouniversal/program/ui/pageSettings"
 	"gouniversal/program/ui/uifunc"
-	"gouniversal/program/ui/uiglobal"
 	"gouniversal/program/userManagement"
+	"gouniversal/shared/config"
+	"gouniversal/shared/functions"
+	"gouniversal/shared/io/file"
+	"gouniversal/shared/navigation"
+	"gouniversal/shared/types"
 	"html/template"
 	"log"
 	"net"
@@ -38,7 +39,7 @@ var (
 	cookieName string
 )
 
-func SaveUiConfig(uc types.UiConfig) error {
+func SaveUiConfig(uc programTypes.UiConfig) error {
 
 	uc.Header = config.BuildHeader("ui", "ui", 1.0, "UI config file")
 
@@ -61,9 +62,9 @@ func SaveUiConfig(uc types.UiConfig) error {
 	return err
 }
 
-func LoadUiConfig() types.UiConfig {
+func LoadUiConfig() programTypes.UiConfig {
 
-	var uc types.UiConfig
+	var uc programTypes.UiConfig
 
 	if _, err := os.Stat(UiConfigFile); os.IsNotExist(err) {
 		// if not found, create default file
@@ -160,39 +161,23 @@ func initCookies(w http.ResponseWriter, r *http.Request) {
 	setSession(nav, w, r)
 }
 
-func showTop(page *uiglobal.Page, nav *navigation.Navigation) {
+func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
-	// header
-	type header struct {
-		Title string
-	}
-	var h header
-
-	h.Title = nav.Sitemap.PageTitle(nav.Path)
-
-	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/top.html")
-	if err != nil {
-		fmt.Println(err)
-	}
-	page.Content += uifunc.TemplToString(templ, h)
-
-	// menu
-	type menu struct {
+	type program struct {
 		Lang        lang.Menu
-		Brand       string
+		Title       string
 		MenuProgram template.HTML
 		MenuAccount template.HTML
+		Content     template.HTML
 	}
-	var m menu
+	var p program
 
-	m.Lang = page.Lang.Menu
-	m.Brand = nav.Sitemap.PageTitle(nav.Path)
+	p.Title = nav.Sitemap.PageTitle(nav.Path)
+	p.Lang = page.Lang.Menu
 
-	var menuprogram string
-	menuprogram = ""
+	menuprogram := ""
 	var depth int
-	var lastDepth int
-	lastDepth = 1
+	lastDepth := 1
 	for i := len(nav.Sitemap.Pages) - 1; i >= 0; i-- {
 
 		depth = nav.Sitemap.Pages[i].Depth
@@ -214,50 +199,35 @@ func showTop(page *uiglobal.Page, nav *navigation.Navigation) {
 		}
 	}
 
-	m.MenuProgram = template.HTML(menuprogram)
+	p.MenuProgram = template.HTML(menuprogram)
+	p.Content = template.HTML(page.Content)
 
-	templ, err = template.ParseFiles(global.UiConfig.FileRoot + "program/menu.html")
-	if err != nil {
-		fmt.Println(err)
-	}
-	page.Content += uifunc.TemplToString(templ, m)
-
-	page.Content += "<main role=\"main\"><div class=\"app-template\">"
-}
-
-func showBottom(page *uiglobal.Page) {
-
-	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/bottom.html")
+	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/program.html")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	items := struct {
-		Temp bool
-	}{
-		Temp: false,
-	}
-	page.Content += uifunc.TemplToString(templ, items)
+	return []byte(functions.TemplToString(templ, p))
 }
 
 func selectLang(l string) lang.File {
 
-	uiglobal.Lang.Mut.Lock()
-	defer uiglobal.Lang.Mut.Unlock()
+	global.Lang.Mut.Lock()
+	defer global.Lang.Mut.Unlock()
 
-	for i := 0; i < len(uiglobal.Lang.File); i++ {
+	for i := 0; i < len(global.Lang.File); i++ {
 
 		if l != "" {
 
-			if l == uiglobal.Lang.File[i].Header.FileName {
+			if l == global.Lang.File[i].Header.FileName {
 
-				return uiglobal.Lang.File[i]
+				return global.Lang.File[i]
 			}
 		} else {
 
-			if "en" == uiglobal.Lang.File[i].Header.FileName {
+			if "en" == global.Lang.File[i].Header.FileName {
 
-				return uiglobal.Lang.File[i]
+				return global.Lang.File[i]
 			}
 		}
 	}
@@ -283,7 +253,7 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
 
-	page := new(uiglobal.Page)
+	page := new(types.Page)
 	nav := new(navigation.Navigation)
 
 	getSession(nav, w, r)
@@ -311,10 +281,7 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 
 		nav.CurrentPath = ""
 		nav.Redirect = ""
-
 		page.Content = ""
-
-		showTop(page, nav)
 
 		if nav.IsNext("Program") {
 
@@ -353,8 +320,6 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 			nav.RedirectPath("Program:Home", true)
 		}
 
-		showBottom(page)
-
 		if nav.Redirect != "" {
 
 			nav.NavigatePath(nav.Redirect)
@@ -373,7 +338,7 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 		setSession(nav, w, r)
 	}
 
-	w.Write([]byte(page.Content))
+	w.Write(renderProgram(page, nav))
 
 	// show allowed pages
 	/*var sm []string
@@ -463,7 +428,7 @@ func (ui UI) StartServer() {
 			}
 		}
 
-		uiglobal.Lang.File = lang.LoadLangFiles()
+		global.Lang.File = lang.LoadLangFiles()
 
 		// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
 		key := securecookie.GenerateRandomKey(32)

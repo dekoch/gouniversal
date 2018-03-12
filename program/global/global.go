@@ -1,19 +1,22 @@
 package global
 
 import (
-	"gouniversal/program/types"
+	"gouniversal/program/lang"
+	"gouniversal/program/programTypes"
 )
 
 type Global struct{}
 
 var (
-	Console types.Console
+	Console programTypes.Console
 
-	ProgramConfig types.ProgramConfig
+	ProgramConfig programTypes.ProgramConfig
 
-	UiConfig types.UiConfig
+	UiConfig programTypes.UiConfig
 
-	UserConfig types.UserConfig
+	UserConfig programTypes.UserConfig
 
-	GroupConfig types.GroupConfig
+	GroupConfig programTypes.GroupConfig
+
+	Lang lang.Global
 )

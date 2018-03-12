@@ -2,8 +2,8 @@ package lang
 
 import (
 	"encoding/json"
-	"gouniversal/config"
-	"gouniversal/io/file"
+	"gouniversal/shared/config"
+	"gouniversal/shared/io/file"
 	"io/ioutil"
 	"log"
 	"os"

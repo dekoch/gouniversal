@@ -5,19 +5,19 @@ import (
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
 	"gouniversal/program/programConfig"
-	"gouniversal/program/ui/navigation"
-	"gouniversal/program/ui/uifunc"
-	"gouniversal/program/ui/uiglobal"
+	"gouniversal/shared/functions"
+	"gouniversal/shared/navigation"
+	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 )
 
-func RegisterPage(page *uiglobal.Page, nav *navigation.Navigation) {
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Program:Settings:General", page.Lang.Settings.GeneralEdit.Title)
 }
 
-func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	var strButton string
 
@@ -41,6 +41,6 @@ func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	page.Content += uifunc.TemplToString(templ, g)
+	page.Content += functions.TemplToString(templ, g)
 
 }

@@ -2,16 +2,16 @@ package programConfig
 
 import (
 	"encoding/json"
-	"gouniversal/config"
-	"gouniversal/io/file"
-	"gouniversal/program/types"
+	"gouniversal/program/programTypes"
+	"gouniversal/shared/config"
+	"gouniversal/shared/io/file"
 	"log"
 	"os"
 )
 
 const ConfigFilePath = "data/config/program"
 
-func SaveConfig(mc types.ProgramConfig) error {
+func SaveConfig(mc programTypes.ProgramConfig) error {
 
 	mc.Header = config.BuildHeader("program", "ProgramConfig", 1.0, "Program Settings")
 
@@ -30,9 +30,9 @@ func SaveConfig(mc types.ProgramConfig) error {
 	return err
 }
 
-func LoadConfig() types.ProgramConfig {
+func LoadConfig() programTypes.ProgramConfig {
 
-	var mc types.ProgramConfig
+	var mc programTypes.ProgramConfig
 
 	if _, err := os.Stat(ConfigFilePath); os.IsNotExist(err) {
 		// if not found, create default file

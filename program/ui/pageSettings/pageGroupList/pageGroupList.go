@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
-	"gouniversal/program/ui/navigation"
-	"gouniversal/program/ui/uifunc"
-	"gouniversal/program/ui/uiglobal"
+	"gouniversal/shared/functions"
+	"gouniversal/shared/navigation"
+	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 	"strconv"
 )
 
-func RegisterPage(page *uiglobal.Page, nav *navigation.Navigation) {
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Program:Settings:Group:List", page.Lang.Settings.Group.GroupList.Title)
 }
 
-func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type grouplist struct {
 		Lang      lang.SettingsGroupList
@@ -52,5 +52,5 @@ func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	page.Content += uifunc.TemplToString(templ, gl)
+	page.Content += functions.TemplToString(templ, gl)
 }

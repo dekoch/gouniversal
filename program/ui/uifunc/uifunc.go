@@ -1,25 +1,13 @@
 package uifunc
 
 import (
-	"bytes"
 	"gouniversal/program/global"
-	"gouniversal/program/types"
-	"html/template"
+	"gouniversal/shared/types"
 	"net/http"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
-
-func TemplToString(templ *template.Template, data interface{}) string {
-
-	var tpl bytes.Buffer
-	if err := templ.Execute(&tpl, data); err != nil {
-
-	}
-
-	return tpl.String()
-}
 
 type t int
 

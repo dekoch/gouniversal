@@ -3,19 +3,19 @@ package pageHome
 import (
 	"fmt"
 	"gouniversal/program/global"
-	"gouniversal/program/ui/navigation"
-	"gouniversal/program/ui/uifunc"
-	"gouniversal/program/ui/uiglobal"
+	"gouniversal/shared/functions"
+	"gouniversal/shared/navigation"
+	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 )
 
-func RegisterPage(page *uiglobal.Page, nav *navigation.Navigation) {
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Program:Home", page.Lang.Home.Title)
 }
 
-func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	page.Title = page.Lang.Home.Title
 
@@ -29,5 +29,5 @@ func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
 	}{
 		Temp: "",
 	}
-	page.Content += uifunc.TemplToString(templ, items)
+	page.Content += functions.TemplToString(templ, items)
 }

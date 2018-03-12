@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
-	"gouniversal/program/types"
-	"gouniversal/program/ui/navigation"
 	"gouniversal/program/ui/uifunc"
-	"gouniversal/program/ui/uiglobal"
 	"gouniversal/program/userManagement"
+	"gouniversal/shared/functions"
+	"gouniversal/shared/navigation"
+	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -17,12 +17,12 @@ import (
 	"github.com/google/uuid"
 )
 
-func RegisterPage(page *uiglobal.Page, nav *navigation.Navigation) {
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Program:Settings:User:Edit", page.Lang.Settings.User.UserEdit.Title)
 }
 
-func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type useredit struct {
 		Lang    lang.SettingsUserEdit
@@ -91,18 +91,18 @@ func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
 
 	cmbLang := "<select name=\"language\">"
 
-	uiglobal.Lang.Mut.Lock()
-	for i := 0; i < len(uiglobal.Lang.File); i++ {
+	global.Lang.Mut.Lock()
+	for i := 0; i < len(global.Lang.File); i++ {
 
-		cmbLang += "<option value=\"" + uiglobal.Lang.File[i].Header.FileName + "\""
+		cmbLang += "<option value=\"" + global.Lang.File[i].Header.FileName + "\""
 
-		if ue.User.Lang == uiglobal.Lang.File[i].Header.FileName {
+		if ue.User.Lang == global.Lang.File[i].Header.FileName {
 			cmbLang += " selected"
 		}
 
-		cmbLang += ">" + uiglobal.Lang.File[i].Header.FileName + "</option>"
+		cmbLang += ">" + global.Lang.File[i].Header.FileName + "</option>"
 	}
-	uiglobal.Lang.Mut.Unlock()
+	global.Lang.Mut.Unlock()
 	cmbLang += "</select>"
 	ue.CmbLang = template.HTML(cmbLang)
 
@@ -112,7 +112,7 @@ func Render(page *uiglobal.Page, nav *navigation.Navigation, r *http.Request) {
 		fmt.Println(err)
 	}
 
-	page.Content += uifunc.TemplToString(templ, ue)
+	page.Content += functions.TemplToString(templ, ue)
 }
 
 func newUser() string {
