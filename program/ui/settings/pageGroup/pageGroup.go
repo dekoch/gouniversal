@@ -1,8 +1,8 @@
 package pageGroup
 
 import (
-	"gouniversal/program/ui/pageSettings/pageGroupEdit"
-	"gouniversal/program/ui/pageSettings/pageGroupList"
+	"gouniversal/program/ui/settings/pageGroupEdit"
+	"gouniversal/program/ui/settings/pageGroupList"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
 	"net/http"

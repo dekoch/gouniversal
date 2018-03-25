@@ -3,12 +3,13 @@ package ui
 import (
 	"encoding/json"
 	"fmt"
+	"gouniversal/modules"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
 	"gouniversal/program/programTypes"
 	"gouniversal/program/ui/pageHome"
 	"gouniversal/program/ui/pageLogin"
-	"gouniversal/program/ui/pageSettings"
+	"gouniversal/program/ui/settings"
 	"gouniversal/program/ui/uifunc"
 	"gouniversal/program/userManagement"
 	"gouniversal/shared/config"
@@ -37,6 +38,7 @@ const UiConfigFile = "data/config/ui"
 var (
 	store      = new(sessions.CookieStore)
 	cookieName string
+	mod        = new(modules.Modules)
 )
 
 func SaveUiConfig(uc programTypes.UiConfig) error {
@@ -128,23 +130,22 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 		initCookies(w, r)
 	}
 
+	// get stored path
 	path, err := getCookie("navigation", w, r)
-
 	if err == nil {
 		nav.Path = path
 	}
 
+	// get stored user UUID
 	u, err := getCookie("authenticated", w, r)
-
 	if err == nil {
 
 		nav.User = userManagement.SelectUser(u)
 	}
 
-	g, err := getCookie("isgod", w, r)
-
+	// for debugging
 	nav.GodMode = false
-
+	g, err := getCookie("isgod", w, r)
 	if err == nil {
 		if g == "true" {
 			nav.GodMode = true
@@ -164,11 +165,13 @@ func initCookies(w http.ResponseWriter, r *http.Request) {
 func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	type program struct {
-		Lang        lang.Menu
-		Title       string
-		MenuProgram template.HTML
-		MenuAccount template.HTML
-		Content     template.HTML
+		Lang          lang.Menu
+		Title         string
+		MenuProgram   template.HTML
+		MenuApp       template.HTML
+		MenuAppHidden template.HTML
+		MenuAccount   template.HTML
+		Content       template.HTML
 	}
 	var p program
 
@@ -199,7 +202,34 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		}
 	}
 
+	p.MenuAppHidden = "hidden"
+	menuapp := ""
+	lastDepth = 1
+	for i := len(nav.Sitemap.Pages) - 1; i >= 0; i-- {
+
+		depth = nav.Sitemap.Pages[i].Depth
+
+		if strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:") &&
+			depth <= 2 {
+
+			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
+				nav.GodMode {
+
+				if depth != lastDepth {
+					lastDepth = depth
+
+					menuapp += "<div class=\"dropdown-divider\"></div>"
+				}
+
+				menuapp += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
+
+				p.MenuAppHidden = ""
+			}
+		}
+	}
+
 	p.MenuProgram = template.HTML(menuprogram)
+	p.MenuApp = template.HTML(menuapp)
 	p.Content = template.HTML(page.Content)
 
 	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/program.html")
@@ -261,10 +291,12 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 	page.Lang = selectLang(nav.User.Lang)
 
 	pageHome.RegisterPage(page, nav)
-	pageSettings.RegisterPage(page, nav)
+	settings.RegisterPage(page, nav)
 	pageLogin.RegisterPage(page, nav)
 	nav.Sitemap.Register("Program:Logout", page.Lang.Logout.Title)
 	nav.Sitemap.Register("Program:Exit", page.Lang.Exit.Title)
+
+	mod.RegisterPage(page, nav)
 
 	var strNavigation string
 	strNavigation = r.FormValue("navigation")
@@ -291,7 +323,7 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 
 			} else if nav.IsNext("Settings") {
 
-				pageSettings.Render(page, nav, r)
+				settings.Render(page, nav, r)
 
 			} else if nav.IsNext("Login") {
 
@@ -316,6 +348,10 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 
 				nav.RedirectPath("Program:Login", true)
 			}
+		} else if nav.IsNext("App") {
+
+			mod.Render(page, nav, r)
+
 		} else {
 			nav.RedirectPath("Program:Home", true)
 		}
@@ -362,28 +398,27 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
 	if global.UiConfig.Recovery {
 
-		var strButton string
-		strButton = r.FormValue("recovery")
+		button := r.FormValue("recovery")
 
-		if strButton == "goback" {
+		if button == "goback" {
 
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 
-		} else if strButton == "disablerecovery" {
+		} else if button == "disablerecovery" {
 
 			global.UiConfig.Recovery = false
 			SaveUiConfig(global.UiConfig)
 
-		} else if strButton == "cookies" {
+		} else if button == "cookies" {
 
 			initCookies(w, r)
 
-		} else if strButton == "god" {
+		} else if button == "god" {
 
 			setCookie("isgod", "true", w, r)
 
 		} else {
-			fmt.Println(strButton)
+			fmt.Println(button)
 		}
 
 		type recovery struct {
@@ -403,7 +438,7 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ui UI) StartServer() {
+func (ui *UI) StartServer() {
 	fmt.Println("starting webserver...")
 
 	fmt.Print("FileRoot: ")
@@ -437,6 +472,8 @@ func (ui UI) StartServer() {
 		u := uuid.Must(uuid.NewRandom())
 		cookieName = u.String()
 
+		mod.LoadConfig()
+
 		// configure server
 		fs := http.FileServer(http.Dir(global.UiConfig.FileRoot + "static/"))
 		http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -448,4 +485,8 @@ func (ui UI) StartServer() {
 	} else {
 		fmt.Println("no interface found")
 	}
+}
+
+func (ui *UI) Exit() {
+	mod.Exit()
 }

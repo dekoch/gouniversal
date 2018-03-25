@@ -29,6 +29,7 @@ func SaveUser(uc programTypes.UserConfigFile) error {
 
 		newuser[0].UUID = u.String()
 		newuser[0].Lang = "en"
+		newuser[0].State = 1 // active
 		// admin/admin
 		newuser[0].LoginName = "admin"
 		newuser[0].PWDHash = "$2a$14$ueP7ISwguEjrGHcHI0SKjO2Jn/A2CjFsWA7LEWgV0FcPNwI7tetde"
@@ -84,6 +85,13 @@ func SelectUser(uid string) types.User {
 
 	for u := 0; u < len(global.UserConfig.File.User); u++ {
 
+		// if no uuid is set, search for public user
+		if uid == "" {
+			if global.UserConfig.File.User[u].State == 0 {
+				uid = global.UserConfig.File.User[u].UUID
+			}
+		}
+
 		// search user with UUID
 		if uid == global.UserConfig.File.User[u].UUID {
 
@@ -92,6 +100,7 @@ func SelectUser(uid string) types.User {
 	}
 
 	var user types.User
+	user.State = -1
 	return user
 }
 
@@ -111,6 +120,7 @@ func IsUserInGroup(gid string, user types.User) bool {
 
 func IsPageAllowed(pname string, user types.User) bool {
 
+	// always allowed pages
 	if pname == "Program:Login" ||
 		pname == "Program:Logout" ||
 		pname == "Program:Home" {
@@ -118,11 +128,14 @@ func IsPageAllowed(pname string, user types.User) bool {
 		return true
 	}
 
+	// if user state is not set
+	if user.State < 0 {
+		return false
+	}
+
+	// test each group
 	for i := 0; i < len(user.Groups); i++ {
-
-		// test each group
-		if groupManagement.IsPageAllowed(pname, user.Groups[i]) {
-
+		if groupManagement.IsPageAllowed(pname, user.Groups[i], true) {
 			return true
 		}
 	}

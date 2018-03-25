@@ -18,8 +18,6 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	page.Title = page.Lang.Login.Title
-
 	type login struct {
 		Lang lang.Login
 	}

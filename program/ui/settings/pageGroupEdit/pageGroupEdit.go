@@ -25,16 +25,17 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
+	button := r.FormValue("edit")
+
 	type groupedit struct {
-		Lang  lang.SettingsGroupEdit
-		Group programTypes.Group
-		Pages template.HTML
+		Lang     lang.SettingsGroupEdit
+		Group    programTypes.Group
+		CmbState template.HTML
+		Pages    template.HTML
 	}
 	var ge groupedit
 
 	ge.Lang = page.Lang.Settings.Group.GroupEdit
-
-	button := r.FormValue("edit")
 
 	// Form input
 	id := nav.Parameter("UUID")
@@ -59,7 +60,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		nav.RedirectPath("Program:Settings:Group:List", false)
 	}
 
-	// copy groups from array
+	// copy group from array
 	global.GroupConfig.Mut.Lock()
 	for i := 0; i < len(global.GroupConfig.File.Group); i++ {
 
@@ -70,6 +71,31 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 	global.GroupConfig.Mut.Unlock()
 
+	// combobox State
+	cmbState := "<select name=\"state\">"
+	statetext := ""
+
+	for i := 1; i <= 2; i++ {
+
+		switch i {
+		case 1:
+			statetext = page.Lang.Settings.Group.GroupEdit.States.Active
+		case 2:
+			statetext = page.Lang.Settings.Group.GroupEdit.States.Inactive
+		}
+
+		cmbState += "<option value=\"" + strconv.Itoa(i) + "\""
+
+		if ge.Group.State == i {
+			cmbState += " selected"
+		}
+
+		cmbState += ">" + statetext + "</option>"
+	}
+	cmbState += "</select>"
+	ge.CmbState = template.HTML(cmbState)
+
+	// list of pages
 	pagelist := ""
 	sm := nav.Sitemap.PageList()
 
@@ -79,7 +105,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		pagelist += "<td>" + sm[i] + "</td>"
 		pagelist += "<td><input type=\"checkbox\" name=\"selectedpages\" value=\"" + sm[i] + "\""
 
-		if groupManagement.IsPageAllowed(sm[i], ge.Group.UUID) {
+		if groupManagement.IsPageAllowed(sm[i], ge.Group.UUID, false) {
 
 			pagelist += " checked"
 		}
@@ -107,6 +133,7 @@ func newGroup() string {
 	newgroup := make([]programTypes.Group, 1)
 	newgroup[0].UUID = u.String()
 	newgroup[0].Name = u.String()
+	newgroup[0].State = 1 // active
 
 	global.GroupConfig.File.Group = append(newgroup, global.GroupConfig.File.Group...)
 

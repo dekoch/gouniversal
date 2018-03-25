@@ -23,6 +23,7 @@ func SaveGroup(gc programTypes.GroupConfigFile) error {
 
 		newgroup[0].UUID = "admin"
 		newgroup[0].Name = "admin"
+		newgroup[0].State = 1 // active
 
 		pages := []string{"Program:Settings:User", "Program:Settings:User:List", "Program:Settings:User:Edit", "Program:Settings:Group", "Program:Settings:Group:List", "Program:Settings:Group:Edit"}
 		newgroup[0].AllowedPages = pages
@@ -68,7 +69,7 @@ func LoadGroup() programTypes.GroupConfigFile {
 	return gc
 }
 
-func IsPageAllowed(pname string, gid string) bool {
+func IsPageAllowed(pname string, gid string, checkState bool) bool {
 
 	global.GroupConfig.Mut.Lock()
 	defer global.GroupConfig.Mut.Unlock()
@@ -76,6 +77,13 @@ func IsPageAllowed(pname string, gid string) bool {
 	for g := 0; g < len(global.GroupConfig.File.Group); g++ {
 
 		if gid == global.GroupConfig.File.Group[g].UUID {
+
+			if checkState {
+				// if group is not active
+				if global.GroupConfig.File.Group[g].State != 1 {
+					return false
+				}
+			}
 
 			for p := 0; p < len(global.GroupConfig.File.Group[g].AllowedPages); p++ {
 

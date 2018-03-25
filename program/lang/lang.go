@@ -17,6 +17,10 @@ type MenuProgram struct {
 	Title string
 }
 
+type MenuApp struct {
+	Title string
+}
+
 type MenuAccount struct {
 	Title  string
 	Login  string
@@ -25,6 +29,7 @@ type MenuAccount struct {
 
 type Menu struct {
 	Program MenuProgram
+	App     MenuApp
 	Account MenuAccount
 }
 
@@ -48,11 +53,18 @@ type SettingsUserList struct {
 	Edit      string
 }
 
+type SettingsUserState struct {
+	Public   string
+	Active   string
+	Inactive string
+}
+
 type SettingsUserEdit struct {
 	Title     string
 	LoginName string
 	Name      string
 	State     string
+	States    SettingsUserState
 	Language  string
 	Password  string
 	Groups    string
@@ -74,10 +86,16 @@ type SettingsGroupList struct {
 	Edit     string
 }
 
+type SettingsGroupState struct {
+	Active   string
+	Inactive string
+}
+
 type SettingsGroupEdit struct {
 	Title   string
 	Name    string
 	State   string
+	States  SettingsGroupState
 	Comment string
 	Pages   string
 	Apply   string
@@ -140,6 +158,8 @@ func SaveLang(lang File, n string) error {
 		// if not found, create default file
 		lang.Menu.Program.Title = "Program"
 
+		lang.Menu.App.Title = "Application"
+
 		lang.Menu.Account.Title = "Account"
 		lang.Menu.Account.Login = "Login"
 		lang.Menu.Account.Logout = "Logout"
@@ -162,6 +182,9 @@ func SaveLang(lang File, n string) error {
 		lang.Settings.User.UserEdit.LoginName = "Login Name"
 		lang.Settings.User.UserEdit.Name = "Name"
 		lang.Settings.User.UserEdit.State = "State"
+		lang.Settings.User.UserEdit.States.Public = "Public"
+		lang.Settings.User.UserEdit.States.Active = "Active"
+		lang.Settings.User.UserEdit.States.Inactive = "Inactive"
 		lang.Settings.User.UserEdit.Language = "Language"
 		lang.Settings.User.UserEdit.Password = "Password"
 		lang.Settings.User.UserEdit.Groups = "Groups"
@@ -178,6 +201,8 @@ func SaveLang(lang File, n string) error {
 		lang.Settings.Group.GroupEdit.Title = "Group Edit"
 		lang.Settings.Group.GroupEdit.Name = "Name"
 		lang.Settings.Group.GroupEdit.State = "State"
+		lang.Settings.Group.GroupEdit.States.Active = "Active"
+		lang.Settings.Group.GroupEdit.States.Inactive = "Inactive"
 		lang.Settings.Group.GroupEdit.Comment = "Comment"
 		lang.Settings.Group.GroupEdit.Pages = "Pages"
 		lang.Settings.Group.GroupEdit.Apply = "Apply"

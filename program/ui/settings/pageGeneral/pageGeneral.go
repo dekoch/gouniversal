@@ -19,13 +19,9 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	var strButton string
+	button := r.FormValue("edit")
 
-	strButton = r.FormValue("edit")
-
-	fmt.Println(strButton)
-
-	if strButton == "apply" {
+	if button == "apply" {
 
 		programConfig.SaveConfig(global.ProgramConfig)
 	}

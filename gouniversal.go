@@ -18,6 +18,7 @@ func main() {
 
 	global.Console.Input = ""
 
+	//time.Sleep(15 * time.Second)
 	//fmt.Println("exit")
 	//os.Exit(1)
 
@@ -59,6 +60,8 @@ func main() {
 
 		time.Sleep(100 * time.Millisecond)
 	}
+
+	web.Exit()
 
 	fmt.Println("App ended")
 	os.Exit(1)

@@ -24,17 +24,18 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
+	button := r.FormValue("edit")
+
 	type useredit struct {
-		Lang    lang.SettingsUserEdit
-		User    types.User
-		CmbLang template.HTML
-		Groups  template.HTML
+		Lang     lang.SettingsUserEdit
+		User     types.User
+		CmbLang  template.HTML
+		CmbState template.HTML
+		Groups   template.HTML
 	}
 	var ue useredit
 
 	ue.Lang = page.Lang.Settings.User.UserEdit
-
-	button := r.FormValue("edit")
 
 	// Form input
 	id := nav.Parameter("UUID")
@@ -70,6 +71,51 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 	global.UserConfig.Mut.Unlock()
 
+	// combobox Language
+	cmbLang := "<select name=\"language\">"
+
+	global.Lang.Mut.Lock()
+	for i := 0; i < len(global.Lang.File); i++ {
+
+		cmbLang += "<option value=\"" + global.Lang.File[i].Header.FileName + "\""
+
+		if ue.User.Lang == global.Lang.File[i].Header.FileName {
+			cmbLang += " selected"
+		}
+
+		cmbLang += ">" + global.Lang.File[i].Header.FileName + "</option>"
+	}
+	global.Lang.Mut.Unlock()
+	cmbLang += "</select>"
+	ue.CmbLang = template.HTML(cmbLang)
+
+	// combobox State
+	cmbState := "<select name=\"state\">"
+	statetext := ""
+
+	for i := 0; i <= 2; i++ {
+
+		switch i {
+		case 0:
+			statetext = page.Lang.Settings.User.UserEdit.States.Public
+		case 1:
+			statetext = page.Lang.Settings.User.UserEdit.States.Active
+		case 2:
+			statetext = page.Lang.Settings.User.UserEdit.States.Inactive
+		}
+
+		cmbState += "<option value=\"" + strconv.Itoa(i) + "\""
+
+		if ue.User.State == i {
+			cmbState += " selected"
+		}
+
+		cmbState += ">" + statetext + "</option>"
+	}
+	cmbState += "</select>"
+	ue.CmbState = template.HTML(cmbState)
+
+	// list of groups
 	grouplist := ""
 
 	global.GroupConfig.Mut.Lock()
@@ -88,23 +134,6 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	global.GroupConfig.Mut.Unlock()
 
 	ue.Groups = template.HTML(grouplist)
-
-	cmbLang := "<select name=\"language\">"
-
-	global.Lang.Mut.Lock()
-	for i := 0; i < len(global.Lang.File); i++ {
-
-		cmbLang += "<option value=\"" + global.Lang.File[i].Header.FileName + "\""
-
-		if ue.User.Lang == global.Lang.File[i].Header.FileName {
-			cmbLang += " selected"
-		}
-
-		cmbLang += ">" + global.Lang.File[i].Header.FileName + "</option>"
-	}
-	global.Lang.Mut.Unlock()
-	cmbLang += "</select>"
-	ue.CmbLang = template.HTML(cmbLang)
 
 	// display user
 	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/settings/useredit.html")
@@ -126,6 +155,7 @@ func newUser() string {
 	newuser[0].UUID = u.String()
 	newuser[0].LoginName = u.String()
 	newuser[0].Lang = "en"
+	newuser[0].State = 1 // active
 
 	global.UserConfig.File.User = append(newuser, global.UserConfig.File.User...)
 
