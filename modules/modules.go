@@ -13,6 +13,9 @@ const modOpenESPM = true
 
 func (m *Modules) LoadConfig() {
 
+	if modOpenESPM {
+		openespm.LoadConfig()
+	}
 }
 
 func (m *Modules) RegisterPage(page *types.Page, nav *navigation.Navigation) {
@@ -31,4 +34,7 @@ func (m *Modules) Render(page *types.Page, nav *navigation.Navigation, r *http.R
 
 func (m *Modules) Exit() {
 
+	if modOpenESPM {
+		openespm.Exit()
+	}
 }

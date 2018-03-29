@@ -13,7 +13,8 @@ import (
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("Program:Login", page.Lang.Login.Title)
+	nav.Sitemap.Register("Account:Login", page.Lang.Menu.Account.Login)
+	nav.Sitemap.Register("Account:Logout", page.Lang.Menu.Account.Logout)
 }
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {

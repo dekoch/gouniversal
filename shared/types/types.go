@@ -14,7 +14,6 @@ type User struct {
 }
 
 type Page struct {
-	Title   string
 	Content string
 	Lang    lang.File
 }

@@ -121,8 +121,8 @@ func IsUserInGroup(gid string, user types.User) bool {
 func IsPageAllowed(pname string, user types.User) bool {
 
 	// always allowed pages
-	if pname == "Program:Login" ||
-		pname == "Program:Logout" ||
+	if pname == "Account:Login" ||
+		pname == "Account:Logout" ||
 		pname == "Program:Home" {
 
 		return true

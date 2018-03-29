@@ -165,22 +165,32 @@ func initCookies(w http.ResponseWriter, r *http.Request) {
 func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	type program struct {
-		Lang          lang.Menu
-		Title         string
-		MenuProgram   template.HTML
-		MenuApp       template.HTML
-		MenuAppHidden template.HTML
-		MenuAccount   template.HTML
-		Content       template.HTML
+		Lang             lang.Menu
+		Title            string
+		MenuProgram      template.HTML
+		MenuApp          template.HTML
+		MenuAppHidden    template.HTML
+		MenuAccountTitle template.HTML
+		MenuAccount      template.HTML
+		Content          template.HTML
 	}
 	var p program
 
 	p.Title = nav.Sitemap.PageTitle(nav.Path)
 	p.Lang = page.Lang.Menu
 
-	menuprogram := ""
 	var depth int
-	lastDepth := 1
+
+	menuprogram := ""
+	lastProgramDepth := 1
+
+	p.MenuAppHidden = "hidden"
+	menuapp := ""
+	lastAppDepth := 1
+
+	menuAccount := ""
+	lastAccountDepth := 1
+
 	for i := len(nav.Sitemap.Pages) - 1; i >= 0; i-- {
 
 		depth = nav.Sitemap.Pages[i].Depth
@@ -191,8 +201,8 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
 				nav.GodMode {
 
-				if depth != lastDepth {
-					lastDepth = depth
+				if depth != lastProgramDepth {
+					lastProgramDepth = depth
 
 					menuprogram += "<div class=\"dropdown-divider\"></div>"
 				}
@@ -200,14 +210,6 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 				menuprogram += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
 			}
 		}
-	}
-
-	p.MenuAppHidden = "hidden"
-	menuapp := ""
-	lastDepth = 1
-	for i := len(nav.Sitemap.Pages) - 1; i >= 0; i-- {
-
-		depth = nav.Sitemap.Pages[i].Depth
 
 		if strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:") &&
 			depth <= 2 {
@@ -215,8 +217,8 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
 				nav.GodMode {
 
-				if depth != lastDepth {
-					lastDepth = depth
+				if depth != lastAppDepth {
+					lastAppDepth = depth
 
 					menuapp += "<div class=\"dropdown-divider\"></div>"
 				}
@@ -226,10 +228,33 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 				p.MenuAppHidden = ""
 			}
 		}
+
+		if strings.HasPrefix(nav.Sitemap.Pages[i].Path, "Account:") &&
+			depth <= 2 {
+
+			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
+				nav.GodMode {
+
+				if depth != lastAccountDepth {
+					lastAccountDepth = depth
+
+					menuAccount += "<div class=\"dropdown-divider\"></div>"
+				}
+
+				menuAccount += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
+			}
+		}
+	}
+
+	if nav.User.UUID != "" {
+		p.MenuAccountTitle = template.HTML(nav.User.LoginName)
+	} else {
+		p.MenuAccountTitle = template.HTML(page.Lang.Menu.Account.Title)
 	}
 
 	p.MenuProgram = template.HTML(menuprogram)
 	p.MenuApp = template.HTML(menuapp)
+	p.MenuAccount = template.HTML(menuAccount)
 	p.Content = template.HTML(page.Content)
 
 	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/program.html")
@@ -291,12 +316,10 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 	page.Lang = selectLang(nav.User.Lang)
 
 	pageHome.RegisterPage(page, nav)
-	settings.RegisterPage(page, nav)
-	pageLogin.RegisterPage(page, nav)
-	nav.Sitemap.Register("Program:Logout", page.Lang.Logout.Title)
-	nav.Sitemap.Register("Program:Exit", page.Lang.Exit.Title)
-
 	mod.RegisterPage(page, nav)
+	settings.RegisterPage(page, nav)
+	nav.Sitemap.Register("Program:Exit", page.Lang.Exit.Title)
+	pageLogin.RegisterPage(page, nav)
 
 	var strNavigation string
 	strNavigation = r.FormValue("navigation")
@@ -325,7 +348,18 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 
 				settings.Render(page, nav, r)
 
-			} else if nav.IsNext("Login") {
+			} else if nav.IsNext("Exit") {
+			} else {
+
+				nav.RedirectPath("Program:Login", true)
+			}
+		} else if nav.IsNext("App") {
+
+			mod.Render(page, nav, r)
+
+		} else if nav.IsNext("Account") {
+
+			if nav.IsNext("Login") {
 
 				user := r.FormValue("user")
 				pwd := r.FormValue("pwd")
@@ -342,15 +376,7 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 
 				nav.User = userManagement.SelectUser("")
 				nav.RedirectPath("Program:Home", false)
-
-			} else if nav.IsNext("Exit") {
-			} else {
-
-				nav.RedirectPath("Program:Login", true)
 			}
-		} else if nav.IsNext("App") {
-
-			mod.Render(page, nav, r)
 
 		} else {
 			nav.RedirectPath("Program:Home", true)

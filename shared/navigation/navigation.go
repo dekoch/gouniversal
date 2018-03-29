@@ -14,6 +14,7 @@ type Navigation struct {
 	PathAfterLogin string
 	Home           string
 	User           types.User
+	Guest          bool
 	GodMode        bool
 	Sitemap        sitemap.Sitemap
 }
