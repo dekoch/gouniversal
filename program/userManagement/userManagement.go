@@ -122,8 +122,13 @@ func IsPageAllowed(pname string, user types.User) bool {
 
 	// always allowed pages
 	if pname == "Account:Login" ||
-		pname == "Account:Logout" ||
-		pname == "Program:Home" {
+		pname == "Account:Logout" {
+
+		return true
+	}
+
+	if pname == "Program:Home" &&
+		user.State == 1 {
 
 		return true
 	}

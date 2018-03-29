@@ -1,5 +1,6 @@
 package config
 
+// FileHeader default config file header
 type FileHeader struct {
 	HeaderVersion  float32
 	FileName       string
@@ -8,6 +9,7 @@ type FileHeader struct {
 	Comment        string
 }
 
+// BuildHeader builds a default config file header
 func BuildHeader(filename string, conname string, conver float32, comment string) FileHeader {
 	var h FileHeader
 
@@ -21,6 +23,7 @@ func BuildHeader(filename string, conname string, conver float32, comment string
 	return h
 }
 
+// CheckHeader returns true, if conname and Header ContentName is identical
 func CheckHeader(fh FileHeader, conname string) bool {
 	if fh.ContentName != conname {
 		return false

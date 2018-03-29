@@ -288,9 +288,7 @@ func LoadLangFiles() []File {
 			log.Fatal(err)
 		}
 
-		if config.CheckHeader(langfile.Header, "LangGlobal") == false {
-			log.Fatal("wrong config")
-		} else {
+		if config.CheckHeader(langfile.Header, "LangGlobal") {
 
 			lg = append(lg, langfile)
 		}

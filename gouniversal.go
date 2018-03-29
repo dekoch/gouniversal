@@ -30,10 +30,10 @@ func main() {
 	web := new(ui.UI)
 	go web.StartServer()
 
-	var boExit bool
+	exitApp := false
 	reader := bufio.NewReader(os.Stdin)
 
-	for boExit == false {
+	for exitApp == false {
 		input, _ := reader.ReadString('\n')
 		input = strings.Replace(input, "\n", "", -1)
 
@@ -47,7 +47,7 @@ func main() {
 			if global.Console.Input == "help" {
 				printHelp()
 			} else if global.Console.Input == "exit" {
-				boExit = true
+				exitApp = true
 			} else {
 				fmt.Println("")
 				fmt.Println("unrecognized command \"" + global.Console.Input + "\"")

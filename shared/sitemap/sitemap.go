@@ -15,6 +15,10 @@ type Sitemap struct {
 	Pages []page
 }
 
+// Register adds a pagepath + title to a sitemap
+// e.g.
+// pagepath = "App:Program:MyApp"
+// title = "MyApp"
 func (site *Sitemap) Register(path string, title string) {
 
 	newpage := make([]page, 1)
@@ -26,6 +30,7 @@ func (site *Sitemap) Register(path string, title string) {
 	site.Pages = append(newpage, site.Pages...)
 }
 
+// PageList returns all registered pages
 func (site *Sitemap) PageList() []string {
 
 	var list []string
@@ -41,6 +46,7 @@ func (site *Sitemap) PageList() []string {
 	return list
 }
 
+// PageTitle returns a page title from selected pagepath
 func (site *Sitemap) PageTitle(path string) string {
 
 	// find page
@@ -64,10 +70,13 @@ func (site *Sitemap) PageTitle(path string) string {
 	return ""
 }
 
+// ShowMap lists all registered pages
 func (site *Sitemap) ShowMap() {
 
 	for i := 0; i < len(site.Pages); i++ {
 
-		fmt.Println(site.Pages[i].Path)
+		fmt.Print(site.Pages[i].Path)
+		fmt.Print("\t")
+		fmt.Println(site.Pages[i].Title)
 	}
 }

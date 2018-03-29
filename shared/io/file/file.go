@@ -49,7 +49,6 @@ func (f File) WriteFile(path string, content []byte) error {
 	defer file.Close()
 
 	file.Write(content)
-
 	file.Close()
 
 	return err

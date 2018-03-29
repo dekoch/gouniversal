@@ -155,7 +155,7 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 
 func initCookies(w http.ResponseWriter, r *http.Request) {
 	nav := new(navigation.Navigation)
-	nav.Path = "Program:Home"
+	nav.Path = "Account:Login"
 	nav.User.UUID = ""
 	nav.GodMode = false
 
@@ -165,14 +165,15 @@ func initCookies(w http.ResponseWriter, r *http.Request) {
 func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	type program struct {
-		Lang             lang.Menu
-		Title            string
-		MenuProgram      template.HTML
-		MenuApp          template.HTML
-		MenuAppHidden    template.HTML
-		MenuAccountTitle template.HTML
-		MenuAccount      template.HTML
-		Content          template.HTML
+		Lang              lang.Menu
+		Title             string
+		MenuProgram       template.HTML
+		MenuProgramHidden template.HTML
+		MenuApp           template.HTML
+		MenuAppHidden     template.HTML
+		MenuAccountTitle  template.HTML
+		MenuAccount       template.HTML
+		Content           template.HTML
 	}
 	var p program
 
@@ -181,60 +182,85 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	var depth int
 
-	menuprogram := ""
-	lastProgramDepth := 1
+	p.MenuProgramHidden = "hidden"
+	menuProgram := ""
+	lastProgramDepth := -1
 
 	p.MenuAppHidden = "hidden"
-	menuapp := ""
-	lastAppDepth := 1
+	menuApp := ""
+	lastAppDepth := -1
 
 	menuAccount := ""
-	lastAccountDepth := 1
+	lastAccountDepth := -1
 
 	for i := len(nav.Sitemap.Pages) - 1; i >= 0; i-- {
 
 		depth = nav.Sitemap.Pages[i].Depth
 
-		if strings.HasPrefix(nav.Sitemap.Pages[i].Path, "Program:") &&
-			depth <= 2 {
+		// menuProgram
+		if (strings.HasPrefix(nav.Sitemap.Pages[i].Path, "Program:") &&
+			depth <= 2) ||
+			(strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:Program:") &&
+				depth <= 3) {
 
 			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
 				nav.GodMode {
 
+				if lastProgramDepth == -1 {
+					lastProgramDepth = depth
+				}
+
+				// if menu depth changed, add divider
 				if depth != lastProgramDepth {
 					lastProgramDepth = depth
 
-					menuprogram += "<div class=\"dropdown-divider\"></div>"
+					menuProgram += "<div class=\"dropdown-divider\"></div>"
 				}
 
-				menuprogram += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
+				menuProgram += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
+				p.MenuProgramHidden = ""
 			}
 		}
 
-		if strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:") &&
-			depth <= 2 {
+		// menuApp
+		if (strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:") &&
+			depth <= 2) &&
+			strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:Program:") == false &&
+			strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:Account:") == false {
 
 			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
 				nav.GodMode {
 
+				if lastAppDepth == -1 {
+					lastAppDepth = depth
+				}
+
+				// if menu depth changed, add divider
 				if depth != lastAppDepth {
 					lastAppDepth = depth
 
-					menuapp += "<div class=\"dropdown-divider\"></div>"
+					menuApp += "<div class=\"dropdown-divider\"></div>"
 				}
 
-				menuapp += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
-
+				menuApp += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
 				p.MenuAppHidden = ""
 			}
 		}
 
-		if strings.HasPrefix(nav.Sitemap.Pages[i].Path, "Account:") &&
-			depth <= 2 {
+		// menuAccount
+		if (strings.HasPrefix(nav.Sitemap.Pages[i].Path, "Account:") &&
+			depth <= 2) ||
+			(strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:Account:") &&
+				depth <= 2) {
 
 			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
 				nav.GodMode {
 
+				if lastAccountDepth == -1 {
+					lastAccountDepth = depth
+				}
+
+				// if menu depth changed, add divider
 				if depth != lastAccountDepth {
 					lastAccountDepth = depth
 
@@ -246,14 +272,15 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		}
 	}
 
+	// menuAccount
 	if nav.User.UUID != "" {
 		p.MenuAccountTitle = template.HTML(nav.User.LoginName)
 	} else {
 		p.MenuAccountTitle = template.HTML(page.Lang.Menu.Account.Title)
 	}
 
-	p.MenuProgram = template.HTML(menuprogram)
-	p.MenuApp = template.HTML(menuapp)
+	p.MenuProgram = template.HTML(menuProgram)
+	p.MenuApp = template.HTML(menuApp)
 	p.MenuAccount = template.HTML(menuAccount)
 	p.Content = template.HTML(page.Content)
 
@@ -270,27 +297,31 @@ func selectLang(l string) lang.File {
 	global.Lang.Mut.Lock()
 	defer global.Lang.Mut.Unlock()
 
+	// search lang
 	for i := 0; i < len(global.Lang.File); i++ {
 
-		if l != "" {
+		if l == global.Lang.File[i].Header.FileName {
 
-			if l == global.Lang.File[i].Header.FileName {
-
-				return global.Lang.File[i]
-			}
-		} else {
-
-			if "en" == global.Lang.File[i].Header.FileName {
-
-				return global.Lang.File[i]
-			}
+			return global.Lang.File[i]
 		}
 	}
 
+	// if nothing found
+	// search "en"
+	for i := 0; i < len(global.Lang.File); i++ {
+
+		if "en" == global.Lang.File[i].Header.FileName {
+
+			return global.Lang.File[i]
+		}
+	}
+
+	// if nothing found
+	// load or create "en"
 	return lang.LoadLang("en")
 }
 
-func handleroot(w http.ResponseWriter, r *http.Request) {
+func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path == "/" {
 		session, _ := store.Get(r, cookieName)
@@ -304,7 +335,7 @@ func handleroot(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL.Path)
 }
 
-func handleapp(w http.ResponseWriter, r *http.Request) {
+func handleApp(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
 
@@ -321,13 +352,12 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 	nav.Sitemap.Register("Program:Exit", page.Lang.Exit.Title)
 	pageLogin.RegisterPage(page, nav)
 
-	var strNavigation string
-	strNavigation = r.FormValue("navigation")
+	newPath := r.FormValue("navigation")
 
-	if strNavigation != "" {
-		nav.NavigatePath(strNavigation)
+	if newPath != "" {
+		nav.NavigatePath(newPath)
 
-		fmt.Println(strNavigation)
+		fmt.Println(newPath)
 	}
 
 	nav.Redirect = "init"
@@ -338,6 +368,13 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 		nav.Redirect = ""
 		page.Content = ""
 
+		// select next page
+		// e.g. nav.NavigatePath("Program:Settings:User:List")
+		//
+		// Program
+		// Program:Settings
+		// Program:Settings:User
+		// Program:Settings:User:List
 		if nav.IsNext("Program") {
 
 			if nav.IsNext("Home") {
@@ -351,7 +388,7 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 			} else if nav.IsNext("Exit") {
 			} else {
 
-				nav.RedirectPath("Program:Login", true)
+				nav.RedirectPath("Account:Login", true)
 			}
 		} else if nav.IsNext("App") {
 
@@ -375,11 +412,11 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 			} else if nav.IsNext("Logout") {
 
 				nav.User = userManagement.SelectUser("")
-				nav.RedirectPath("Program:Home", false)
+				nav.RedirectPath("Account:Login", false)
 			}
 
 		} else {
-			nav.RedirectPath("Program:Home", true)
+			nav.RedirectPath("Account:Login", true)
 		}
 
 		if nav.Redirect != "" {
@@ -401,6 +438,9 @@ func handleapp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(renderProgram(page, nav))
+
+	// show all pages
+	//nav.Sitemap.ShowMap()
 
 	// show allowed pages
 	/*var sm []string
@@ -503,8 +543,8 @@ func (ui *UI) StartServer() {
 		// configure server
 		fs := http.FileServer(http.Dir(global.UiConfig.FileRoot + "static/"))
 		http.Handle("/static/", http.StripPrefix("/static/", fs))
-		http.HandleFunc("/", handleroot)
-		http.HandleFunc("/app/", handleapp)
+		http.HandleFunc("/", handleRoot)
+		http.HandleFunc("/app/", handleApp)
 		http.HandleFunc("/recovery/", handleRecovery)
 
 		http.ListenAndServe(":"+strconv.Itoa(global.UiConfig.Port), nil)

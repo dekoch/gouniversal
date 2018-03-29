@@ -57,19 +57,13 @@ func (nav *Navigation) IsNext(page string) bool {
 
 	if len(page) > 0 {
 
-		// Settings:User:List
-		// CurrentPath = Settings
-		// check User
+		nextPage := nav.CurrentPath + ":" + page
 
-		var nextpage string
-
-		nextpage = nav.CurrentPath + ":" + page
-
-		if strings.HasPrefix(nextpage, ":") {
-			nextpage = nextpage[1:]
+		if strings.HasPrefix(nextPage, ":") {
+			nextPage = nextPage[1:]
 		}
 
-		if strings.HasPrefix(nav.Path, nextpage) {
+		if strings.HasPrefix(nav.Path, nextPage) {
 
 			nav.CurrentPath += ":" + page
 
@@ -103,15 +97,7 @@ func (nav *Navigation) NavigatePath(path string) {
 			nav.Path = path
 		}
 
-		/*if userManagement.IsPageAllowed(p, nav.User) ||
-			path == "Program:Login" ||
-			path == "Program:Logout" ||
-			path == "Program:Home" ||
-			nav.GodMode {
-
-			nav.Path = path
-		}*/
-
+		// debug
 		//nav.Path = path
 	}
 }
@@ -143,16 +129,14 @@ func (nav *Navigation) NavigateHome() {
 	nav.NavigatePath(nav.Home)
 }
 
+// Parameter returns value from page parameter
 func (nav *Navigation) Parameter(name string) string {
-	// find parameter value with name inside path
 
-	var par string
-	par = ""
+	par := ""
 
 	name += "="
 
 	index := strings.LastIndex(nav.Path, name)
-
 	cnt := len(nav.Path)
 
 	if cnt > 0 {
