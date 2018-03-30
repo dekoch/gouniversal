@@ -1,6 +1,7 @@
 package pageUserEdit
 
 import (
+	"errors"
 	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
@@ -14,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 )
 
@@ -49,15 +51,17 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		}
 	} else if button == "apply" {
 
-		editUser(r, id)
-
-		nav.RedirectPath("Program:Settings:User:List", false)
+		err := editUser(r, id)
+		if err == nil {
+			nav.RedirectPath("Program:Settings:User:List", false)
+		}
 
 	} else if button == "delete" {
 
-		deleteUser(id)
-
-		nav.RedirectPath("Program:Settings:User:List", false)
+		err := deleteUser(id)
+		if err == nil {
+			nav.RedirectPath("Program:Settings:User:List", false)
+		}
 	}
 
 	// copy user from array
@@ -164,53 +168,73 @@ func newUser() string {
 	return u.String()
 }
 
-func editUser(r *http.Request, u string) {
+func editUser(r *http.Request, u string) error {
+
+	loginName, _ := functions.CheckFormInput("loginname", r)
+	name, errName := functions.CheckFormInput("name", r)
+	state, _ := functions.CheckFormInput("state", r)
+	sellang := r.FormValue("language")
+	comment, errComment := functions.CheckFormInput("comment", r)
+
+	// check input
+	if functions.IsEmpty(loginName) ||
+		functions.IsEmpty(state) ||
+		govalidator.IsNumeric(state) == false ||
+		functions.IsEmpty(sellang) ||
+		// content not required
+		errName != nil ||
+		errComment != nil {
+
+		return errors.New("bad input")
+	}
 
 	global.UserConfig.Mut.Lock()
 	defer global.UserConfig.Mut.Unlock()
 
-	loginName := uifunc.CheckFormInput("loginname", r)
-	state := uifunc.CheckFormInput("state", r)
+	for i := 0; i < len(global.UserConfig.File.User); i++ {
 
-	if uifunc.CheckInput(loginName, uifunc.STRING) &&
-		uifunc.CheckInput(state, uifunc.INT) {
+		if u == global.UserConfig.File.User[i].UUID {
 
-		for i := 0; i < len(global.UserConfig.File.User); i++ {
+			iState, err := strconv.Atoi(state)
+			if err != nil {
+				return err
+			}
 
-			if u == global.UserConfig.File.User[i].UUID {
+			selgroups := r.Form["selectedgroups"]
 
-				iState, err := strconv.Atoi(state)
+			global.UserConfig.File.User[i].LoginName = loginName
+			global.UserConfig.File.User[i].Name = name
+			global.UserConfig.File.User[i].State = iState
+			global.UserConfig.File.User[i].Lang = sellang
+			global.UserConfig.File.User[i].Comment = comment
+			global.UserConfig.File.User[i].Groups = selgroups
 
-				if err == nil {
-					name := uifunc.CheckFormInput("name", r)
-					sellang := r.FormValue("language")
-					selgroups := r.Form["selectedgroups"]
+			pwd := r.FormValue("pwd")
 
-					global.UserConfig.File.User[i].LoginName = loginName
-					global.UserConfig.File.User[i].Name = name
-					global.UserConfig.File.User[i].State = iState
-					global.UserConfig.File.User[i].Lang = sellang
-					global.UserConfig.File.User[i].Groups = selgroups
+			if pwd != "" {
 
-					pwd := r.FormValue("pwd")
+				if functions.IsEmpty(pwd) {
 
-					if uifunc.CheckInput(pwd, uifunc.STRING) {
+					global.UserConfig.File.User[i].PWDHash = ""
+				} else {
 
-						hash, err := uifunc.HashPassword(pwd)
-
-						if err == nil {
-							global.UserConfig.File.User[i].PWDHash = hash
-						}
+					hash, err := uifunc.HashPassword(pwd)
+					if err == nil {
+						global.UserConfig.File.User[i].PWDHash = hash
+					} else {
+						return err
 					}
 				}
-
-				userManagement.SaveUser(global.UserConfig.File)
 			}
+
+			return userManagement.SaveUser(global.UserConfig.File)
 		}
 	}
+
+	return errors.New("UUID not found")
 }
 
-func deleteUser(u string) {
+func deleteUser(u string) error {
 
 	global.UserConfig.Mut.Lock()
 	defer global.UserConfig.Mut.Unlock()
@@ -230,5 +254,5 @@ func deleteUser(u string) {
 
 	global.UserConfig.File.User = ul
 
-	userManagement.SaveUser(global.UserConfig.File)
+	return userManagement.SaveUser(global.UserConfig.File)
 }

@@ -1,12 +1,12 @@
 package pageGroupEdit
 
 import (
+	"errors"
 	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/groupManagement"
 	"gouniversal/program/lang"
 	"gouniversal/program/programTypes"
-	"gouniversal/program/ui/uifunc"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 )
 
@@ -49,15 +50,17 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		}
 	} else if button == "apply" {
 
-		editGroup(r, id)
-
-		nav.RedirectPath("Program:Settings:Group:List", false)
+		err := editGroup(r, id)
+		if err == nil {
+			nav.RedirectPath("Program:Settings:Group:List", false)
+		}
 
 	} else if button == "delete" {
 
-		deleteGroup(id)
-
-		nav.RedirectPath("Program:Settings:Group:List", false)
+		err := deleteGroup(id)
+		if err == nil {
+			nav.RedirectPath("Program:Settings:Group:List", false)
+		}
 	}
 
 	// copy group from array
@@ -142,42 +145,54 @@ func newGroup() string {
 	return u.String()
 }
 
-func editGroup(r *http.Request, u string) {
+func editGroup(r *http.Request, u string) error {
+
+	name, _ := functions.CheckFormInput("name", r)
+	state, _ := functions.CheckFormInput("state", r)
+	comment, errComment := functions.CheckFormInput("comment", r)
+
+	// check input
+	if functions.IsEmpty(name) ||
+		functions.IsEmpty(state) ||
+		govalidator.IsNumeric(state) == false ||
+		// content not required
+		errComment != nil {
+
+		return errors.New("bad input")
+	}
 
 	global.GroupConfig.Mut.Lock()
 	defer global.GroupConfig.Mut.Unlock()
 
-	name := uifunc.CheckFormInput("name", r)
-	state := uifunc.CheckFormInput("state", r)
+	for i := 0; i < len(global.GroupConfig.File.Group); i++ {
 
-	if uifunc.CheckInput(name, uifunc.STRING) &&
-		uifunc.CheckInput(state, uifunc.INT) {
+		if u == global.GroupConfig.File.Group[i].UUID {
 
-		for i := 0; i < len(global.GroupConfig.File.Group); i++ {
-
-			if u == global.GroupConfig.File.Group[i].UUID {
-
-				intState, err := strconv.Atoi(state)
-
-				if err == nil {
-					comment := uifunc.CheckFormInput("comment", r)
-
-					selpages := r.Form["selectedpages"]
-
-					global.GroupConfig.File.Group[i].Name = name
-					global.GroupConfig.File.Group[i].State = intState
-					global.GroupConfig.File.Group[i].Comment = comment
-
-					global.GroupConfig.File.Group[i].AllowedPages = selpages
-				}
-
-				groupManagement.SaveGroup(global.GroupConfig.File)
+			intState, err := strconv.Atoi(state)
+			if err != nil {
+				return err
 			}
+
+			if comment == "" {
+				comment = global.GroupConfig.File.Group[i].Comment
+			}
+
+			selpages := r.Form["selectedpages"]
+
+			global.GroupConfig.File.Group[i].Name = name
+			global.GroupConfig.File.Group[i].State = intState
+			global.GroupConfig.File.Group[i].Comment = comment
+
+			global.GroupConfig.File.Group[i].AllowedPages = selpages
+
+			return groupManagement.SaveGroup(global.GroupConfig.File)
 		}
 	}
+
+	return errors.New("UUID not found")
 }
 
-func deleteGroup(u string) {
+func deleteGroup(u string) error {
 
 	global.GroupConfig.Mut.Lock()
 	defer global.GroupConfig.Mut.Unlock()
@@ -197,5 +212,5 @@ func deleteGroup(u string) {
 
 	global.GroupConfig.File.Group = gl
 
-	groupManagement.SaveGroup(global.GroupConfig.File)
+	return groupManagement.SaveGroup(global.GroupConfig.File)
 }

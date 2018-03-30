@@ -67,6 +67,7 @@ type SettingsUserEdit struct {
 	States    SettingsUserState
 	Language  string
 	Password  string
+	Comment   string
 	Groups    string
 	Apply     string
 	Delete    string
@@ -82,6 +83,7 @@ type SettingsGroupList struct {
 	Title    string
 	AddGroup string
 	Name     string
+	Comment  string
 	Options  string
 	Edit     string
 }
@@ -187,6 +189,7 @@ func SaveLang(lang File, n string) error {
 		lang.Settings.User.UserEdit.States.Inactive = "Inactive"
 		lang.Settings.User.UserEdit.Language = "Language"
 		lang.Settings.User.UserEdit.Password = "Password"
+		lang.Settings.User.UserEdit.Comment = "Comment"
 		lang.Settings.User.UserEdit.Groups = "Groups"
 		lang.Settings.User.UserEdit.Apply = "Apply"
 		lang.Settings.User.UserEdit.Delete = "Delete"
@@ -195,6 +198,7 @@ func SaveLang(lang File, n string) error {
 		lang.Settings.Group.GroupList.Title = "Group List"
 		lang.Settings.Group.GroupList.AddGroup = "Add Group"
 		lang.Settings.Group.GroupList.Name = "Name"
+		lang.Settings.Group.GroupList.Comment = "Comment"
 		lang.Settings.Group.GroupList.Options = "Options"
 		lang.Settings.Group.GroupList.Edit = "Edit"
 

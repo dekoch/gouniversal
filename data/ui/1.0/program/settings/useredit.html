@@ -22,6 +22,10 @@
                 <td><input type="password" class="form-control" name="pwd"></td>
             </tr>
             <tr>
+                <th>{{.Lang.Comment}}:</th>
+                <td><input type="text" class="form-control" name="comment" value="{{.User.Comment}}"></td>
+            </tr>
+            <tr>
                 <th>UUID:</th>
                 <td>{{.User.UUID}}</td>
             </tr>

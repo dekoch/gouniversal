@@ -40,6 +40,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		tbody += "<tr>"
 		tbody += "<th scope='row'>" + strconv.Itoa(intIndex) + "</th>"
 		tbody += "<td>" + global.GroupConfig.File.Group[i].Name + "</td>"
+		tbody += "<td>" + global.GroupConfig.File.Group[i].Comment + "</td>"
 		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"Program:Settings:Group:Edit$UUID=" + global.GroupConfig.File.Group[i].UUID + "\" title=\"" + gl.Lang.Edit + "\"></button></td>"
 		tbody += "</tr>"
 	}

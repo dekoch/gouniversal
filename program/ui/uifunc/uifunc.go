@@ -2,46 +2,11 @@ package uifunc
 
 import (
 	"gouniversal/program/global"
+	"gouniversal/shared/functions"
 	"gouniversal/shared/types"
-	"net/http"
-	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
-
-type t int
-
-const (
-	STRING t = 1 + iota
-	INT
-)
-
-func CheckInput(i string, typ t) bool {
-	if typ == STRING {
-		if len(strings.TrimSpace(i)) != 0 {
-			return true
-		}
-	}
-
-	if typ == INT {
-		if len(strings.TrimSpace(i)) != 0 {
-			return true
-		}
-	}
-
-	return false
-}
-
-func CheckFormInput(key string, r *http.Request) string {
-
-	input := r.FormValue(key)
-
-	//if govalidator.IsAlphanumeric(input) {
-	return input
-	//}
-
-	//return ""
-}
 
 func LoginNameToUUID(user string) string {
 
@@ -79,11 +44,11 @@ func GetUserWithUUID(u string) types.User {
 
 func CheckLogin(user string, pwd string) bool {
 
-	global.UserConfig.Mut.Lock()
-	defer global.UserConfig.Mut.Unlock()
+	if functions.IsEmpty(user) == false &&
+		functions.IsEmpty(pwd) == false {
 
-	if CheckInput(user, STRING) &&
-		CheckInput(pwd, STRING) {
+		global.UserConfig.Mut.Lock()
+		defer global.UserConfig.Mut.Unlock()
 
 		for i := 0; i < len(global.UserConfig.File.User); i++ {
 

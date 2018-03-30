@@ -180,8 +180,6 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	p.Title = nav.Sitemap.PageTitle(nav.Path)
 	p.Lang = page.Lang.Menu
 
-	var depth int
-
 	p.MenuProgramHidden = "hidden"
 	menuProgram := ""
 	lastProgramDepth := -1
@@ -193,17 +191,23 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	menuAccount := ""
 	lastAccountDepth := -1
 
+	path := ""
+	title := ""
+	depth := -1
+
 	for i := len(nav.Sitemap.Pages) - 1; i >= 0; i-- {
 
+		path = nav.Sitemap.Pages[i].Path
+		title = nav.Sitemap.Pages[i].Title
 		depth = nav.Sitemap.Pages[i].Depth
 
 		// menuProgram
-		if (strings.HasPrefix(nav.Sitemap.Pages[i].Path, "Program:") &&
+		if (strings.HasPrefix(path, "Program:") &&
 			depth <= 2) ||
-			(strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:Program:") &&
+			(strings.HasPrefix(path, "App:Program:") &&
 				depth <= 3) {
 
-			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
+			if userManagement.IsPageAllowed(path, nav.User) ||
 				nav.GodMode {
 
 				if lastProgramDepth == -1 {
@@ -217,18 +221,18 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 					menuProgram += "<div class=\"dropdown-divider\"></div>"
 				}
 
-				menuProgram += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
+				menuProgram += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + path + "\">" + title + "</button>"
 				p.MenuProgramHidden = ""
 			}
 		}
 
 		// menuApp
-		if (strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:") &&
+		if (strings.HasPrefix(path, "App:") &&
 			depth <= 2) &&
-			strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:Program:") == false &&
-			strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:Account:") == false {
+			strings.HasPrefix(path, "App:Program:") == false &&
+			strings.HasPrefix(path, "App:Account:") == false {
 
-			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
+			if userManagement.IsPageAllowed(path, nav.User) ||
 				nav.GodMode {
 
 				if lastAppDepth == -1 {
@@ -242,18 +246,18 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 					menuApp += "<div class=\"dropdown-divider\"></div>"
 				}
 
-				menuApp += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
+				menuApp += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + path + "\">" + title + "</button>"
 				p.MenuAppHidden = ""
 			}
 		}
 
 		// menuAccount
-		if (strings.HasPrefix(nav.Sitemap.Pages[i].Path, "Account:") &&
+		if (strings.HasPrefix(path, "Account:") &&
 			depth <= 2) ||
-			(strings.HasPrefix(nav.Sitemap.Pages[i].Path, "App:Account:") &&
-				depth <= 2) {
+			(strings.HasPrefix(path, "App:Account:") &&
+				depth <= 3) {
 
-			if userManagement.IsPageAllowed(nav.Sitemap.Pages[i].Path, nav.User) ||
+			if userManagement.IsPageAllowed(path, nav.User) ||
 				nav.GodMode {
 
 				if lastAccountDepth == -1 {
@@ -267,7 +271,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 					menuAccount += "<div class=\"dropdown-divider\"></div>"
 				}
 
-				menuAccount += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + nav.Sitemap.Pages[i].Path + "\">" + nav.Sitemap.Pages[i].Title + "</button>"
+				menuAccount += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + path + "\">" + title + "</button>"
 			}
 		}
 	}
