@@ -140,7 +140,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	ue.Groups = template.HTML(grouplist)
 
 	// display user
-	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/settings/useredit.html")
+	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "settings/useredit.html")
 	if err != nil {
 		fmt.Println(err)
 	}

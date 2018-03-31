@@ -33,7 +33,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	g.Lang = page.Lang.Settings.GeneralEdit
 
-	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/settings/general.html")
+	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "settings/general.html")
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -26,7 +26,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	l.Lang = page.Lang.Login
 
-	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/login.html")
+	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "login.html")
 	if err != nil {
 		fmt.Println(err)
 	}

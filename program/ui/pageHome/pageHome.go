@@ -17,7 +17,7 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/home.html")
+	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "home.html")
 	if err != nil {
 		fmt.Println(err)
 	}

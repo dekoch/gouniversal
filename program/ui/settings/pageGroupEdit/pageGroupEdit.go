@@ -118,7 +118,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	ge.Pages = template.HTML(pagelist)
 
 	// display group
-	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/settings/groupedit.html")
+	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "settings/groupedit.html")
 	if err != nil {
 		fmt.Println(err)
 	}

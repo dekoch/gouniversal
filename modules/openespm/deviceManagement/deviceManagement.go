@@ -8,11 +8,9 @@ import (
 	"gouniversal/shared/io/file"
 	"log"
 	"os"
-
-	"github.com/google/uuid"
 )
 
-const DeviceFile = "data/config/devices"
+const DeviceFile = "data/config/openespm/devices"
 
 func SaveDevices(dc oespmTypes.DeviceConfigFile) error {
 
@@ -23,10 +21,11 @@ func SaveDevices(dc oespmTypes.DeviceConfigFile) error {
 
 		newDevice := make([]oespmTypes.Device, 1)
 
-		u := uuid.Must(uuid.NewRandom())
-
-		newDevice[0].UUID = u.String()
+		newDevice[0].UUID = "test"
+		newDevice[0].Key = "1234"
+		newDevice[0].Name = "Test"
 		newDevice[0].State = 1 // active
+		newDevice[0].App = "SimpleSwitch_v1_0"
 
 		dc.Devices = newDevice
 	}

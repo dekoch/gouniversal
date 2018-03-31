@@ -48,7 +48,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	ul.UserList = template.HTML(tbody)
 
-	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/settings/userlist.html")
+	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "settings/userlist.html")
 	if err != nil {
 		fmt.Println(err)
 	}

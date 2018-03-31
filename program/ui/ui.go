@@ -48,7 +48,8 @@ func SaveUiConfig(uc programTypes.UiConfig) error {
 	if _, err := os.Stat(UiConfigFile); os.IsNotExist(err) {
 		// if not found, create default file
 
-		uc.FileRoot = "data/ui/1.0/"
+		uc.ProgramFileRoot = "data/ui/program/1.0/"
+		uc.StaticFileRoot = "data/ui/static/1.0/"
 		uc.Port = 8080
 		uc.Recovery = false
 	}
@@ -288,7 +289,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	p.MenuAccount = template.HTML(menuAccount)
 	p.Content = template.HTML(page.Content)
 
-	templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/program.html")
+	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "program.html")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -366,7 +367,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 	nav.Redirect = "init"
 
-	for nav.Redirect != "" {
+	for functions.IsEmpty(nav.Redirect) == false {
 
 		nav.CurrentPath = ""
 		nav.Redirect = ""
@@ -498,7 +499,7 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
 		re.Temp = ""
 
-		templ, err := template.ParseFiles(global.UiConfig.FileRoot + "program/recovery.html")
+		templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "recovery.html")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -511,12 +512,18 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 func (ui *UI) StartServer() {
 	fmt.Println("starting webserver...")
 
-	fmt.Print("FileRoot: ")
-	fmt.Println(global.UiConfig.FileRoot)
+	fmt.Print("ProgramFileRoot: ")
+	fmt.Println(global.UiConfig.ProgramFileRoot)
 
-	if _, err := os.Stat(global.UiConfig.FileRoot); os.IsNotExist(err) {
+	if _, err := os.Stat(global.UiConfig.ProgramFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
-		fmt.Println("error: FileRoot not found")
+		fmt.Println("error: ProgramFileRoot not found")
+		os.Exit(1)
+	}
+
+	if _, err := os.Stat(global.UiConfig.StaticFileRoot); os.IsNotExist(err) {
+		// if not found, exit program
+		fmt.Println("error: StaticFileRoot not found")
 		os.Exit(1)
 	}
 
@@ -545,7 +552,7 @@ func (ui *UI) StartServer() {
 		mod.LoadConfig()
 
 		// configure server
-		fs := http.FileServer(http.Dir(global.UiConfig.FileRoot + "static/"))
+		fs := http.FileServer(http.Dir(global.UiConfig.StaticFileRoot))
 		http.Handle("/static/", http.StripPrefix("/static/", fs))
 		http.HandleFunc("/", handleRoot)
 		http.HandleFunc("/app/", handleApp)

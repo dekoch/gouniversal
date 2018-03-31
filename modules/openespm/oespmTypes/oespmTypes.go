@@ -6,10 +6,19 @@ import (
 	"sync"
 )
 
-type Request struct {
-	UUID   string
-	Key    string
-	Values url.Values
+type RespType int
+
+const (
+	PLAIN RespType = 1 + iota
+	JSON
+	XML
+)
+
+type Response struct {
+	Type    RespType
+	Content string
+	Status  int
+	Err     error
 }
 
 type Device struct {
@@ -18,6 +27,14 @@ type Device struct {
 	Name    string
 	State   int
 	Comment string
+	App     string
+}
+
+type Request struct {
+	UUID   string
+	Key    string
+	Values url.Values
+	Device Device
 }
 
 type DeviceConfigFile struct {
@@ -28,4 +45,10 @@ type DeviceConfigFile struct {
 type DeviceConfig struct {
 	Mut  sync.Mutex
 	File DeviceConfigFile
+}
+
+type JsonHeader struct {
+	HeaderVersion float32
+	AppName       string
+	AppVersion    float32
 }

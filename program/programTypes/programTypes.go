@@ -40,10 +40,11 @@ type GroupConfig struct {
 }
 
 type UiConfig struct {
-	Header   config.FileHeader
-	FileRoot string
-	Port     int
-	Recovery bool
+	Header          config.FileHeader
+	ProgramFileRoot string
+	StaticFileRoot  string
+	Port            int
+	Recovery        bool
 }
 
 type Console struct {
