@@ -2,8 +2,9 @@ package deviceManagement
 
 import (
 	"encoding/json"
-	"gouniversal/modules/openespm/oespmGlobal"
-	"gouniversal/modules/openespm/oespmTypes"
+	"errors"
+	"gouniversal/modules/openespm/globalOESPM"
+	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/shared/config"
 	"gouniversal/shared/io/file"
 	"log"
@@ -12,14 +13,14 @@ import (
 
 const DeviceFile = "data/config/openespm/devices"
 
-func SaveDevices(dc oespmTypes.DeviceConfigFile) error {
+func SaveConfig(dc typesOESPM.DeviceConfigFile) error {
 
 	dc.Header = config.BuildHeader("devices", "devices", 1.0, "device config file")
 
 	if _, err := os.Stat(DeviceFile); os.IsNotExist(err) {
 		// if not found, create default file
 
-		newDevice := make([]oespmTypes.Device, 1)
+		newDevice := make([]typesOESPM.Device, 1)
 
 		newDevice[0].UUID = "test"
 		newDevice[0].Key = "1234"
@@ -41,13 +42,13 @@ func SaveDevices(dc oespmTypes.DeviceConfigFile) error {
 	return err
 }
 
-func LoadDevices() oespmTypes.DeviceConfigFile {
+func LoadConfig() typesOESPM.DeviceConfigFile {
 
-	var dc oespmTypes.DeviceConfigFile
+	var dc typesOESPM.DeviceConfigFile
 
 	if _, err := os.Stat(DeviceFile); os.IsNotExist(err) {
 		// if not found, create default file
-		SaveDevices(dc)
+		SaveConfig(dc)
 	}
 
 	f := new(file.File)
@@ -68,21 +69,39 @@ func LoadDevices() oespmTypes.DeviceConfigFile {
 	return dc
 }
 
-func SelectDevice(uid string) oespmTypes.Device {
+func LoadDevice(uid string) (typesOESPM.Device, error) {
 
-	oespmGlobal.DeviceConfig.Mut.Lock()
-	defer oespmGlobal.DeviceConfig.Mut.Unlock()
+	globalOESPM.DeviceConfig.Mut.Lock()
+	defer globalOESPM.DeviceConfig.Mut.Unlock()
 
-	for u := 0; u < len(oespmGlobal.DeviceConfig.File.Devices); u++ {
+	for u := 0; u < len(globalOESPM.DeviceConfig.File.Devices); u++ {
 
-		// search user with UUID
-		if uid == oespmGlobal.DeviceConfig.File.Devices[u].UUID {
+		// search device with UUID
+		if uid == globalOESPM.DeviceConfig.File.Devices[u].UUID {
 
-			return oespmGlobal.DeviceConfig.File.Devices[u]
+			return globalOESPM.DeviceConfig.File.Devices[u], nil
 		}
 	}
 
-	var device oespmTypes.Device
+	var device typesOESPM.Device
 	device.State = -1
-	return device
+	return device, errors.New("LoadDevice() device not found")
+}
+
+func SaveDevice(uid string, dev typesOESPM.Device) error {
+
+	globalOESPM.DeviceConfig.Mut.Lock()
+	defer globalOESPM.DeviceConfig.Mut.Unlock()
+
+	for u := 0; u < len(globalOESPM.DeviceConfig.File.Devices); u++ {
+
+		// search device with UUID
+		if uid == globalOESPM.DeviceConfig.File.Devices[u].UUID {
+
+			globalOESPM.DeviceConfig.File.Devices[u] = dev
+			return nil
+		}
+	}
+
+	return errors.New("SaveDevice() device not found")
 }

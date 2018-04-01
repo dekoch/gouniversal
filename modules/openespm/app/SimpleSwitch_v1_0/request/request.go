@@ -4,19 +4,35 @@ package SimpleSwitch_v1_0_request
 
 import (
 	"encoding/json"
-	"gouniversal/modules/openespm/oespmTypes"
+	"gouniversal/modules/openespm/app/SimpleSwitch_v1_0"
+	"gouniversal/modules/openespm/typesOESPM"
+	"gouniversal/shared/functions"
 )
 
 type appResp struct {
 	Switch bool
 }
 
-func Request(resp *oespmTypes.Response, req *oespmTypes.Request) {
+func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 
-	resp.Type = oespmTypes.JSON
+	resp.Type = typesOESPM.JSON
 
+	// init new device
+	if functions.IsEmpty(req.Device.Config) {
+		req.Device.Config = SimpleSwitch_v1_0.InitConfig()
+	}
+
+	// read device config
+	var dc SimpleSwitch_v1_0.AppConfig
+	err := json.Unmarshal([]byte(req.Device.Config), &dc)
+	if err != nil {
+		resp.Err = err
+		return
+	}
+
+	// build json response
 	var js appResp
-	js.Switch = true
+	js.Switch = dc.Switch
 
 	b, err := json.Marshal(js)
 	if err != nil {

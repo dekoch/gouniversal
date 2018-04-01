@@ -1,8 +1,8 @@
-package pageUser
+package user
 
 import (
-	"gouniversal/program/ui/settings/pageUserEdit"
-	"gouniversal/program/ui/settings/pageUserList"
+	"gouniversal/program/ui/settings/user/pageUserEdit"
+	"gouniversal/program/ui/settings/user/pageUserList"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
 	"net/http"

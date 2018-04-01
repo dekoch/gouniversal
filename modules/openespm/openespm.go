@@ -2,7 +2,8 @@ package openespm
 
 import (
 	"gouniversal/modules/openespm/deviceManagement"
-	"gouniversal/modules/openespm/oespmGlobal"
+	"gouniversal/modules/openespm/globalOESPM"
+	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/request"
 	"gouniversal/modules/openespm/ui"
 	"gouniversal/shared/navigation"
@@ -12,9 +13,15 @@ import (
 
 func LoadConfig() {
 
-	oespmGlobal.DeviceConfig.Mut.Lock()
-	oespmGlobal.DeviceConfig.File = deviceManagement.LoadDevices()
-	oespmGlobal.DeviceConfig.Mut.Unlock()
+	globalOESPM.UiConfig.AppFileRoot = "data/ui/openespm/1.0/"
+
+	globalOESPM.DeviceConfig.Mut.Lock()
+	globalOESPM.DeviceConfig.File = deviceManagement.LoadConfig()
+	globalOESPM.DeviceConfig.Mut.Unlock()
+
+	globalOESPM.Lang.Mut.Lock()
+	globalOESPM.Lang.File = langOESPM.LoadLangFiles()
+	globalOESPM.Lang.Mut.Unlock()
 
 	request.LoadConfig()
 }

@@ -1,10 +1,10 @@
 package settings
 
 import (
+	"gouniversal/program/ui/settings/group"
 	"gouniversal/program/ui/settings/pageAbout"
 	"gouniversal/program/ui/settings/pageGeneral"
-	"gouniversal/program/ui/settings/pageGroup"
-	"gouniversal/program/ui/settings/pageUser"
+	"gouniversal/program/ui/settings/user"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
 	"net/http"
@@ -13,8 +13,8 @@ import (
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	pageGeneral.RegisterPage(page, nav)
-	pageUser.RegisterPage(page, nav)
-	pageGroup.RegisterPage(page, nav)
+	user.RegisterPage(page, nav)
+	group.RegisterPage(page, nav)
 	pageAbout.RegisterPage(page, nav)
 }
 
@@ -30,11 +30,11 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	} else if nav.IsNext("User") {
 
-		pageUser.Render(page, nav, r)
+		user.Render(page, nav, r)
 
 	} else if nav.IsNext("Group") {
 
-		pageGroup.Render(page, nav, r)
+		group.Render(page, nav, r)
 
 	} else if nav.IsNext("About") {
 

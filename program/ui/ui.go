@@ -206,7 +206,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		if (strings.HasPrefix(path, "Program:") &&
 			depth <= 2) ||
 			(strings.HasPrefix(path, "App:Program:") &&
-				depth <= 3) {
+				depth <= 4) {
 
 			if userManagement.IsPageAllowed(path, nav.User) ||
 				nav.GodMode {

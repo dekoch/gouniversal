@@ -1,6 +1,7 @@
-package oespmTypes
+package typesOESPM
 
 import (
+	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/shared/config"
 	"net/url"
 	"sync"
@@ -28,13 +29,15 @@ type Device struct {
 	State   int
 	Comment string
 	App     string
+	Config  string
 }
 
 type Request struct {
-	UUID   string
-	Key    string
-	Values url.Values
-	Device Device
+	UUID             string
+	Key              string
+	Values           url.Values
+	Device           Device
+	DeviceDataFolder string
 }
 
 type DeviceConfigFile struct {
@@ -51,4 +54,14 @@ type JsonHeader struct {
 	HeaderVersion float32
 	AppName       string
 	AppVersion    float32
+}
+
+type Page struct {
+	Content string
+	Lang    langOESPM.File
+}
+
+type UiConfig struct {
+	Header      config.FileHeader
+	AppFileRoot string
 }

@@ -173,16 +173,11 @@ func editGroup(r *http.Request, u string) error {
 				return err
 			}
 
-			if comment == "" {
-				comment = global.GroupConfig.File.Group[i].Comment
-			}
-
 			selpages := r.Form["selectedpages"]
 
 			global.GroupConfig.File.Group[i].Name = name
 			global.GroupConfig.File.Group[i].State = intState
 			global.GroupConfig.File.Group[i].Comment = comment
-
 			global.GroupConfig.File.Group[i].AllowedPages = selpages
 
 			return groupManagement.SaveGroup(global.GroupConfig.File)

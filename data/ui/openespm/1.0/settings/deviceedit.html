@@ -1,0 +1,33 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>{{.Lang.Name}}:</th>
+                <td><input type="text" class="form-control" name="name" value="{{.Device.Name}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.App}}:</th>
+                <td>{{.CmbApps}}</td>
+            </tr>
+            <tr>
+                <th>{{.Lang.State}}:</th>
+                <td>{{.CmbState}}</td>
+            </tr>
+            <tr>
+                <th>{{.Lang.Comment}}:</th>
+                <td><input type="text" class="form-control" name="comment" value="{{.Device.Comment}}"></td>
+            </tr>
+            <tr>
+                <th>UUID:</th>
+                <td>{{.Device.UUID}}</td>
+            </tr>
+            <tr>
+                <th>Key:</th>
+                <td>{{.Device.Key}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title={{.Lang.Apply}}></button>
+    <button class="btn btn-danger fa fa-trash" type="submit" name="edit" value="delete" title={{.Lang.Delete}}></button>
+</form>

@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"gouniversal/modules/openespm/app/appManagement"
 	"gouniversal/modules/openespm/deviceManagement"
-	"gouniversal/modules/openespm/oespmTypes"
+	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/shared/functions"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
 
-	req := new(oespmTypes.Request)
+	startTime := time.Now()
+
+	req := new(typesOESPM.Request)
 
 	req.Values = r.URL.Query()
 	fmt.Println("GET params:", req.Values)
@@ -20,13 +24,13 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	req.UUID = req.Values.Get("id")
 	req.Key = req.Values.Get("key")
 
-	resp := new(oespmTypes.Response)
-	resp.Type = oespmTypes.PLAIN
+	resp := new(typesOESPM.Response)
+	resp.Type = typesOESPM.PLAIN
 	resp.Content = ""
 	resp.Status = http.StatusOK
 	resp.Err = nil
 
-	for i := 0; i <= 4; i++ {
+	for i := 0; i <= 5; i++ {
 		if resp.Err == nil {
 			switch i {
 			case 0:
@@ -42,9 +46,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				}
 
 			case 2:
-				req.Device = deviceManagement.SelectDevice(req.UUID)
-				if req.Device.State < 0 {
-					resp.Err = errors.New("device not found")
+				req.Device, resp.Err = deviceManagement.LoadDevice(req.UUID)
+				if resp.Err != nil {
 					resp.Status = http.StatusForbidden
 				}
 
@@ -56,6 +59,10 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 			case 4:
 				appManagement.Request(resp, req)
+
+			case 5:
+				resp.Err = deviceManagement.SaveDevice(req.UUID, req.Device)
+				//deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
 			}
 		}
 	}
@@ -70,15 +77,21 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	} else {
 
 		switch resp.Type {
-		case oespmTypes.JSON:
+		case typesOESPM.JSON:
 			w.Header().Set("Content-Type", "application/json")
 
-		case oespmTypes.XML:
+		case typesOESPM.XML:
 			w.Header().Set("Content-Type", "application/xml")
 		}
 
 		w.Write([]byte(resp.Content))
 	}
+
+	t := time.Now()
+	elapsed := t.Sub(startTime)
+	f := elapsed.Seconds() * 1000.0
+	fmt.Println(strconv.FormatFloat(f, 'f', 1, 64) + "ms")
+
 }
 
 func LoadConfig() {

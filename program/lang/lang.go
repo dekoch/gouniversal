@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-const LangDir = "data/lang/"
+const LangDir = "data/lang/program/"
 
 // menu
 type MenuProgram struct {

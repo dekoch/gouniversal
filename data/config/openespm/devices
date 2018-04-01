@@ -1,1 +1,1 @@
-{"Header":{"HeaderVersion":1,"FileName":"devices","ContentName":"devices","ContentVersion":1,"Comment":"device config file"},"Devices":[{"UUID":"test","Key":"1234","Name":"Test","State":1,"Comment":"","App":"SimpleSwitch_v1_0"}]}
+{"Header":{"HeaderVersion":1,"FileName":"devices","ContentName":"devices","ContentVersion":1,"Comment":"device config file"},"Devices":[{"UUID":"test","Key":"1234","Name":"Test","State":1,"Comment":"","App":"SimpleSwitch_v1_0","Config":""}]}
