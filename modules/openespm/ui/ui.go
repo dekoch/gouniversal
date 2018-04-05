@@ -5,7 +5,6 @@ import (
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/modules/openespm/ui/settings"
-	"gouniversal/program/global"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
 	"net/http"
@@ -25,9 +24,9 @@ func selectLang(l string) langOESPM.File {
 	defer globalOESPM.Lang.Mut.Unlock()
 
 	// search lang
-	for i := 0; i < len(global.Lang.File); i++ {
+	for i := 0; i < len(globalOESPM.Lang.File); i++ {
 
-		if l == global.Lang.File[i].Header.FileName {
+		if l == globalOESPM.Lang.File[i].Header.FileName {
 
 			return globalOESPM.Lang.File[i]
 		}
@@ -35,9 +34,9 @@ func selectLang(l string) langOESPM.File {
 
 	// if nothing found
 	// search "en"
-	for i := 0; i < len(global.Lang.File); i++ {
+	for i := 0; i < len(globalOESPM.Lang.File); i++ {
 
-		if "en" == global.Lang.File[i].Header.FileName {
+		if "en" == globalOESPM.Lang.File[i].Header.FileName {
 
 			return globalOESPM.Lang.File[i]
 		}

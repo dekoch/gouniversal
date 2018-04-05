@@ -8,6 +8,7 @@ import (
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
+	"gouniversal/shared/alert"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/navigation"
 	"html/template"
@@ -53,6 +54,8 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 		err := editDevice(r, id)
 		if err == nil {
 			nav.RedirectPath("App:Program:openESPM:Settings:Device:List", false)
+		} else {
+			alert.Message(alert.ERROR, page.Lang.Alert.Error, err.Error(), nav.CurrentPath, nav.User.UUID)
 		}
 
 	} else if button == "delete" {

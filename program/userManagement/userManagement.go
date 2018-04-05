@@ -85,13 +85,6 @@ func SelectUser(uid string) types.User {
 
 	for u := 0; u < len(global.UserConfig.File.User); u++ {
 
-		// if no uuid is set, search for public user
-		if uid == "" {
-			if global.UserConfig.File.User[u].State == 0 {
-				uid = global.UserConfig.File.User[u].UUID
-			}
-		}
-
 		// search user with UUID
 		if uid == global.UserConfig.File.User[u].UUID {
 

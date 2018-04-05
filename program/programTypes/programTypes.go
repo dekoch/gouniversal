@@ -44,6 +44,7 @@ type UiConfig struct {
 	ProgramFileRoot string
 	StaticFileRoot  string
 	Port            int
+	MaxGuests       int
 	Recovery        bool
 }
 

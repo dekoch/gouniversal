@@ -64,6 +64,16 @@
             </form>
         </header>
         <main role="main">
+          <p id="alert"></p>
+          <script type="text/javascript">
+              // Create a new HTML5 EventSource
+              var source = new EventSource('/alert/?uuid={{.UUID}}');
+              // Create a callback for when a new message is received.
+              source.onmessage = function(e) {
+                  // Append the `data` attribute of the message to the DOM.
+                  document.getElementById("alert").innerHTML = e.data;
+              };
+          </script>
           <div class="app-template">
               {{.Content}}
           </div>

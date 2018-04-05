@@ -48,9 +48,17 @@ type Settings struct {
 	Device SettingsDevice
 }
 
+type Alert struct {
+	Success string
+	Info    string
+	Warning string
+	Error   string
+}
+
 type File struct {
 	Header   config.FileHeader
 	Settings Settings
+	Alert    Alert
 }
 
 type Global struct {
@@ -83,6 +91,11 @@ func SaveLang(lang File, n string) error {
 		lang.Settings.Device.Edit.Comment = "Comment"
 		lang.Settings.Device.Edit.Apply = "Apply"
 		lang.Settings.Device.Edit.Delete = "Delete"
+
+		lang.Alert.Success = "Success"
+		lang.Alert.Info = "Info"
+		lang.Alert.Warning = "Warning"
+		lang.Alert.Error = "Error"
 	}
 
 	b, err := json.Marshal(lang)

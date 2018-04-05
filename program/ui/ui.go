@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gouniversal/modules"
 	"gouniversal/program/global"
+	"gouniversal/program/guestManagement"
 	"gouniversal/program/lang"
 	"gouniversal/program/programTypes"
 	"gouniversal/program/ui/pageHome"
@@ -12,6 +13,7 @@ import (
 	"gouniversal/program/ui/settings"
 	"gouniversal/program/ui/uifunc"
 	"gouniversal/program/userManagement"
+	"gouniversal/shared/alert"
 	"gouniversal/shared/config"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/io/file"
@@ -47,10 +49,10 @@ func SaveUiConfig(uc programTypes.UiConfig) error {
 
 	if _, err := os.Stat(UiConfigFile); os.IsNotExist(err) {
 		// if not found, create default file
-
 		uc.ProgramFileRoot = "data/ui/program/1.0/"
 		uc.StaticFileRoot = "data/ui/static/1.0/"
 		uc.Port = 8080
+		uc.MaxGuests = 20
 		uc.Recovery = false
 	}
 
@@ -142,6 +144,16 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 	if err == nil {
 
 		nav.User = userManagement.SelectUser(u)
+
+		if nav.User.State < 0 {
+			// if no user found
+			nav.User = guestManagement.SelectGuest(u)
+		}
+
+		if nav.User.State < 0 {
+			// if no guest found, create new
+			nav.User = guestManagement.NewGuest()
+		}
 	}
 
 	// for debugging
@@ -157,7 +169,7 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 func initCookies(w http.ResponseWriter, r *http.Request) {
 	nav := new(navigation.Navigation)
 	nav.Path = "Account:Login"
-	nav.User.UUID = ""
+	nav.User = guestManagement.NewGuest()
 	nav.GodMode = false
 
 	setSession(nav, w, r)
@@ -174,6 +186,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		MenuAppHidden     template.HTML
 		MenuAccountTitle  template.HTML
 		MenuAccount       template.HTML
+		UUID              template.HTML
 		Content           template.HTML
 	}
 	var p program
@@ -287,6 +300,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	p.MenuProgram = template.HTML(menuProgram)
 	p.MenuApp = template.HTML(menuApp)
 	p.MenuAccount = template.HTML(menuAccount)
+	p.UUID = template.HTML(nav.User.UUID)
 	p.Content = template.HTML(page.Content)
 
 	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "program.html")
@@ -416,7 +430,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 			} else if nav.IsNext("Logout") {
 
-				nav.User = userManagement.SelectUser("")
+				nav.User = guestManagement.NewGuest()
 				nav.RedirectPath("Account:Login", false)
 			}
 
@@ -461,8 +475,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	t := time.Now()
 	elapsed := t.Sub(start)
 	f := elapsed.Seconds() * 1000.0
-	fmt.Print(nav.Path)
-	fmt.Println(" " + strconv.FormatFloat(f, 'f', 1, 64) + "ms")
+	fmt.Println(nav.Path + " " + strconv.FormatFloat(f, 'f', 1, 64) + "ms")
 }
 
 func handleRecovery(w http.ResponseWriter, r *http.Request) {
@@ -512,8 +525,8 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 func (ui *UI) StartServer() {
 	fmt.Println("starting webserver...")
 
-	fmt.Print("ProgramFileRoot: ")
-	fmt.Println(global.UiConfig.ProgramFileRoot)
+	fmt.Println("ProgramFileRoot: " + global.UiConfig.ProgramFileRoot)
+	fmt.Println("StaticFileRoot: " + global.UiConfig.StaticFileRoot)
 
 	if _, err := os.Stat(global.UiConfig.ProgramFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
@@ -549,6 +562,7 @@ func (ui *UI) StartServer() {
 		u := uuid.Must(uuid.NewRandom())
 		cookieName = u.String()
 
+		alert.Start()
 		mod.LoadConfig()
 
 		// configure server

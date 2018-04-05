@@ -137,6 +137,13 @@ type Exit struct {
 	Title string
 }
 
+type Alert struct {
+	Success string
+	Info    string
+	Warning string
+	Error   string
+}
+
 type File struct {
 	Header   config.FileHeader
 	Menu     Menu
@@ -145,6 +152,7 @@ type File struct {
 	Login    Login
 	Logout   Logout
 	Exit     Exit
+	Alert    Alert
 }
 
 type Global struct {
@@ -222,6 +230,11 @@ func SaveLang(lang File, n string) error {
 		lang.Logout.Title = "Logout"
 
 		lang.Exit.Title = "Exit"
+
+		lang.Alert.Success = "Success"
+		lang.Alert.Info = "Info"
+		lang.Alert.Warning = "Warning"
+		lang.Alert.Error = "Error"
 	}
 
 	b, err := json.Marshal(lang)
