@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gouniversal/modules/openespm/app/appManagement"
 	"gouniversal/modules/openespm/deviceManagement"
+	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/shared/functions"
 	"net/http"
@@ -62,7 +63,6 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 			case 5:
 				resp.Err = deviceManagement.SaveDevice(req.UUID, req.Device)
-				//deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
 			}
 		}
 	}
@@ -91,7 +91,6 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	elapsed := t.Sub(startTime)
 	f := elapsed.Seconds() * 1000.0
 	fmt.Println(strconv.FormatFloat(f, 'f', 1, 64) + "ms")
-
 }
 
 func LoadConfig() {
@@ -100,5 +99,8 @@ func LoadConfig() {
 }
 
 func Exit() {
-
+	// save device config on exit
+	globalOESPM.DeviceConfig.Mut.Lock()
+	deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+	globalOESPM.DeviceConfig.Mut.Unlock()
 }

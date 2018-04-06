@@ -10,15 +10,15 @@ import (
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("App:Program:openESPM:Settings:Device", page.Lang.Settings.Device.Title)
+	nav.Sitemap.Register("App:openESPM:Settings:Device", page.Lang.Settings.Device.Title)
 	pageDeviceList.RegisterPage(page, nav)
 	pageDeviceEdit.RegisterPage(page, nav)
 }
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {
 
-	if nav.Path == "App:Program:openESPM:Settings:Device" {
-		nav.NavigatePath("App:Program:openESPM:Settings:Device:List")
+	if nav.Path == "App:openESPM:Settings:Device" {
+		nav.NavigatePath("App:openESPM:Settings:Device:List")
 	}
 
 	if nav.IsNext("List") {

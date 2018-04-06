@@ -1,6 +1,7 @@
 package typesOESPM
 
 import (
+	"encoding/json"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/shared/config"
 	"net/url"
@@ -30,6 +31,19 @@ type Device struct {
 	Comment string
 	App     string
 	Config  string
+}
+
+func (d Device) Unmarshal(v interface{}) error {
+	return json.Unmarshal([]byte(d.Config), &v)
+}
+
+func (d *Device) Marshal(v interface{}) error {
+	b, err := json.Marshal(v)
+	if err == nil {
+		d.Config = string(b[:])
+	}
+
+	return err
 }
 
 type Request struct {

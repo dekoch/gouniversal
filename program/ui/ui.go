@@ -242,7 +242,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 		// menuApp
 		if (strings.HasPrefix(path, "App:") &&
-			depth <= 2) &&
+			depth <= 3) &&
 			strings.HasPrefix(path, "App:Program:") == false &&
 			strings.HasPrefix(path, "App:Account:") == false {
 
@@ -269,7 +269,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		if (strings.HasPrefix(path, "Account:") &&
 			depth <= 2) ||
 			(strings.HasPrefix(path, "App:Account:") &&
-				depth <= 3) {
+				depth <= 4) {
 
 			if userManagement.IsPageAllowed(path, nav.User) ||
 				nav.GodMode {

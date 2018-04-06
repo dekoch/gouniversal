@@ -22,7 +22,7 @@ import (
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("App:Program:openESPM:Settings:Device:Edit", page.Lang.Settings.Device.Edit.Title)
+	nav.Sitemap.Register("App:openESPM:Settings:Device:Edit", page.Lang.Settings.Device.Edit.Title)
 }
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {

@@ -23,16 +23,19 @@ func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 	}
 
 	// read device config
-	var dc SimpleSwitch_v1_0.AppConfig
-	err := json.Unmarshal([]byte(req.Device.Config), &dc)
+	var config SimpleSwitch_v1_0.AppConfig
+	err := req.Device.Unmarshal(&config)
 	if err != nil {
 		resp.Err = err
 		return
 	}
 
+	// test
+	//config.Switch = !config.Switch
+
 	// build json response
 	var js appResp
-	js.Switch = dc.Switch
+	js.Switch = config.Switch
 
 	b, err := json.Marshal(js)
 	if err != nil {
@@ -40,4 +43,7 @@ func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 	} else {
 		resp.Content = string(b[:])
 	}
+
+	// write device config
+	resp.Err = req.Device.Marshal(config)
 }
