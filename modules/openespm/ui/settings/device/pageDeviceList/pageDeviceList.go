@@ -43,7 +43,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 		tbody += "<th scope='row'>" + strconv.Itoa(intIndex) + "</th>"
 		tbody += "<td>" + dev.Name + "</td>"
 		tbody += "<td>" + dev.App + "</td>"
-		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:Program:openESPM:Settings:Device:Edit$UUID=" + dev.UUID + "\" title=\"" + dl.Lang.Edit + "\"></button></td>"
+		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:openESPM:Settings:Device:Edit$UUID=" + dev.UUID + "\" title=\"" + dl.Lang.Edit + "\"></button></td>"
 		tbody += "</tr>"
 	}
 	globalOESPM.DeviceConfig.Mut.Unlock()

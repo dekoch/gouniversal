@@ -53,7 +53,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 		err := editDevice(r, id)
 		if err == nil {
-			nav.RedirectPath("App:Program:openESPM:Settings:Device:List", false)
+			nav.RedirectPath("App:openESPM:Settings:Device:List", false)
 		} else {
 			alert.Message(alert.ERROR, page.Lang.Alert.Error, err.Error(), nav.CurrentPath, nav.User.UUID)
 		}
@@ -62,7 +62,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 		err := deleteDevice(id)
 		if err == nil {
-			nav.RedirectPath("App:Program:openESPM:Settings:Device:List", false)
+			nav.RedirectPath("App:openESPM:Settings:Device:List", false)
 		}
 	}
 
