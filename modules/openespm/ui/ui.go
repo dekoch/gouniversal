@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"gouniversal/modules/openespm/app"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
@@ -16,6 +17,19 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 	appPage.Lang = selectLang(nav.User.Lang)
 
 	settings.RegisterPage(appPage, nav)
+
+	// register devices
+	globalOESPM.DeviceConfig.Mut.Lock()
+	for i := 0; i < len(globalOESPM.DeviceConfig.File.Devices); i++ {
+
+		dev := globalOESPM.DeviceConfig.File.Devices[i]
+
+		// only active devices
+		if dev.State == 1 {
+			nav.Sitemap.Register("App", "App:openESPM:App:"+dev.App+":"+dev.UUID, dev.Name)
+		}
+	}
+	globalOESPM.DeviceConfig.Mut.Unlock()
 }
 
 func selectLang(l string) langOESPM.File {
@@ -56,6 +70,10 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	if nav.IsNext("Settings") {
 
 		settings.Render(appPage, nav, r)
+
+	} else if nav.IsNext("App") {
+
+		app.Render(appPage, nav, r)
 	}
 
 	page.Content += appPage.Content

@@ -3,7 +3,7 @@ package pageDeviceEdit
 import (
 	"errors"
 	"fmt"
-	"gouniversal/modules/openespm/app/appManagement"
+	"gouniversal/modules/openespm/app"
 	"gouniversal/modules/openespm/deviceManagement"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/langOESPM"
@@ -22,7 +22,7 @@ import (
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("App:openESPM:Settings:Device:Edit", page.Lang.Settings.Device.Edit.Title)
+	nav.Sitemap.Register("", "App:openESPM:Settings:Device:Edit", page.Lang.Settings.Device.Edit.Title)
 }
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {
@@ -79,7 +79,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	// combobox App
 	cmbApps := "<select name=\"app\">"
-	apps := appManagement.AppList()
+	apps := app.List()
 
 	for i := 0; i < len(apps); i++ {
 
@@ -141,8 +141,9 @@ func newDevice() string {
 	newDevice[0].State = 1 // active
 	newDevice[0].Key = key.String()
 
-	apps := appManagement.AppList()
+	apps := app.List()
 
+	// select first app as default
 	if len(apps) > 0 {
 		newDevice[0].App = apps[0]
 	}
@@ -160,12 +161,16 @@ func editDevice(r *http.Request, u string) error {
 	app, _ := functions.CheckFormInput("app", r)
 	state, _ := functions.CheckFormInput("state", r)
 	comment, errComment := functions.CheckFormInput("comment", r)
+	id, _ := functions.CheckFormInput("uuid", r)
+	key, _ := functions.CheckFormInput("key", r)
 
 	// check input
 	if functions.IsEmpty(name) ||
 		functions.IsEmpty(app) ||
 		functions.IsEmpty(state) ||
 		govalidator.IsNumeric(state) == false ||
+		functions.IsEmpty(id) ||
+		functions.IsEmpty(key) ||
 		// content not required
 		errComment != nil {
 
@@ -188,6 +193,8 @@ func editDevice(r *http.Request, u string) error {
 			globalOESPM.DeviceConfig.File.Devices[i].App = app
 			globalOESPM.DeviceConfig.File.Devices[i].State = intState
 			globalOESPM.DeviceConfig.File.Devices[i].Comment = comment
+			globalOESPM.DeviceConfig.File.Devices[i].UUID = id
+			globalOESPM.DeviceConfig.File.Devices[i].Key = key
 
 			return deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
 		}

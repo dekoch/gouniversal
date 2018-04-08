@@ -38,9 +38,7 @@ func (m *Modules) RegisterPage(page *types.Page, nav *navigation.Navigation) {
 func (m *Modules) Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	if modOpenESPM {
-		if nav.IsNext("openESPM") ||
-			nav.IsNext("Program:openESPM") ||
-			nav.IsNext("Account:openESPM") {
+		if nav.IsNext("openESPM") {
 
 			openespm.Render(page, nav, r)
 		}

@@ -14,8 +14,8 @@ func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {
 
-	if nav.Path == "App:Program:openESPM:Settings" {
-		nav.NavigatePath("App:Program:openESPM:Settings:Device")
+	if nav.Path == "App:openESPM:Settings" {
+		nav.NavigatePath("App:openESPM:Settings:Device")
 	}
 
 	if nav.IsNext("Device") {

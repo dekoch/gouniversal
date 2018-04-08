@@ -3,7 +3,7 @@ package request
 import (
 	"errors"
 	"fmt"
-	"gouniversal/modules/openespm/app/appManagement"
+	"gouniversal/modules/openespm/app"
 	"gouniversal/modules/openespm/deviceManagement"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
@@ -31,7 +31,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	resp.Status = http.StatusOK
 	resp.Err = nil
 
-	for i := 0; i <= 5; i++ {
+	for i := 0; i <= 6; i++ {
 		if resp.Err == nil {
 			switch i {
 			case 0:
@@ -59,9 +59,15 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				}
 
 			case 4:
-				appManagement.Request(resp, req)
+				if req.Device.State == 2 {
+					resp.Err = errors.New("device is inactive")
+					resp.Status = http.StatusForbidden
+				}
 
 			case 5:
+				app.Request(resp, req)
+
+			case 6:
 				resp.Err = deviceManagement.SaveDevice(req.UUID, req.Device)
 			}
 		}

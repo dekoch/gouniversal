@@ -6,9 +6,9 @@ import (
 )
 
 type page struct {
+	Menu  string
 	Path  string
 	Title string
-	Depth int
 }
 
 type Sitemap struct {
@@ -19,13 +19,13 @@ type Sitemap struct {
 // e.g.
 // pagepath = "App:Program:MyApp"
 // title = "MyApp"
-func (site *Sitemap) Register(path string, title string) {
+func (site *Sitemap) Register(menu string, path string, title string) {
 
 	newpage := make([]page, 1)
 
+	newpage[0].Menu = menu
 	newpage[0].Path = path
 	newpage[0].Title = title
-	newpage[0].Depth = strings.Count(path, ":")
 
 	site.Pages = append(newpage, site.Pages...)
 }

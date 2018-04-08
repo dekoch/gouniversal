@@ -4,7 +4,7 @@ and use a prepared user/group administration, navigation and alarm system.
 
 HTML front end based on **Bootstrap v4**.
 
-## Files and Folders
+### Files and Folders
 ```
 gouniversal/
 ├── data/ (Folder to ship with binary)
@@ -35,3 +35,10 @@ gouniversal/
 │              Please add other things as module)
 ├── README.md
 └── shared/ (shared functions for program and modules)
+```
+# Applications
+## openESPM
+open-source Manager for IoT Devices
+ - SimpleSwitch v1.0
+
+Device Firmware: [https://github.com/dekoch/GOopenESPM](https://github.com/dekoch/GOopenESPM)

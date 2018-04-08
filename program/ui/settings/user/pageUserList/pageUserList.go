@@ -14,7 +14,7 @@ import (
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("Program:Settings:User:List", page.Lang.Settings.User.UserList.Title)
+	nav.Sitemap.Register("", "Program:Settings:User:List", page.Lang.Settings.User.UserList.Title)
 }
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {

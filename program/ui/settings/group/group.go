@@ -10,7 +10,7 @@ import (
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("Program:Settings:Group", page.Lang.Settings.Group.Title)
+	nav.Sitemap.Register("Program", "Program:Settings:Group", page.Lang.Settings.Group.Title)
 	pageGroupList.RegisterPage(page, nav)
 	pageGroupEdit.RegisterPage(page, nav)
 }

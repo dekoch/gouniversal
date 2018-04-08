@@ -14,7 +14,7 @@ import (
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("App:openESPM:Settings:Device:List", page.Lang.Settings.Device.List.Title)
+	nav.Sitemap.Register("", "App:openESPM:Settings:Device:List", page.Lang.Settings.Device.List.Title)
 }
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {

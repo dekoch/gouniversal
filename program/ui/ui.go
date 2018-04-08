@@ -25,7 +25,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -196,94 +195,45 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	p.MenuProgramHidden = "hidden"
 	menuProgram := ""
-	lastProgramDepth := -1
 
 	p.MenuAppHidden = "hidden"
 	menuApp := ""
-	lastAppDepth := -1
 
 	menuAccount := ""
-	lastAccountDepth := -1
 
+	menu := ""
 	path := ""
 	title := ""
-	depth := -1
 
 	for i := len(nav.Sitemap.Pages) - 1; i >= 0; i-- {
 
+		menu = nav.Sitemap.Pages[i].Menu
 		path = nav.Sitemap.Pages[i].Path
 		title = nav.Sitemap.Pages[i].Title
-		depth = nav.Sitemap.Pages[i].Depth
 
 		// menuProgram
-		if (strings.HasPrefix(path, "Program:") &&
-			depth <= 2) ||
-			(strings.HasPrefix(path, "App:Program:") &&
-				depth <= 4) {
+		if menu == "Program" {
 
 			if userManagement.IsPageAllowed(path, nav.User) ||
 				nav.GodMode {
-
-				if lastProgramDepth == -1 {
-					lastProgramDepth = depth
-				}
-
-				// if menu depth changed, add divider
-				if depth != lastProgramDepth {
-					lastProgramDepth = depth
-
-					menuProgram += "<div class=\"dropdown-divider\"></div>"
-				}
 
 				menuProgram += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + path + "\">" + title + "</button>"
 				p.MenuProgramHidden = ""
 			}
-		}
-
-		// menuApp
-		if (strings.HasPrefix(path, "App:") &&
-			depth <= 3) &&
-			strings.HasPrefix(path, "App:Program:") == false &&
-			strings.HasPrefix(path, "App:Account:") == false {
+		} else if menu == "App" {
+			// menuApp
 
 			if userManagement.IsPageAllowed(path, nav.User) ||
 				nav.GodMode {
-
-				if lastAppDepth == -1 {
-					lastAppDepth = depth
-				}
-
-				// if menu depth changed, add divider
-				if depth != lastAppDepth {
-					lastAppDepth = depth
-
-					menuApp += "<div class=\"dropdown-divider\"></div>"
-				}
 
 				menuApp += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + path + "\">" + title + "</button>"
 				p.MenuAppHidden = ""
 			}
-		}
-
-		// menuAccount
-		if (strings.HasPrefix(path, "Account:") &&
-			depth <= 2) ||
-			(strings.HasPrefix(path, "App:Account:") &&
-				depth <= 4) {
+		} else if menu == "Account" {
+			// menuAccount
 
 			if userManagement.IsPageAllowed(path, nav.User) ||
 				nav.GodMode {
-
-				if lastAccountDepth == -1 {
-					lastAccountDepth = depth
-				}
-
-				// if menu depth changed, add divider
-				if depth != lastAccountDepth {
-					lastAccountDepth = depth
-
-					menuAccount += "<div class=\"dropdown-divider\"></div>"
-				}
 
 				menuAccount += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + path + "\">" + title + "</button>"
 			}
@@ -368,7 +318,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	pageHome.RegisterPage(page, nav)
 	mod.RegisterPage(page, nav)
 	settings.RegisterPage(page, nav)
-	nav.Sitemap.Register("Program:Exit", page.Lang.Exit.Title)
+	nav.Sitemap.Register("Program", "Program:Exit", page.Lang.Exit.Title)
 	pageLogin.RegisterPage(page, nav)
 
 	newPath := r.FormValue("navigation")

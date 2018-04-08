@@ -71,6 +71,8 @@ func (nav *Navigation) IsNext(page string) bool {
 				nav.CurrentPath = nav.CurrentPath[1:]
 			}
 
+			//fmt.Println(nav.CurrentPath)
+
 			return true
 		}
 	}
@@ -82,16 +84,7 @@ func (nav *Navigation) NavigatePath(path string) {
 
 	if len(path) > 0 {
 
-		var p string
-		index := strings.Index(path, "$")
-
-		if index > 0 {
-			p = path[:index]
-		} else {
-			p = path
-		}
-
-		if userManagement.IsPageAllowed(p, nav.User) ||
+		if userManagement.IsPageAllowed(path, nav.User) ||
 			nav.GodMode {
 
 			nav.Path = path

@@ -55,10 +55,16 @@ type Alert struct {
 	Error   string
 }
 
+type SimpleSwitch_v1_0 struct {
+	On  string
+	Off string
+}
+
 type File struct {
-	Header   config.FileHeader
-	Settings Settings
-	Alert    Alert
+	Header            config.FileHeader
+	Settings          Settings
+	Alert             Alert
+	SimpleSwitch_v1_0 SimpleSwitch_v1_0
 }
 
 type Global struct {
@@ -96,6 +102,9 @@ func SaveLang(lang File, n string) error {
 		lang.Alert.Info = "Info"
 		lang.Alert.Warning = "Warning"
 		lang.Alert.Error = "Error"
+
+		lang.SimpleSwitch_v1_0.On = "On"
+		lang.SimpleSwitch_v1_0.Off = "Off"
 	}
 
 	b, err := json.Marshal(lang)

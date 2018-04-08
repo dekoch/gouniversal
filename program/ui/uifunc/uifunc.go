@@ -4,6 +4,7 @@ import (
 	"gouniversal/program/global"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/types"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -69,4 +70,18 @@ func HashPassword(password string) (string, error) {
 func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func RemovePFromPath(path string) string {
+
+	index := strings.Index(path, "$")
+
+	var p string
+	if index > 0 {
+		p = path[:index]
+	} else {
+		p = path
+	}
+
+	return p
 }

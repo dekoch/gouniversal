@@ -10,7 +10,7 @@ import (
 )
 
 type appResp struct {
-	Switch bool
+	Switch string
 }
 
 func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
@@ -35,7 +35,11 @@ func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 
 	// build json response
 	var js appResp
-	js.Switch = config.Switch
+	if config.Switch {
+		js.Switch = "on"
+	} else {
+		js.Switch = "off"
+	}
 
 	b, err := json.Marshal(js)
 	if err != nil {

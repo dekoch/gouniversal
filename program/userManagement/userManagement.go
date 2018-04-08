@@ -111,16 +111,16 @@ func IsUserInGroup(gid string, user types.User) bool {
 	return false
 }
 
-func IsPageAllowed(pname string, user types.User) bool {
+func IsPageAllowed(path string, user types.User) bool {
 
 	// always allowed pages
-	if pname == "Account:Login" ||
-		pname == "Account:Logout" {
+	if path == "Account:Login" ||
+		path == "Account:Logout" {
 
 		return true
 	}
 
-	if pname == "Program:Home" &&
+	if path == "Program:Home" &&
 		user.State == 1 {
 
 		return true
@@ -133,7 +133,7 @@ func IsPageAllowed(pname string, user types.User) bool {
 
 	// test each group
 	for i := 0; i < len(user.Groups); i++ {
-		if groupManagement.IsPageAllowed(pname, user.Groups[i], true) {
+		if groupManagement.IsPageAllowed(path, user.Groups[i], true) {
 			return true
 		}
 	}

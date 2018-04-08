@@ -1,17 +1,15 @@
-<div class="app-template">
-    <form method="post">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th scope="col"><button class="btn btn-default fa fa-users" type="submit" name="navigation" value="Program:Settings:Group:Edit$UUID=new" title="{{.Lang.AddGroup}}"></button></th>
-                        <th scope="col">{{.Lang.Name}}</th>
-                        <th scope="col">{{.Lang.Comment}}</th>
-                        <th scope="col">{{.Lang.Options}}</th>
-                    </tr>
-                </thead>
-            <tbody>
-                {{.GroupList}}
-            </tbody>
-        </table>
-    </form>
-</div>
+<form method="post">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col"><button class="btn btn-default fa fa-users" type="submit" name="navigation" value="Program:Settings:Group:Edit$UUID=new" title="{{.Lang.AddGroup}}"></button></th>
+                <th scope="col">{{.Lang.Name}}</th>
+                <th scope="col">{{.Lang.Comment}}</th>
+                <th scope="col">{{.Lang.Options}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{.GroupList}}
+        </tbody>
+    </table>
+</form>

@@ -8,7 +8,7 @@ import (
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("Program:Settings:About", page.Lang.Settings.About.Title)
+	nav.Sitemap.Register("Program", "Program:Settings:About", page.Lang.Settings.About.Title)
 }
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {

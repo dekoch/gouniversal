@@ -12,7 +12,7 @@ import (
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("Program:Home", page.Lang.Home.Title)
+	nav.Sitemap.Register("Program", "Program:Home", page.Lang.Home.Title)
 }
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {

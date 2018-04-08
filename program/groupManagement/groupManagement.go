@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"gouniversal/program/global"
 	"gouniversal/program/programTypes"
+	"gouniversal/program/ui/uifunc"
 	"gouniversal/shared/config"
 	"gouniversal/shared/io/file"
 	"log"
@@ -69,7 +70,7 @@ func LoadGroup() programTypes.GroupConfigFile {
 	return gc
 }
 
-func IsPageAllowed(pname string, gid string, checkState bool) bool {
+func IsPageAllowed(path string, gid string, checkState bool) bool {
 
 	global.GroupConfig.Mut.Lock()
 	defer global.GroupConfig.Mut.Unlock()
@@ -87,7 +88,10 @@ func IsPageAllowed(pname string, gid string, checkState bool) bool {
 
 			for p := 0; p < len(global.GroupConfig.File.Group[g].AllowedPages); p++ {
 
-				if pname == global.GroupConfig.File.Group[g].AllowedPages[p] {
+				allowed := uifunc.RemovePFromPath(global.GroupConfig.File.Group[g].AllowedPages[p])
+				requested := uifunc.RemovePFromPath(path)
+
+				if requested == allowed {
 
 					return true
 				}
