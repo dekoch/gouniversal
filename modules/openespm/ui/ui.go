@@ -2,6 +2,7 @@ package ui
 
 import (
 	"gouniversal/modules/openespm/app"
+	"gouniversal/modules/openespm/appManagement"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
@@ -9,6 +10,7 @@ import (
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
 	"net/http"
+	"strings"
 )
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
@@ -18,18 +20,18 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	settings.RegisterPage(appPage, nav)
 
-	// register devices
-	globalOESPM.DeviceConfig.Mut.Lock()
-	for i := 0; i < len(globalOESPM.DeviceConfig.File.Devices); i++ {
+	// register apps
+	globalOESPM.AppConfig.Mut.Lock()
+	for i := 0; i < len(globalOESPM.AppConfig.File.Apps); i++ {
 
-		dev := globalOESPM.DeviceConfig.File.Devices[i]
+		a := globalOESPM.AppConfig.File.Apps[i]
 
-		// only active devices
-		if dev.State == 1 {
-			nav.Sitemap.Register("App", "App:openESPM:App:"+dev.App+":"+dev.UUID, dev.Name)
+		// only active apps
+		if a.State == 1 {
+			nav.Sitemap.Register("App", "App:openESPM:App:"+a.App+":"+a.UUID, a.Name)
 		}
 	}
-	globalOESPM.DeviceConfig.Mut.Unlock()
+	globalOESPM.AppConfig.Mut.Unlock()
 }
 
 func selectLang(l string) langOESPM.File {
@@ -73,8 +75,36 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	} else if nav.IsNext("App") {
 
-		app.Render(appPage, nav, r)
+		// load config for selected app
+		err := loadAppConfig(appPage, nav)
+		if err == nil {
+			app.Render(appPage, nav, r)
+
+			// save config to ram
+			appManagement.SaveApp(appPage.App)
+
+			// save config to file
+			globalOESPM.AppConfig.Mut.Lock()
+			appManagement.SaveConfig(globalOESPM.AppConfig.File)
+			globalOESPM.AppConfig.Mut.Unlock()
+		}
 	}
 
 	page.Content += appPage.Content
+}
+
+func loadAppConfig(page *typesOESPM.Page, nav *navigation.Navigation) error {
+
+	// search app UUID inside path
+	index := strings.LastIndex(nav.Path, ":")
+
+	var u string
+	if index > 0 {
+		u = nav.Path[index+1:]
+	}
+
+	var err error
+	page.App, err = appManagement.LoadApp(u)
+
+	return err
 }

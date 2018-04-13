@@ -13,6 +13,7 @@ import (
 	"gouniversal/shared/navigation"
 	"html/template"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -150,7 +151,11 @@ func newDevice() string {
 
 	globalOESPM.DeviceConfig.File.Devices = append(newDevice, globalOESPM.DeviceConfig.File.Devices...)
 
-	deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+	err := deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+	if err == nil {
+		deviceDataFolder := globalOESPM.DeviceDataFolder + newDevice[0].UUID + "/"
+		os.MkdirAll(deviceDataFolder, os.ModePerm)
+	}
 
 	return u.String()
 }
@@ -223,5 +228,16 @@ func deleteDevice(u string) error {
 
 	globalOESPM.DeviceConfig.File.Devices = dl
 
-	return deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+	err := deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+	if err != nil {
+		return err
+	}
+
+	deviceDataFolder := globalOESPM.DeviceDataFolder + u + "/"
+
+	if _, err := os.Stat(deviceDataFolder); os.IsNotExist(err) {
+		return nil
+	}
+
+	return os.RemoveAll(deviceDataFolder)
 }

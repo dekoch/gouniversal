@@ -3,10 +3,13 @@ package deviceManagement
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/shared/config"
+	"gouniversal/shared/functions"
 	"gouniversal/shared/io/file"
+	"html/template"
 	"log"
 	"os"
 )
@@ -26,7 +29,7 @@ func SaveConfig(dc typesOESPM.DeviceConfigFile) error {
 		newDevice[0].Key = "1234"
 		newDevice[0].Name = "Test"
 		newDevice[0].State = 1 // active
-		newDevice[0].App = "SimpleSwitch_v1_0"
+		newDevice[0].App = "SimpleSwitchV1x0"
 
 		dc.Devices = newDevice
 	}
@@ -88,7 +91,7 @@ func LoadDevice(uid string) (typesOESPM.Device, error) {
 	return device, errors.New("LoadDevice() device not found")
 }
 
-func SaveDevice(uid string, dev typesOESPM.Device) error {
+func SaveDevice(dev typesOESPM.Device) error {
 
 	globalOESPM.DeviceConfig.Mut.Lock()
 	defer globalOESPM.DeviceConfig.Mut.Unlock()
@@ -96,7 +99,7 @@ func SaveDevice(uid string, dev typesOESPM.Device) error {
 	for u := 0; u < len(globalOESPM.DeviceConfig.File.Devices); u++ {
 
 		// search device with UUID
-		if uid == globalOESPM.DeviceConfig.File.Devices[u].UUID {
+		if dev.UUID == globalOESPM.DeviceConfig.File.Devices[u].UUID {
 
 			globalOESPM.DeviceConfig.File.Devices[u] = dev
 			return nil
@@ -104,4 +107,49 @@ func SaveDevice(uid string, dev typesOESPM.Device) error {
 	}
 
 	return errors.New("SaveDevice() device not found")
+}
+
+func HTMLSelectDevice(name string, appname string, uid string) template.HTML {
+
+	type content struct {
+		Title  template.HTML
+		Select template.HTML
+	}
+	var c content
+
+	title := "..."
+
+	sel := "<select name=\"" + name + "\">"
+
+	globalOESPM.DeviceConfig.Mut.Lock()
+	defer globalOESPM.DeviceConfig.Mut.Unlock()
+
+	for u := 0; u < len(globalOESPM.DeviceConfig.File.Devices); u++ {
+
+		if appname == globalOESPM.DeviceConfig.File.Devices[u].App {
+			sel += "<option value=\"" + globalOESPM.DeviceConfig.File.Devices[u].UUID + "\""
+
+			if uid == globalOESPM.DeviceConfig.File.Devices[u].UUID {
+				sel += " selected"
+
+				title = globalOESPM.DeviceConfig.File.Devices[u].Name
+			}
+
+			sel += ">" + globalOESPM.DeviceConfig.File.Devices[u].Name + "</option>"
+		}
+	}
+
+	sel += "</select>"
+
+	c.Title = template.HTML(title)
+	c.Select = template.HTML(sel)
+
+	templ, err := template.ParseFiles(globalOESPM.UiConfig.AppFileRoot + "selectdevice.html")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	p := functions.TemplToString(templ, c)
+
+	return template.HTML(p)
 }

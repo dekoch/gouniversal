@@ -1,10 +1,10 @@
-package SimpleSwitch_v1_0_request
+package SimpleSwitchV1x0request
 
 // http://127.0.0.1:8080/request/?id=test&key=1234
 
 import (
 	"encoding/json"
-	"gouniversal/modules/openespm/app/SimpleSwitch_v1_0"
+	"gouniversal/modules/openespm/app/SimpleSwitchV1x0"
 	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/shared/functions"
 )
@@ -19,11 +19,11 @@ func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 
 	// init new device
 	if functions.IsEmpty(req.Device.Config) {
-		req.Device.Config = SimpleSwitch_v1_0.InitConfig()
+		req.Device.Config = SimpleSwitchV1x0.InitDeviceConfig()
 	}
 
 	// read device config
-	var config SimpleSwitch_v1_0.AppConfig
+	var config SimpleSwitchV1x0.DeviceConfig
 	err := req.Device.Unmarshal(&config)
 	if err != nil {
 		resp.Err = err

@@ -68,7 +68,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				app.Request(resp, req)
 
 			case 6:
-				resp.Err = deviceManagement.SaveDevice(req.UUID, req.Device)
+				resp.Err = deviceManagement.SaveDevice(req.Device)
 			}
 		}
 	}

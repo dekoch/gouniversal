@@ -2,30 +2,30 @@ package app
 
 import (
 	"errors"
-	"gouniversal/modules/openespm/app/SimpleSwitch_v1_0/SimpleSwitch_v1_0_request"
-	"gouniversal/modules/openespm/app/SimpleSwitch_v1_0/SimpleSwitch_v1_0_ui"
+	"gouniversal/modules/openespm/app/SimpleSwitchV1x0/SimpleSwitchV1x0request"
+	"gouniversal/modules/openespm/app/SimpleSwitchV1x0/SimpleSwitchV1x0ui"
+	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
+	"gouniversal/shared/alert"
 	"gouniversal/shared/navigation"
 	"net/http"
 )
 
-const DataFolder = "data/config/openespm/"
-
 func List() []string {
 
-	s := []string{"SimpleSwitch_v1_0"}
+	s := []string{"SimpleSwitchV1x0"}
 
 	return s
 }
 
 func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 
-	req.DeviceDataFolder = DataFolder + req.UUID + "/"
+	req.DeviceDataFolder = globalOESPM.DeviceDataFolder + req.UUID + "/"
 
 	switch req.Device.App {
-	case "SimpleSwitch_v1_0":
+	case "SimpleSwitchV1x0":
 
-		SimpleSwitch_v1_0_request.Request(resp, req)
+		SimpleSwitchV1x0request.Request(resp, req)
 
 	default:
 		resp.Err = errors.New("app \"" + req.Device.App + "\" not found")
@@ -34,8 +34,10 @@ func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {
 
-	if nav.IsNext("SimpleSwitch_v1_0") {
+	if nav.IsNext("SimpleSwitchV1x0") {
 
-		SimpleSwitch_v1_0_ui.Render(page, nav, r)
+		SimpleSwitchV1x0ui.Render(page, nav, r)
+	} else {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, "Render() "+nav.CurrentPath, nav.CurrentPath, nav.User.UUID)
 	}
 }

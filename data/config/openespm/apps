@@ -1,0 +1,1 @@
+{"Header":{"HeaderVersion":1,"FileName":"apps","ContentName":"apps","ContentVersion":1,"Comment":"app config file"},"Apps":[{"UUID":"84956f31-44eb-4b11-b952-c016faaceedf","Name":"Switch 1","State":1,"Comment":"","App":"SimpleSwitchV1x0","Config":"{\"DeviceUUID\":\"test\"}"}]}

@@ -2,6 +2,7 @@ package typesOESPM
 
 import (
 	"encoding/json"
+	"fmt"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/shared/config"
 	"net/url"
@@ -54,6 +55,40 @@ type Request struct {
 	DeviceDataFolder string
 }
 
+type App struct {
+	UUID    string
+	Name    string
+	State   int
+	Comment string
+	App     string
+	Config  string
+}
+
+func (a App) Unmarshal(v interface{}) error {
+	return json.Unmarshal([]byte(a.Config), &v)
+}
+
+func (a *App) Marshal(v interface{}) error {
+	b, err := json.Marshal(v)
+	if err == nil {
+		a.Config = string(b[:])
+	} else {
+		fmt.Println(err)
+	}
+
+	return err
+}
+
+type AppConfigFile struct {
+	Header config.FileHeader
+	Apps   []App
+}
+
+type AppConfig struct {
+	Mut  sync.Mutex
+	File AppConfigFile
+}
+
 type DeviceConfigFile struct {
 	Header  config.FileHeader
 	Devices []Device
@@ -73,6 +108,7 @@ type JsonHeader struct {
 type Page struct {
 	Content string
 	Lang    langOESPM.File
+	App     App
 }
 
 type UiConfig struct {
