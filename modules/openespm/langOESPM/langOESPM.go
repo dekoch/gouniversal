@@ -88,8 +88,9 @@ type Alert struct {
 }
 
 type SimpleSwitchV1x0 struct {
-	On  string
-	Off string
+	On             string
+	Off            string
+	DeviceSettings string
 }
 
 type File struct {
@@ -155,6 +156,7 @@ func SaveLang(lang File, n string) error {
 
 		lang.SimpleSwitchV1x0.On = "On"
 		lang.SimpleSwitchV1x0.Off = "Off"
+		lang.SimpleSwitchV1x0.DeviceSettings = "Device Settings"
 	}
 
 	b, err := json.Marshal(lang)

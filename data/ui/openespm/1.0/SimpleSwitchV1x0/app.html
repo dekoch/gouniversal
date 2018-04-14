@@ -1,6 +1,21 @@
 <form method="post">
+    <div id="devicesettings">
+        <div class="card">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapseDevice">
+                    {{.Lang.DeviceSettings}}
+                </a>
+            </div>
+            <div id="collapseDevice" class="collapse" data-parent="#devicesettings">
+                <div class="card-body">
+                    {{.SelectDev}}
+                    <br>
+                    <br>
+                    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title=""></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
     {{.Switch}}
-    <br>
-    <br>
-    {{.SelectDev}}
 </form>

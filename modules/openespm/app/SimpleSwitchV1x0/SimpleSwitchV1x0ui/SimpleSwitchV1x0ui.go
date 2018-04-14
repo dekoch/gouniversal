@@ -16,6 +16,8 @@ import (
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {
 
+	edit, _ := functions.CheckFormInput("edit", r)
+
 	var app SimpleSwitchV1x0.AppConfig
 	var dev SimpleSwitchV1x0.DeviceConfig
 	var device typesOESPM.Device
@@ -54,7 +56,9 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 			case 3:
 				// load device config
-				device, err = deviceManagement.LoadDevice(app.DeviceUUID)
+				if app.DeviceUUID != "" {
+					device, err = deviceManagement.LoadDevice(app.DeviceUUID)
+				}
 				// init new device
 				if functions.IsEmpty(device.Config) {
 					device.Config = SimpleSwitchV1x0.InitDeviceConfig()
@@ -92,9 +96,11 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 			case 9:
 				// save device to file
-				globalOESPM.DeviceConfig.Mut.Lock()
-				deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
-				globalOESPM.DeviceConfig.Mut.Unlock()
+				if edit == "apply" {
+					globalOESPM.DeviceConfig.Mut.Lock()
+					deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+					globalOESPM.DeviceConfig.Mut.Unlock()
+				}
 			}
 		}
 	}
