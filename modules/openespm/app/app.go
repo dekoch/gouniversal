@@ -20,7 +20,7 @@ func List() []string {
 
 func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 
-	req.DeviceDataFolder = globalOESPM.DeviceDataFolder + req.UUID + "/"
+	req.DeviceDataFolder = globalOESPM.DeviceDataFolder + req.Device.UUID + "/"
 
 	switch req.Device.App {
 	case "SimpleSwitchV1x0":

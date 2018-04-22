@@ -1,84 +1,12 @@
 package userManagement
 
 import (
-	"encoding/json"
 	"gouniversal/program/global"
 	"gouniversal/program/groupManagement"
-	"gouniversal/program/programTypes"
-	"gouniversal/shared/config"
-	"gouniversal/shared/io/file"
-	"gouniversal/shared/types"
-	"log"
-	"os"
-
-	"github.com/google/uuid"
+	"gouniversal/program/userConfig"
 )
 
-const UserFile = "data/config/user"
-
-func SaveUser(uc programTypes.UserConfigFile) error {
-
-	uc.Header = config.BuildHeader("user", "users", 1.0, "user config file")
-
-	if _, err := os.Stat(UserFile); os.IsNotExist(err) {
-		// if not found, create default file
-
-		newuser := make([]types.User, 1)
-
-		u := uuid.Must(uuid.NewRandom())
-
-		newuser[0].UUID = u.String()
-		newuser[0].Lang = "en"
-		newuser[0].State = 1 // active
-		// admin/admin
-		newuser[0].LoginName = "admin"
-		newuser[0].PWDHash = "$2a$14$ueP7ISwguEjrGHcHI0SKjO2Jn/A2CjFsWA7LEWgV0FcPNwI7tetde"
-
-		groups := []string{"admin"}
-		newuser[0].Groups = groups
-
-		uc.User = newuser
-	}
-
-	b, err := json.Marshal(uc)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	f := new(file.File)
-	err = f.WriteFile(UserFile, b)
-
-	return err
-}
-
-func LoadUser() programTypes.UserConfigFile {
-
-	var uc programTypes.UserConfigFile
-
-	if _, err := os.Stat(UserFile); os.IsNotExist(err) {
-		// if not found, create default file
-		SaveUser(uc)
-	}
-
-	f := new(file.File)
-	b, err := f.ReadFile(UserFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = json.Unmarshal(b, &uc)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if config.CheckHeader(uc.Header, "users") == false {
-		log.Fatal("wrong config")
-	}
-
-	return uc
-}
-
-func SelectUser(uid string) types.User {
+func SelectUser(uid string) userConfig.User {
 
 	global.UserConfig.Mut.Lock()
 	defer global.UserConfig.Mut.Unlock()
@@ -92,12 +20,12 @@ func SelectUser(uid string) types.User {
 		}
 	}
 
-	var user types.User
+	var user userConfig.User
 	user.State = -1
 	return user
 }
 
-func IsUserInGroup(gid string, user types.User) bool {
+func IsUserInGroup(gid string, user userConfig.User) bool {
 
 	for i := 0; i < len(user.Groups); i++ {
 
@@ -111,7 +39,7 @@ func IsUserInGroup(gid string, user types.User) bool {
 	return false
 }
 
-func IsPageAllowed(path string, user types.User) bool {
+func IsPageAllowed(path string, user userConfig.User) bool {
 
 	// always allowed pages
 	if path == "Account:Login" ||

@@ -1,9 +1,9 @@
 package navigation
 
 import (
+	"gouniversal/program/userConfig"
 	"gouniversal/program/userManagement"
 	"gouniversal/shared/sitemap"
-	"gouniversal/shared/types"
 	"strings"
 )
 
@@ -13,7 +13,7 @@ type Navigation struct {
 	Redirect       string
 	PathAfterLogin string
 	Home           string
-	User           types.User
+	User           userConfig.User
 	Guest          bool
 	GodMode        bool
 	Sitemap        sitemap.Sitemap

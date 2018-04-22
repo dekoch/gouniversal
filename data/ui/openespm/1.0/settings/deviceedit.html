@@ -18,12 +18,16 @@
                 <td><input type="text" class="form-control" name="comment" value="{{.Device.Comment}}"></td>
             </tr>
             <tr>
-                <th>UUID:</th>
-                <td><input type="text" class="form-control" name="uuid" value="{{.Device.UUID}}"></td>
+                <th>RequestID:</th>
+                <td><input type="text" class="form-control" name="requestid" value="{{.Device.RequestID}}"></td>
             </tr>
             <tr>
-                <th>Key:</th>
-                <td><input type="text" class="form-control" name="key" value="{{.Device.Key}}"></td>
+                <th>RequestKey:</th>
+                <td><input type="text" class="form-control" name="requestkey" value="{{.Device.RequestKey}}"></td>
+            </tr>
+            <tr>
+                <th>UUID:</th>
+                <td>{{.Device.UUID}}</td>
             </tr>
         </tbody>
     </table>

@@ -22,7 +22,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	req.Values = r.URL.Query()
 	fmt.Println("GET params:", req.Values)
 
-	req.UUID = req.Values.Get("id")
+	req.ID = req.Values.Get("id")
 	req.Key = req.Values.Get("key")
 
 	resp := new(typesOESPM.Response)
@@ -35,8 +35,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		if resp.Err == nil {
 			switch i {
 			case 0:
-				if functions.IsEmpty(req.UUID) {
-					resp.Err = errors.New("UUID not set")
+				if functions.IsEmpty(req.ID) {
+					resp.Err = errors.New("ID not set")
 					resp.Status = http.StatusForbidden
 				}
 
@@ -47,13 +47,13 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				}
 
 			case 2:
-				req.Device, resp.Err = deviceManagement.LoadDevice(req.UUID)
+				req.Device, resp.Err = deviceManagement.LoadDeviceWithReqID(req.ID)
 				if resp.Err != nil {
 					resp.Status = http.StatusForbidden
 				}
 
 			case 3:
-				if req.Device.Key != req.Key {
+				if req.Device.RequestKey != req.Key {
 					resp.Err = errors.New("key mismatch")
 					resp.Status = http.StatusForbidden
 				}
@@ -79,7 +79,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		http.Error(w, resp.Err.Error(), resp.Status)
-		fmt.Println(req.UUID + "\t" + resp.Err.Error())
+		fmt.Println(req.ID + "\t" + resp.Err.Error())
 	} else {
 
 		switch resp.Type {
@@ -107,6 +107,6 @@ func LoadConfig() {
 func Exit() {
 	// save device config on exit
 	globalOESPM.DeviceConfig.Mut.Lock()
-	deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+	globalOESPM.DeviceConfig.SaveConfig()
 	globalOESPM.DeviceConfig.Mut.Unlock()
 }

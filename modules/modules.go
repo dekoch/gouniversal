@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"gouniversal/modules/modbustest"
 	"gouniversal/modules/openespm"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
@@ -8,15 +9,19 @@ import (
 )
 
 // Modules provide a interface to nest apps and modules
-type Modules struct{}
 
 const modOpenESPM = true
+const modModbusTest = false
 
 // LoadConfig is called before UI starts
-func (m *Modules) LoadConfig() {
+func LoadConfig() {
 
 	if modOpenESPM {
 		openespm.LoadConfig()
+	}
+
+	if modModbusTest {
+		modbustest.LoadConfig()
 	}
 }
 
@@ -27,7 +32,7 @@ func (m *Modules) LoadConfig() {
 // nav.Sitemap.Register("App:Account:MyApp", "MyApp")
 //
 // to nest your app or module inside menus
-func (m *Modules) RegisterPage(page *types.Page, nav *navigation.Navigation) {
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	if modOpenESPM {
 		openespm.RegisterPage(page, nav)
@@ -35,7 +40,7 @@ func (m *Modules) RegisterPage(page *types.Page, nav *navigation.Navigation) {
 }
 
 // Render UI page
-func (m *Modules) Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	if modOpenESPM {
 		if nav.IsNext("openESPM") {
@@ -46,7 +51,7 @@ func (m *Modules) Render(page *types.Page, nav *navigation.Navigation, r *http.R
 }
 
 // Exit is called before program exit
-func (m *Modules) Exit() {
+func Exit() {
 
 	if modOpenESPM {
 		openespm.Exit()

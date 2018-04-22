@@ -1,6 +1,8 @@
 package globalOESPM
 
 import (
+	"gouniversal/modules/openespm/appConfig"
+	"gouniversal/modules/openespm/deviceConfig"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
 )
@@ -11,8 +13,8 @@ const DeviceDataFolder = "data/config/openespm/device/"
 var (
 	UiConfig typesOESPM.UiConfig
 
-	AppConfig    typesOESPM.AppConfig
-	DeviceConfig typesOESPM.DeviceConfig
+	AppConfig    appConfig.AppConfig
+	DeviceConfig deviceConfig.DeviceConfig
 
 	Lang langOESPM.Global
 )

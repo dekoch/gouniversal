@@ -3,11 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"gouniversal/modules"
 	"gouniversal/program/global"
-	"gouniversal/program/groupManagement"
-	"gouniversal/program/programConfig"
+	"gouniversal/program/lang"
 	"gouniversal/program/ui"
-	"gouniversal/program/userManagement"
 	"os"
 	"strings"
 	"time"
@@ -16,19 +15,21 @@ import (
 func main() {
 	fmt.Println("App starting...")
 
+	web := new(ui.UI)
+
 	global.Console.Input = ""
 
-	//time.Sleep(15 * time.Second)
-	//fmt.Println("exit")
-	//os.Exit(1)
+	global.UiConfig.LoadConfig()
 
-	global.ProgramConfig = programConfig.LoadConfig()
-	global.UiConfig = ui.LoadUiConfig()
-	global.UserConfig.File = userManagement.LoadUser()
-	global.GroupConfig.File = groupManagement.LoadGroup()
+	global.Lang.File = lang.LoadLangFiles()
 
-	web := new(ui.UI)
-	go web.StartServer()
+	if global.UiConfig.File.UIEnabled {
+		go web.StartServer()
+	} else {
+		fmt.Println("UI is disabled")
+
+		modules.LoadConfig()
+	}
 
 	exitApp := false
 	reader := bufio.NewReader(os.Stdin)
@@ -61,7 +62,11 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	web.Exit()
+	if global.UiConfig.File.UIEnabled {
+		web.Exit()
+	}
+
+	modules.Exit()
 
 	fmt.Println("App ended")
 	os.Exit(1)

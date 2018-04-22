@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gouniversal/modules/openespm/app"
-	"gouniversal/modules/openespm/appManagement"
+	"gouniversal/modules/openespm/appConfig"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
@@ -32,7 +32,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	type appEdit struct {
 		Lang     langOESPM.SettingsAppEdit
-		App      typesOESPM.App
+		App      appConfig.App
 		CmbApps  template.HTML
 		CmbState template.HTML
 	}
@@ -48,6 +48,8 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 		if id == "new" {
 
 			id = newApp()
+			alert.Message(alert.INFO, page.Lang.Alert.Info, page.Lang.Settings.App.Edit.InfoGroup, nav.CurrentPath, nav.User.UUID)
+
 			nav.RedirectPath(strings.Replace(nav.Path, "UUID=new", "UUID="+id, 1), false)
 		}
 	} else if button == "apply" {
@@ -135,7 +137,7 @@ func newApp() string {
 
 	u := uuid.Must(uuid.NewRandom())
 
-	newApp := make([]typesOESPM.App, 1)
+	newApp := make([]appConfig.App, 1)
 	newApp[0].UUID = u.String()
 	newApp[0].Name = u.String()
 	newApp[0].State = 1 // active
@@ -149,7 +151,7 @@ func newApp() string {
 
 	globalOESPM.AppConfig.File.Apps = append(newApp, globalOESPM.AppConfig.File.Apps...)
 
-	err := appManagement.SaveConfig(globalOESPM.AppConfig.File)
+	err := globalOESPM.AppConfig.SaveConfig()
 	if err == nil {
 		appDataFolder := globalOESPM.AppDataFolder + newApp[0].UUID + "/"
 		os.MkdirAll(appDataFolder, os.ModePerm)
@@ -193,7 +195,7 @@ func editApp(r *http.Request, u string) error {
 			globalOESPM.AppConfig.File.Apps[i].State = intState
 			globalOESPM.AppConfig.File.Apps[i].Comment = comment
 
-			return appManagement.SaveConfig(globalOESPM.AppConfig.File)
+			return globalOESPM.AppConfig.SaveConfig()
 		}
 	}
 
@@ -205,8 +207,8 @@ func deleteApp(u string) error {
 	globalOESPM.AppConfig.Mut.Lock()
 	defer globalOESPM.AppConfig.Mut.Unlock()
 
-	var al []typesOESPM.App
-	n := make([]typesOESPM.App, 1)
+	var al []appConfig.App
+	n := make([]appConfig.App, 1)
 
 	for i := 0; i < len(globalOESPM.AppConfig.File.Apps); i++ {
 
@@ -220,7 +222,7 @@ func deleteApp(u string) error {
 
 	globalOESPM.AppConfig.File.Apps = al
 
-	err := appManagement.SaveConfig(globalOESPM.AppConfig.File)
+	err := globalOESPM.AppConfig.SaveConfig()
 	if err != nil {
 		return err
 	}

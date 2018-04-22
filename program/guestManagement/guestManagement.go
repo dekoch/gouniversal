@@ -2,7 +2,7 @@ package guestManagement
 
 import (
 	"gouniversal/program/global"
-	"gouniversal/shared/types"
+	"gouniversal/program/userConfig"
 	"sync"
 
 	"github.com/google/uuid"
@@ -10,14 +10,14 @@ import (
 
 type guest struct {
 	Mut  sync.Mutex
-	User []types.User
+	User []userConfig.User
 }
 
 var Guest guest
 
-func NewGuest() types.User {
+func NewGuest() userConfig.User {
 
-	newGuest := make([]types.User, 1)
+	newGuest := make([]userConfig.User, 1)
 
 	// search for public user
 	global.UserConfig.Mut.Lock()
@@ -39,7 +39,7 @@ func NewGuest() types.User {
 
 	guests := len(Guest.User)
 	// if number of guests exceeds maximum, remove the oldest
-	if guests > global.UiConfig.MaxGuests {
+	if guests > global.UiConfig.File.MaxGuests {
 		Guest.User = Guest.User[0 : guests-1]
 	}
 
@@ -48,7 +48,7 @@ func NewGuest() types.User {
 	return newGuest[0]
 }
 
-func SelectGuest(uid string) types.User {
+func SelectGuest(uid string) userConfig.User {
 
 	Guest.Mut.Lock()
 	defer Guest.Mut.Unlock()
@@ -62,7 +62,7 @@ func SelectGuest(uid string) types.User {
 		}
 	}
 
-	var user types.User
+	var user userConfig.User
 	user.State = -1
 	return user
 }

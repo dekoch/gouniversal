@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gouniversal/modules/openespm/app"
-	"gouniversal/modules/openespm/deviceManagement"
+	"gouniversal/modules/openespm/deviceConfig"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
@@ -32,7 +32,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	type deviceEdit struct {
 		Lang     langOESPM.SettingsDeviceEdit
-		Device   typesOESPM.Device
+		Device   deviceConfig.Device
 		CmbApps  template.HTML
 		CmbState template.HTML
 	}
@@ -136,11 +136,12 @@ func newDevice() string {
 	u := uuid.Must(uuid.NewRandom())
 	key := uuid.Must(uuid.NewRandom())
 
-	newDevice := make([]typesOESPM.Device, 1)
+	newDevice := make([]deviceConfig.Device, 1)
 	newDevice[0].UUID = u.String()
 	newDevice[0].Name = u.String()
 	newDevice[0].State = 1 // active
-	newDevice[0].Key = key.String()
+	newDevice[0].RequestID = u.String()
+	newDevice[0].RequestKey = key.String()
 
 	apps := app.List()
 
@@ -151,7 +152,7 @@ func newDevice() string {
 
 	globalOESPM.DeviceConfig.File.Devices = append(newDevice, globalOESPM.DeviceConfig.File.Devices...)
 
-	err := deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+	err := globalOESPM.DeviceConfig.SaveConfig()
 	if err == nil {
 		deviceDataFolder := globalOESPM.DeviceDataFolder + newDevice[0].UUID + "/"
 		os.MkdirAll(deviceDataFolder, os.ModePerm)
@@ -166,16 +167,16 @@ func editDevice(r *http.Request, u string) error {
 	app, _ := functions.CheckFormInput("app", r)
 	state, _ := functions.CheckFormInput("state", r)
 	comment, errComment := functions.CheckFormInput("comment", r)
-	id, _ := functions.CheckFormInput("uuid", r)
-	key, _ := functions.CheckFormInput("key", r)
+	reqId, _ := functions.CheckFormInput("requestid", r)
+	reqKey, _ := functions.CheckFormInput("requestkey", r)
 
 	// check input
 	if functions.IsEmpty(name) ||
 		functions.IsEmpty(app) ||
 		functions.IsEmpty(state) ||
 		govalidator.IsNumeric(state) == false ||
-		functions.IsEmpty(id) ||
-		functions.IsEmpty(key) ||
+		functions.IsEmpty(reqId) ||
+		functions.IsEmpty(reqKey) ||
 		// content not required
 		errComment != nil {
 
@@ -198,10 +199,10 @@ func editDevice(r *http.Request, u string) error {
 			globalOESPM.DeviceConfig.File.Devices[i].App = app
 			globalOESPM.DeviceConfig.File.Devices[i].State = intState
 			globalOESPM.DeviceConfig.File.Devices[i].Comment = comment
-			globalOESPM.DeviceConfig.File.Devices[i].UUID = id
-			globalOESPM.DeviceConfig.File.Devices[i].Key = key
+			globalOESPM.DeviceConfig.File.Devices[i].RequestID = reqId
+			globalOESPM.DeviceConfig.File.Devices[i].RequestKey = reqKey
 
-			return deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+			return globalOESPM.DeviceConfig.SaveConfig()
 		}
 	}
 
@@ -213,8 +214,8 @@ func deleteDevice(u string) error {
 	globalOESPM.DeviceConfig.Mut.Lock()
 	defer globalOESPM.DeviceConfig.Mut.Unlock()
 
-	var dl []typesOESPM.Device
-	n := make([]typesOESPM.Device, 1)
+	var dl []deviceConfig.Device
+	n := make([]deviceConfig.Device, 1)
 
 	for i := 0; i < len(globalOESPM.DeviceConfig.File.Devices); i++ {
 
@@ -228,7 +229,7 @@ func deleteDevice(u string) error {
 
 	globalOESPM.DeviceConfig.File.Devices = dl
 
-	err := deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+	err := globalOESPM.DeviceConfig.SaveConfig()
 	if err != nil {
 		return err
 	}

@@ -2,8 +2,8 @@ package uifunc
 
 import (
 	"gouniversal/program/global"
+	"gouniversal/program/userConfig"
 	"gouniversal/shared/functions"
-	"gouniversal/shared/types"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
@@ -25,7 +25,7 @@ func LoginNameToUUID(user string) string {
 	return ""
 }
 
-func GetUserWithUUID(u string) types.User {
+func GetUserWithUUID(u string) userConfig.User {
 
 	global.UserConfig.Mut.Lock()
 	defer global.UserConfig.Mut.Unlock()
@@ -38,7 +38,7 @@ func GetUserWithUUID(u string) types.User {
 		}
 	}
 
-	var nu types.User
+	var nu userConfig.User
 
 	return nu
 }

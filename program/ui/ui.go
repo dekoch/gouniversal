@@ -1,26 +1,21 @@
 package ui
 
 import (
-	"encoding/json"
 	"fmt"
 	"gouniversal/modules"
 	"gouniversal/program/global"
 	"gouniversal/program/guestManagement"
 	"gouniversal/program/lang"
-	"gouniversal/program/programTypes"
 	"gouniversal/program/ui/pageHome"
 	"gouniversal/program/ui/pageLogin"
 	"gouniversal/program/ui/settings"
 	"gouniversal/program/ui/uifunc"
 	"gouniversal/program/userManagement"
 	"gouniversal/shared/alert"
-	"gouniversal/shared/config"
 	"gouniversal/shared/functions"
-	"gouniversal/shared/io/file"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
 	"html/template"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -34,64 +29,10 @@ import (
 
 type UI struct{}
 
-const UiConfigFile = "data/config/ui"
-
 var (
 	store      = new(sessions.CookieStore)
 	cookieName string
-	mod        = new(modules.Modules)
 )
-
-func SaveUiConfig(uc programTypes.UiConfig) error {
-
-	uc.Header = config.BuildHeader("ui", "ui", 1.0, "UI config file")
-
-	if _, err := os.Stat(UiConfigFile); os.IsNotExist(err) {
-		// if not found, create default file
-		uc.ProgramFileRoot = "data/ui/program/1.0/"
-		uc.StaticFileRoot = "data/ui/static/1.0/"
-		uc.Port = 8080
-		uc.MaxGuests = 20
-		uc.Recovery = false
-	}
-
-	b, err := json.Marshal(uc)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	f := new(file.File)
-	err = f.WriteFile(UiConfigFile, b)
-
-	return err
-}
-
-func LoadUiConfig() programTypes.UiConfig {
-
-	var uc programTypes.UiConfig
-
-	if _, err := os.Stat(UiConfigFile); os.IsNotExist(err) {
-		// if not found, create default file
-		SaveUiConfig(uc)
-	}
-
-	f := new(file.File)
-	b, err := f.ReadFile(UiConfigFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = json.Unmarshal(b, &uc)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if config.CheckHeader(uc.Header, "ui") == false {
-		log.Fatal("wrong config")
-	}
-
-	return uc
-}
 
 func setCookie(parameter string, value string, w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("set cookie " + parameter + " to " + value)
@@ -253,7 +194,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	p.UUID = template.HTML(nav.User.UUID)
 	p.Content = template.HTML(page.Content)
 
-	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "program.html")
+	templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "program.html")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -316,7 +257,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	page.Lang = selectLang(nav.User.Lang)
 
 	pageHome.RegisterPage(page, nav)
-	mod.RegisterPage(page, nav)
+	modules.RegisterPage(page, nav)
 	settings.RegisterPage(page, nav)
 	nav.Sitemap.Register("Program", "Program:Exit", page.Lang.Exit.Title)
 	pageLogin.RegisterPage(page, nav)
@@ -361,7 +302,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 			}
 		} else if nav.IsNext("App") {
 
-			mod.Render(page, nav, r)
+			modules.Render(page, nav, r)
 
 		} else if nav.IsNext("Account") {
 
@@ -430,7 +371,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
-	if global.UiConfig.Recovery {
+	if global.UiConfig.File.Recovery {
 
 		button := r.FormValue("recovery")
 
@@ -440,8 +381,8 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
 		} else if button == "disablerecovery" {
 
-			global.UiConfig.Recovery = false
-			SaveUiConfig(global.UiConfig)
+			global.UiConfig.File.Recovery = false
+			global.UiConfig.SaveUiConfig()
 
 		} else if button == "cookies" {
 
@@ -462,7 +403,7 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
 		re.Temp = ""
 
-		templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "recovery.html")
+		templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "recovery.html")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -475,16 +416,16 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 func (ui *UI) StartServer() {
 	fmt.Println("starting webserver...")
 
-	fmt.Println("ProgramFileRoot: " + global.UiConfig.ProgramFileRoot)
-	fmt.Println("StaticFileRoot: " + global.UiConfig.StaticFileRoot)
+	fmt.Println("ProgramFileRoot: " + global.UiConfig.File.ProgramFileRoot)
+	fmt.Println("StaticFileRoot: " + global.UiConfig.File.StaticFileRoot)
 
-	if _, err := os.Stat(global.UiConfig.ProgramFileRoot); os.IsNotExist(err) {
+	if _, err := os.Stat(global.UiConfig.File.ProgramFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
 		fmt.Println("error: ProgramFileRoot not found")
 		os.Exit(1)
 	}
 
-	if _, err := os.Stat(global.UiConfig.StaticFileRoot); os.IsNotExist(err) {
+	if _, err := os.Stat(global.UiConfig.File.StaticFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
 		fmt.Println("error: StaticFileRoot not found")
 		os.Exit(1)
@@ -498,12 +439,10 @@ func (ui *UI) StartServer() {
 			if ipnet, ok := a.(*net.IPNet); ok {
 				if ipnet.IP.To4() != nil {
 
-					fmt.Println("http://" + ipnet.IP.String() + ":" + strconv.Itoa(global.UiConfig.Port))
+					fmt.Println("http://" + ipnet.IP.String() + ":" + strconv.Itoa(global.UiConfig.File.Port))
 				}
 			}
 		}
-
-		global.Lang.File = lang.LoadLangFiles()
 
 		// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
 		key := securecookie.GenerateRandomKey(32)
@@ -512,22 +451,25 @@ func (ui *UI) StartServer() {
 		u := uuid.Must(uuid.NewRandom())
 		cookieName = u.String()
 
+		global.UserConfig.LoadConfig()
+		global.GroupConfig.LoadConfig()
+
 		alert.Start()
-		mod.LoadConfig()
+		modules.LoadConfig()
 
 		// configure server
-		fs := http.FileServer(http.Dir(global.UiConfig.StaticFileRoot))
+		fs := http.FileServer(http.Dir(global.UiConfig.File.StaticFileRoot))
 		http.Handle("/static/", http.StripPrefix("/static/", fs))
 		http.HandleFunc("/", handleRoot)
 		http.HandleFunc("/app/", handleApp)
 		http.HandleFunc("/recovery/", handleRecovery)
 
-		http.ListenAndServe(":"+strconv.Itoa(global.UiConfig.Port), nil)
+		http.ListenAndServe(":"+strconv.Itoa(global.UiConfig.File.Port), nil)
 	} else {
 		fmt.Println("no interface found")
 	}
 }
 
 func (ui *UI) Exit() {
-	mod.Exit()
+
 }

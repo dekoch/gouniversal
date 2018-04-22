@@ -85,7 +85,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 			// save config to file
 			globalOESPM.AppConfig.Mut.Lock()
-			appManagement.SaveConfig(globalOESPM.AppConfig.File)
+			globalOESPM.AppConfig.SaveConfig()
 			globalOESPM.AppConfig.Mut.Unlock()
 		}
 	}

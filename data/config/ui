@@ -1,1 +1,1 @@
-{"Header":{"HeaderVersion":1,"FileName":"ui","ContentName":"ui","ContentVersion":1,"Comment":"UI config file"},"ProgramFileRoot":"data/ui/program/1.0/","StaticFileRoot":"data/ui/static/1.0/","Port":8080,"MaxGuests":20,"Recovery":false}
+{"Header":{"HeaderVersion":1,"FileName":"ui","ContentName":"ui","ContentVersion":1,"Comment":"UI config file"},"UIEnabled":true,"ProgramFileRoot":"data/ui/program/1.0/","StaticFileRoot":"data/ui/static/1.0/","Port":8080,"MaxGuests":20,"Recovery":false}

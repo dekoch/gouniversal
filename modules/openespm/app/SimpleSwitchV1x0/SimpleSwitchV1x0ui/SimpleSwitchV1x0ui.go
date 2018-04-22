@@ -3,6 +3,7 @@ package SimpleSwitchV1x0ui
 import (
 	"fmt"
 	"gouniversal/modules/openespm/app/SimpleSwitchV1x0"
+	"gouniversal/modules/openespm/deviceConfig"
 	"gouniversal/modules/openespm/deviceManagement"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/langOESPM"
@@ -20,7 +21,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	var app SimpleSwitchV1x0.AppConfig
 	var dev SimpleSwitchV1x0.DeviceConfig
-	var device typesOESPM.Device
+	var device deviceConfig.Device
 
 	type content struct {
 		Lang      langOESPM.SimpleSwitchV1x0
@@ -98,7 +99,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 				// save device to file
 				if edit == "apply" {
 					globalOESPM.DeviceConfig.Mut.Lock()
-					deviceManagement.SaveConfig(globalOESPM.DeviceConfig.File)
+					err = globalOESPM.DeviceConfig.SaveConfig()
 					globalOESPM.DeviceConfig.Mut.Unlock()
 				}
 			}

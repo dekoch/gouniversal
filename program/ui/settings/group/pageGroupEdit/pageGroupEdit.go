@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"gouniversal/program/global"
+	"gouniversal/program/groupConfig"
 	"gouniversal/program/groupManagement"
 	"gouniversal/program/lang"
-	"gouniversal/program/programTypes"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
@@ -30,7 +30,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type groupedit struct {
 		Lang     lang.SettingsGroupEdit
-		Group    programTypes.Group
+		Group    groupConfig.Group
 		CmbState template.HTML
 		Pages    template.HTML
 	}
@@ -118,7 +118,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	ge.Pages = template.HTML(pagelist)
 
 	// display group
-	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "settings/groupedit.html")
+	templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "settings/groupedit.html")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -133,14 +133,14 @@ func newGroup() string {
 
 	u := uuid.Must(uuid.NewRandom())
 
-	newgroup := make([]programTypes.Group, 1)
+	newgroup := make([]groupConfig.Group, 1)
 	newgroup[0].UUID = u.String()
 	newgroup[0].Name = u.String()
 	newgroup[0].State = 1 // active
 
 	global.GroupConfig.File.Group = append(newgroup, global.GroupConfig.File.Group...)
 
-	groupManagement.SaveGroup(global.GroupConfig.File)
+	global.GroupConfig.SaveConfig()
 
 	return u.String()
 }
@@ -180,7 +180,7 @@ func editGroup(r *http.Request, u string) error {
 			global.GroupConfig.File.Group[i].Comment = comment
 			global.GroupConfig.File.Group[i].AllowedPages = selpages
 
-			return groupManagement.SaveGroup(global.GroupConfig.File)
+			return global.GroupConfig.SaveConfig()
 		}
 	}
 
@@ -192,8 +192,8 @@ func deleteGroup(u string) error {
 	global.GroupConfig.Mut.Lock()
 	defer global.GroupConfig.Mut.Unlock()
 
-	var gl []programTypes.Group
-	n := make([]programTypes.Group, 1)
+	var gl []groupConfig.Group
+	n := make([]groupConfig.Group, 1)
 
 	for i := 0; i < len(global.GroupConfig.File.Group); i++ {
 
@@ -207,5 +207,5 @@ func deleteGroup(u string) error {
 
 	global.GroupConfig.File.Group = gl
 
-	return groupManagement.SaveGroup(global.GroupConfig.File)
+	return global.GroupConfig.SaveConfig()
 }

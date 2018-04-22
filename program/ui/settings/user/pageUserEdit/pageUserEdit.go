@@ -6,6 +6,7 @@ import (
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
 	"gouniversal/program/ui/uifunc"
+	"gouniversal/program/userConfig"
 	"gouniversal/program/userManagement"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/navigation"
@@ -30,7 +31,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type useredit struct {
 		Lang     lang.SettingsUserEdit
-		User     types.User
+		User     userConfig.User
 		CmbLang  template.HTML
 		CmbState template.HTML
 		Groups   template.HTML
@@ -140,7 +141,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	ue.Groups = template.HTML(grouplist)
 
 	// display user
-	templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "settings/useredit.html")
+	templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "settings/useredit.html")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -155,7 +156,7 @@ func newUser() string {
 
 	u := uuid.Must(uuid.NewRandom())
 
-	newuser := make([]types.User, 1)
+	newuser := make([]userConfig.User, 1)
 	newuser[0].UUID = u.String()
 	newuser[0].LoginName = u.String()
 	newuser[0].Lang = "en"
@@ -163,7 +164,7 @@ func newUser() string {
 
 	global.UserConfig.File.User = append(newuser, global.UserConfig.File.User...)
 
-	userManagement.SaveUser(global.UserConfig.File)
+	global.UserConfig.SaveConfig()
 
 	return u.String()
 }
@@ -227,7 +228,7 @@ func editUser(r *http.Request, u string) error {
 				}
 			}
 
-			return userManagement.SaveUser(global.UserConfig.File)
+			return global.UserConfig.SaveConfig()
 		}
 	}
 
@@ -239,8 +240,8 @@ func deleteUser(u string) error {
 	global.UserConfig.Mut.Lock()
 	defer global.UserConfig.Mut.Unlock()
 
-	var ul []types.User
-	n := make([]types.User, 1)
+	var ul []userConfig.User
+	n := make([]userConfig.User, 1)
 
 	for i := 0; i < len(global.UserConfig.File.User); i++ {
 
@@ -254,5 +255,5 @@ func deleteUser(u string) error {
 
 	global.UserConfig.File.User = ul
 
-	return userManagement.SaveUser(global.UserConfig.File)
+	return global.UserConfig.SaveConfig()
 }

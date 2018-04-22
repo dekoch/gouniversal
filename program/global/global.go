@@ -1,8 +1,11 @@
 package global
 
 import (
+	"gouniversal/program/groupConfig"
 	"gouniversal/program/lang"
 	"gouniversal/program/programTypes"
+	"gouniversal/program/uiConfig"
+	"gouniversal/program/userConfig"
 )
 
 type Global struct{}
@@ -10,13 +13,11 @@ type Global struct{}
 var (
 	Console programTypes.Console
 
-	ProgramConfig programTypes.ProgramConfig
+	UiConfig uiConfig.UiConfig
 
-	UiConfig programTypes.UiConfig
+	UserConfig userConfig.UserConfig
 
-	UserConfig programTypes.UserConfig
-
-	GroupConfig programTypes.GroupConfig
+	GroupConfig groupConfig.GroupConfig
 
 	Lang lang.Global
 )

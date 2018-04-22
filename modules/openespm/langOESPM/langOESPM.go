@@ -27,14 +27,15 @@ type SettingsAppState struct {
 }
 
 type SettingsAppEdit struct {
-	Title   string
-	Name    string
-	App     string
-	State   string
-	States  SettingsAppState
-	Comment string
-	Apply   string
-	Delete  string
+	Title     string
+	Name      string
+	App       string
+	State     string
+	States    SettingsAppState
+	Comment   string
+	Apply     string
+	Delete    string
+	InfoGroup string
 }
 
 type SettingsApp struct {
@@ -130,6 +131,7 @@ func SaveLang(lang File, n string) error {
 		lang.Settings.App.Edit.Comment = "Comment"
 		lang.Settings.App.Edit.Apply = "Apply"
 		lang.Settings.App.Edit.Delete = "Delete"
+		lang.Settings.App.Edit.InfoGroup = "Don't forget to enable new page."
 
 		lang.Settings.Device.Title = "openESPM Devices"
 		lang.Settings.Device.List.Title = "Device List"

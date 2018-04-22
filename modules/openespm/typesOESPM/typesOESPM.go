@@ -1,12 +1,11 @@
 package typesOESPM
 
 import (
-	"encoding/json"
-	"fmt"
+	"gouniversal/modules/openespm/appConfig"
+	"gouniversal/modules/openespm/deviceConfig"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/shared/config"
 	"net/url"
-	"sync"
 )
 
 type RespType int
@@ -24,79 +23,12 @@ type Response struct {
 	Err     error
 }
 
-type Device struct {
-	UUID    string
-	Key     string
-	Name    string
-	State   int
-	Comment string
-	App     string
-	Config  string
-}
-
-func (d Device) Unmarshal(v interface{}) error {
-	return json.Unmarshal([]byte(d.Config), &v)
-}
-
-func (d *Device) Marshal(v interface{}) error {
-	b, err := json.Marshal(v)
-	if err == nil {
-		d.Config = string(b[:])
-	}
-
-	return err
-}
-
 type Request struct {
-	UUID             string
+	ID               string
 	Key              string
 	Values           url.Values
-	Device           Device
+	Device           deviceConfig.Device
 	DeviceDataFolder string
-}
-
-type App struct {
-	UUID    string
-	Name    string
-	State   int
-	Comment string
-	App     string
-	Config  string
-}
-
-func (a App) Unmarshal(v interface{}) error {
-	return json.Unmarshal([]byte(a.Config), &v)
-}
-
-func (a *App) Marshal(v interface{}) error {
-	b, err := json.Marshal(v)
-	if err == nil {
-		a.Config = string(b[:])
-	} else {
-		fmt.Println(err)
-	}
-
-	return err
-}
-
-type AppConfigFile struct {
-	Header config.FileHeader
-	Apps   []App
-}
-
-type AppConfig struct {
-	Mut  sync.Mutex
-	File AppConfigFile
-}
-
-type DeviceConfigFile struct {
-	Header  config.FileHeader
-	Devices []Device
-}
-
-type DeviceConfig struct {
-	Mut  sync.Mutex
-	File DeviceConfigFile
 }
 
 type JsonHeader struct {
@@ -108,7 +40,7 @@ type JsonHeader struct {
 type Page struct {
 	Content string
 	Lang    langOESPM.File
-	App     App
+	App     appConfig.App
 }
 
 type UiConfig struct {
