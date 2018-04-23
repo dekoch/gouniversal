@@ -200,7 +200,7 @@ func station(no int, c modbusConfig.Station, client modbus.Client) {
 					mOut.NIO = false
 				}
 
-				if mIn.Start {
+				if mIn.Start && mIn.ErgebnisLoeschen == false {
 					step++
 				}
 

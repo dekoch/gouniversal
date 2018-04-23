@@ -14,11 +14,13 @@ import (
 	"gouniversal/shared/alert"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/navigation"
+	"gouniversal/shared/sitemap"
 	"gouniversal/shared/types"
 	"html/template"
 	"net"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"time"
 
@@ -28,6 +30,12 @@ import (
 )
 
 type UI struct{}
+
+type menuDropdown struct {
+	Order int
+	Title string
+	Items []sitemap.Page
+}
 
 var (
 	store      = new(sessions.CookieStore)
@@ -118,79 +126,134 @@ func initCookies(w http.ResponseWriter, r *http.Request) {
 func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	type program struct {
-		Lang              lang.Menu
-		Title             string
-		MenuProgram       template.HTML
-		MenuProgramHidden template.HTML
-		MenuApp           template.HTML
-		MenuAppHidden     template.HTML
-		MenuAccountTitle  template.HTML
-		MenuAccount       template.HTML
-		UUID              template.HTML
-		Content           template.HTML
+		Title     string
+		MenuLeft  template.HTML
+		MenuRight template.HTML
+		UUID      template.HTML
+		Content   template.HTML
 	}
 	var p program
 
 	p.Title = nav.Sitemap.PageTitle(nav.Path)
-	p.Lang = page.Lang.Menu
 
-	p.MenuProgramHidden = "hidden"
-	menuProgram := ""
+	pages := nav.Sitemap.Pages
+	mDropdown := make([]menuDropdown, 0)
 
-	p.MenuAppHidden = "hidden"
-	menuApp := ""
+	// put each allowed page into menu slice
+	for i := 0; i < len(pages); i++ {
 
-	menuAccount := ""
+		if pages[i].Menu != "" {
 
-	menu := ""
-	path := ""
-	title := ""
-
-	for i := len(nav.Sitemap.Pages) - 1; i >= 0; i-- {
-
-		menu = nav.Sitemap.Pages[i].Menu
-		path = nav.Sitemap.Pages[i].Path
-		title = nav.Sitemap.Pages[i].Title
-
-		// menuProgram
-		if menu == "Program" {
-
-			if userManagement.IsPageAllowed(path, nav.User) ||
+			if userManagement.IsPageAllowed(pages[i].Path, nav.User) ||
 				nav.GodMode {
 
-				menuProgram += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + path + "\">" + title + "</button>"
-				p.MenuProgramHidden = ""
-			}
-		} else if menu == "App" {
-			// menuApp
+				dropdownFound := false
+				for d := 0; d < len(mDropdown); d++ {
 
-			if userManagement.IsPageAllowed(path, nav.User) ||
-				nav.GodMode {
+					if pages[i].Menu == mDropdown[d].Title {
+						dropdownFound = true
+					}
+				}
 
-				menuApp += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + path + "\">" + title + "</button>"
-				p.MenuAppHidden = ""
-			}
-		} else if menu == "Account" {
-			// menuAccount
+				if dropdownFound == false {
+					// create new dropdown
+					newDropdown := make([]menuDropdown, 1)
+					newDropdown[0].Title = pages[i].Menu
 
-			if userManagement.IsPageAllowed(path, nav.User) ||
-				nav.GodMode {
+					// set predefined order
+					if newDropdown[0].Title == "Program" {
 
-				menuAccount += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + path + "\">" + title + "</button>"
+						newDropdown[0].Order = 0
+
+					} else if newDropdown[0].Title == "App" {
+
+						newDropdown[0].Order = 1
+
+					} else if newDropdown[0].Title == "Account" {
+
+						newDropdown[0].Order = 999
+
+					} else {
+						newDropdown[0].Order = 999 - len(mDropdown)
+					}
+
+					mDropdown = append(newDropdown, mDropdown...)
+				}
+
+				// add items to dropdown
+				for d := 0; d < len(mDropdown); d++ {
+
+					if pages[i].Menu == mDropdown[d].Title {
+
+						newItem := make([]sitemap.Page, 1)
+						newItem[0] = pages[i]
+
+						mDropdown[d].Items = append(newItem, mDropdown[d].Items...)
+					}
+				}
 			}
 		}
 	}
 
-	// menuAccount
-	if nav.User.UUID != "" {
-		p.MenuAccountTitle = template.HTML(nav.User.LoginName)
-	} else {
-		p.MenuAccountTitle = template.HTML(page.Lang.Menu.Account.Title)
+	htmlMenuLeft := ""
+	htmlMenuRight := ""
+
+	sort.Slice(mDropdown, func(i, j int) bool { return mDropdown[i].Order < mDropdown[j].Order })
+
+	// DropDown to HTML
+	for d := 0; d < len(mDropdown); d++ {
+
+		alignRight := false
+		title := mDropdown[d].Title
+
+		if mDropdown[d].Title == "Program" {
+
+			title = page.Lang.Menu.Program.Title
+
+		} else if mDropdown[d].Title == "App" {
+
+			title = page.Lang.Menu.App.Title
+
+		} else if mDropdown[d].Title == "Account" {
+
+			alignRight = true
+
+			if nav.User.UUID != "" {
+				title = nav.User.LoginName
+			} else {
+				title = page.Lang.Menu.Account.Title
+			}
+		}
+
+		dropDown := "<li class=\"nav-item dropdown\">\n"
+		dropDown += "<a class=\"nav-link dropdown-toggle\" href=\"\" id=\"navbar" + mDropdown[d].Title + "\" role=\"button\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">\n"
+		dropDown += title + "\n"
+		dropDown += "</a>\n"
+		dropDown += "<div class=\"dropdown-menu"
+
+		if alignRight {
+			dropDown += " dropdown-menu-right"
+		}
+
+		dropDown += "\" aria-labelledby=\"navbar" + mDropdown[d].Title + "\">\n"
+
+		for i := 0; i < len(mDropdown[d].Items); i++ {
+			dropDown += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + mDropdown[d].Items[i].Path + "\">" + mDropdown[d].Items[i].Title + "</button>\n"
+		}
+
+		dropDown += "</div>\n</li>\n"
+
+		if alignRight {
+
+			htmlMenuRight += dropDown
+		} else {
+
+			htmlMenuLeft += dropDown
+		}
 	}
 
-	p.MenuProgram = template.HTML(menuProgram)
-	p.MenuApp = template.HTML(menuApp)
-	p.MenuAccount = template.HTML(menuAccount)
+	p.MenuLeft = template.HTML(htmlMenuLeft)
+	p.MenuRight = template.HTML(htmlMenuRight)
 	p.UUID = template.HTML(nav.User.UUID)
 	p.Content = template.HTML(page.Content)
 

@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"gouniversal/modules/homepage"
 	"gouniversal/modules/modbustest"
 	"gouniversal/modules/openespm"
 	"gouniversal/shared/navigation"
@@ -11,6 +12,7 @@ import (
 // Modules provide a interface to nest apps and modules
 
 const modOpenESPM = true
+const modHomepage = true
 const modModbusTest = false
 
 // LoadConfig is called before UI starts
@@ -18,6 +20,10 @@ func LoadConfig() {
 
 	if modOpenESPM {
 		openespm.LoadConfig()
+	}
+
+	if modHomepage {
+		homepage.LoadConfig()
 	}
 
 	if modModbusTest {
@@ -37,6 +43,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 	if modOpenESPM {
 		openespm.RegisterPage(page, nav)
 	}
+
+	if modHomepage {
+		homepage.RegisterPage(page, nav)
+	}
 }
 
 // Render UI page
@@ -48,6 +58,13 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 			openespm.Render(page, nav, r)
 		}
 	}
+
+	if modHomepage {
+		if nav.IsNext("homepage") {
+
+			homepage.Render(page, nav, r)
+		}
+	}
 }
 
 // Exit is called before program exit
@@ -55,5 +72,9 @@ func Exit() {
 
 	if modOpenESPM {
 		openespm.Exit()
+	}
+
+	if modHomepage {
+		homepage.Exit()
 	}
 }

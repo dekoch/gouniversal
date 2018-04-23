@@ -5,14 +5,14 @@ import (
 	"strings"
 )
 
-type page struct {
+type Page struct {
 	Menu  string
 	Path  string
 	Title string
 }
 
 type Sitemap struct {
-	Pages []page
+	Pages []Page
 }
 
 // Register adds a pagepath + title to a sitemap
@@ -21,7 +21,7 @@ type Sitemap struct {
 // title = "MyApp"
 func (site *Sitemap) Register(menu string, path string, title string) {
 
-	newpage := make([]page, 1)
+	newpage := make([]Page, 1)
 
 	newpage[0].Menu = menu
 	newpage[0].Path = path
