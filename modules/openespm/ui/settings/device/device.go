@@ -10,7 +10,7 @@ import (
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("App", "App:openESPM:Settings:Device", page.Lang.Settings.Device.Title)
+	nav.Sitemap.Register("openESPM", "App:openESPM:Settings:Device", page.Lang.Settings.Device.Title)
 	pageDeviceList.RegisterPage(page, nav)
 	pageDeviceEdit.RegisterPage(page, nav)
 }

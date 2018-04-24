@@ -1,6 +1,7 @@
 package homepage
 
 import (
+	"gouniversal/modules/homepage/global"
 	"gouniversal/modules/homepage/ui"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
@@ -9,6 +10,7 @@ import (
 
 func LoadConfig() {
 
+	global.Config.LoadConfig()
 }
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {

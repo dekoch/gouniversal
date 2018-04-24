@@ -1,18 +1,48 @@
 package ui
 
 import (
-	"fmt"
-	"gouniversal/modules/homepage/globalHomepage"
+	"gouniversal/modules/homepage/global"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
+	"strings"
 )
+
+func registerMenuItems(menu string, filepath string, navpath string, nav *navigation.Navigation) {
+
+	menuItems, _ := functions.ReadDir(filepath, 0)
+
+	for _, i := range menuItems {
+
+		if i.IsDir() {
+
+			registerMenuItems(menu, filepath+i.Name()+"/", navpath+":"+i.Name(), nav)
+		} else {
+
+			title := strings.Replace(i.Name(), ".html", "", -1)
+			nav.Sitemap.Register(menu, navpath+":"+i.Name(), title)
+		}
+	}
+}
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("Home", "App:homepage:Home", "Home")
+	// autogenerate menu entries from folders and files in module UIFileRoot
+	menuFolders, _ := functions.ReadDir(global.Config.File.UIFileRoot, 0)
+
+	for _, f := range menuFolders {
+
+		if f.IsDir() {
+
+			registerMenuItems(f.Name(), global.Config.File.UIFileRoot+f.Name()+"/", "App:homepage:"+f.Name(), nav)
+		} else {
+
+			title := strings.Replace(f.Name(), ".html", "", -1)
+			nav.Sitemap.Register(title, "App:homepage:"+f.Name(), title)
+		}
+	}
 }
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
@@ -22,10 +52,18 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 	var c Content
 
-	templ, err := template.ParseFiles(globalHomepage.ContentFolder + "index.html")
-	if err != nil {
-		fmt.Println(err)
-	}
+	// use navigation path to get path to html
+	path := strings.Replace(nav.Path, "App:homepage:", "", -1)
+	path = strings.Replace(path, ":", "/", -1)
+	path = global.Config.File.UIFileRoot + path
 
-	page.Content += functions.TemplToString(templ, c)
+	content, err := functions.PageToString(path, c)
+	if err == nil {
+
+		page.Content += content
+
+	} else {
+
+		nav.RedirectPath("Account:Login", true)
+	}
 }

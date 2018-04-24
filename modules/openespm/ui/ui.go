@@ -28,7 +28,7 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 		// only active apps
 		if a.State == 1 {
-			nav.Sitemap.Register("App", "App:openESPM:App:"+a.App+":"+a.UUID, a.Name)
+			nav.Sitemap.Register("openESPM", "App:openESPM:App:"+a.App+":"+a.UUID, a.Name)
 		}
 	}
 	globalOESPM.AppConfig.Mut.Unlock()

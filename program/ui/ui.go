@@ -22,6 +22,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -136,6 +137,12 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	p.Title = nav.Sitemap.PageTitle(nav.Path)
 
+	// remove leading numbers
+	if strings.Contains(p.Title, ".") {
+		s := strings.SplitAfterN(p.Title, ".", -1)
+		p.Title = s[1]
+	}
+
 	pages := nav.Sitemap.Pages
 	mDropdown := make([]menuDropdown, 0)
 
@@ -204,30 +211,36 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	for d := 0; d < len(mDropdown); d++ {
 
 		alignRight := false
-		title := mDropdown[d].Title
+		dropDownTitle := mDropdown[d].Title
 
-		if mDropdown[d].Title == "Program" {
+		if dropDownTitle == "Program" {
 
-			title = page.Lang.Menu.Program.Title
+			dropDownTitle = page.Lang.Menu.Program.Title
 
-		} else if mDropdown[d].Title == "App" {
+		} else if dropDownTitle == "App" {
 
-			title = page.Lang.Menu.App.Title
+			dropDownTitle = page.Lang.Menu.App.Title
 
-		} else if mDropdown[d].Title == "Account" {
+		} else if dropDownTitle == "Account" {
 
 			alignRight = true
 
 			if nav.User.UUID != "" {
-				title = nav.User.LoginName
+				dropDownTitle = nav.User.LoginName
 			} else {
-				title = page.Lang.Menu.Account.Title
+				dropDownTitle = page.Lang.Menu.Account.Title
 			}
+		}
+
+		// remove leading numbers
+		if strings.Contains(dropDownTitle, ".") {
+			s := strings.SplitAfterN(dropDownTitle, ".", -1)
+			dropDownTitle = s[1]
 		}
 
 		dropDown := "<li class=\"nav-item dropdown\">\n"
 		dropDown += "<a class=\"nav-link dropdown-toggle\" href=\"\" id=\"navbar" + mDropdown[d].Title + "\" role=\"button\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">\n"
-		dropDown += title + "\n"
+		dropDown += dropDownTitle + "\n"
 		dropDown += "</a>\n"
 		dropDown += "<div class=\"dropdown-menu"
 
@@ -238,7 +251,15 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		dropDown += "\" aria-labelledby=\"navbar" + mDropdown[d].Title + "\">\n"
 
 		for i := 0; i < len(mDropdown[d].Items); i++ {
-			dropDown += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + mDropdown[d].Items[i].Path + "\">" + mDropdown[d].Items[i].Title + "</button>\n"
+
+			itemTitle := mDropdown[d].Items[i].Title
+			// remove leading numbers
+			if strings.Contains(itemTitle, ".") {
+				s := strings.SplitAfterN(itemTitle, ".", -1)
+				itemTitle = s[1]
+			}
+
+			dropDown += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + mDropdown[d].Items[i].Path + "\">" + itemTitle + "</button>\n"
 		}
 
 		dropDown += "</div>\n</li>\n"

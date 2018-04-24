@@ -10,7 +10,7 @@ import (
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("App", "App:openESPM:Settings:App", page.Lang.Settings.App.Title)
+	nav.Sitemap.Register("openESPM", "App:openESPM:Settings:App", page.Lang.Settings.App.Title)
 	pageAppList.RegisterPage(page, nav)
 	pageAppEdit.RegisterPage(page, nav)
 }
