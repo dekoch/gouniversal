@@ -21,8 +21,10 @@ func registerMenuItems(menu string, filepath string, navpath string, nav *naviga
 			registerMenuItems(menu, filepath+i.Name()+"/", navpath+":"+i.Name(), nav)
 		} else {
 
-			title := strings.Replace(i.Name(), ".html", "", -1)
-			nav.Sitemap.Register(menu, navpath+":"+i.Name(), title)
+			if strings.HasSuffix(i.Name(), ".html") {
+				title := strings.Replace(i.Name(), ".html", "", -1)
+				nav.Sitemap.Register(menu, navpath+":"+i.Name(), title)
+			}
 		}
 	}
 }
@@ -36,11 +38,13 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 		if f.IsDir() {
 
-			registerMenuItems(f.Name(), global.Config.File.UIFileRoot+f.Name()+"/", "App:homepage:"+f.Name(), nav)
+			registerMenuItems(f.Name(), global.Config.File.UIFileRoot+f.Name()+"/", "App:Homepage:"+f.Name(), nav)
 		} else {
 
-			title := strings.Replace(f.Name(), ".html", "", -1)
-			nav.Sitemap.Register(title, "App:homepage:"+f.Name(), title)
+			if strings.HasSuffix(f.Name(), ".html") {
+				title := strings.Replace(f.Name(), ".html", "", -1)
+				nav.Sitemap.Register(title, "App:Homepage:"+f.Name(), title)
+			}
 		}
 	}
 }
@@ -53,7 +57,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	var c Content
 
 	// use navigation path to get path to html
-	path := strings.Replace(nav.Path, "App:homepage:", "", -1)
+	path := strings.Replace(nav.Path, "App:Homepage:", "", -1)
 	path = strings.Replace(path, ":", "/", -1)
 	path = global.Config.File.UIFileRoot + path
 

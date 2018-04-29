@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gouniversal/modules/openespm/app/SimpleSwitchV1x0/SimpleSwitchV1x0request"
 	"gouniversal/modules/openespm/app/SimpleSwitchV1x0/SimpleSwitchV1x0ui"
-	"gouniversal/modules/openespm/globalOESPM"
+	"gouniversal/modules/openespm/app/TempHumV1x0/TempHumV1x0request"
 	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/shared/alert"
 	"gouniversal/shared/navigation"
@@ -13,19 +13,22 @@ import (
 
 func List() []string {
 
-	s := []string{"SimpleSwitchV1x0"}
+	s := []string{"SimpleSwitchV1x0",
+		"TempHumV1x0"}
 
 	return s
 }
 
 func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 
-	req.DeviceDataFolder = globalOESPM.DeviceDataFolder + req.Device.UUID + "/"
-
 	switch req.Device.App {
 	case "SimpleSwitchV1x0":
 
 		SimpleSwitchV1x0request.Request(resp, req)
+
+	case "TempHumV1x0":
+
+		TempHumV1x0request.Request(resp, req)
 
 	default:
 		resp.Err = errors.New("app \"" + req.Device.App + "\" not found")

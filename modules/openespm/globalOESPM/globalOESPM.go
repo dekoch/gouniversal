@@ -7,8 +7,8 @@ import (
 	"gouniversal/modules/openespm/typesOESPM"
 )
 
-const AppDataFolder = "data/config/openespm/app/"
-const DeviceDataFolder = "data/config/openespm/device/"
+const AppDataFolder = "data/openespm/app/"
+const DeviceDataFolder = "data/openespm/device/"
 
 var (
 	UiConfig typesOESPM.UiConfig

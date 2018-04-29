@@ -16,6 +16,12 @@ const (
 	XML
 )
 
+type DefaultDevResp struct {
+	Ver   float32
+	Intvl float64
+	Ds    bool
+}
+
 type Response struct {
 	Type    RespType
 	Content string

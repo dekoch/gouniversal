@@ -130,6 +130,10 @@ func (nav *Navigation) Parameter(name string) string {
 	name += "="
 
 	index := strings.LastIndex(nav.Path, name)
+	if index < 0 {
+		return ""
+	}
+
 	cnt := len(nav.Path)
 
 	if cnt > 0 {

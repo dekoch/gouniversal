@@ -35,6 +35,7 @@ func (f File) ReadFile(path string) ([]byte, error) {
 
 func (f File) WriteFile(path string, content []byte) error {
 
+	// directory from path
 	dir := filepath.Dir(path)
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {

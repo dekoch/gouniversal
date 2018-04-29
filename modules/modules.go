@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"gouniversal/modules/fileshare"
 	"gouniversal/modules/homepage"
 	"gouniversal/modules/modbustest"
 	"gouniversal/modules/openespm"
@@ -12,7 +13,8 @@ import (
 // Modules provide a interface to nest apps and modules
 
 const modOpenESPM = true
-const modHomepage = true
+const modFileshare = true
+const modHomepage = false
 const modModbusTest = false
 
 // LoadConfig is called before UI starts
@@ -20,6 +22,10 @@ func LoadConfig() {
 
 	if modOpenESPM {
 		openespm.LoadConfig()
+	}
+
+	if modFileshare {
+		fileshare.LoadConfig()
 	}
 
 	if modHomepage {
@@ -44,6 +50,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 		openespm.RegisterPage(page, nav)
 	}
 
+	if modFileshare {
+		fileshare.RegisterPage(page, nav)
+	}
+
 	if modHomepage {
 		homepage.RegisterPage(page, nav)
 	}
@@ -59,8 +69,15 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		}
 	}
 
+	if modFileshare {
+		if nav.IsNext("Fileshare") {
+
+			fileshare.Render(page, nav, r)
+		}
+	}
+
 	if modHomepage {
-		if nav.IsNext("homepage") {
+		if nav.IsNext("Homepage") {
 
 			homepage.Render(page, nav, r)
 		}
@@ -72,6 +89,10 @@ func Exit() {
 
 	if modOpenESPM {
 		openespm.Exit()
+	}
+
+	if modFileshare {
+		fileshare.Exit()
 	}
 
 	if modHomepage {

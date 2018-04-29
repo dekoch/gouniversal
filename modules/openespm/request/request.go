@@ -65,6 +65,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				}
 
 			case 5:
+				req.DeviceDataFolder = globalOESPM.DeviceDataFolder + req.Device.UUID + "/"
 				app.Request(resp, req)
 
 			case 6:
@@ -101,7 +102,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 func LoadConfig() {
 
-	http.HandleFunc("/request/", handleRequest)
+	http.HandleFunc("/oespmreq/", handleRequest)
 }
 
 func Exit() {

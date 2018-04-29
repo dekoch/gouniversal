@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
@@ -115,4 +117,33 @@ func readDir(dir string, maxdepth int, currdepth int) ([]os.FileInfo, error) {
 func ReadDir(dir string, maxdepth int) ([]os.FileInfo, error) {
 
 	return readDir(dir, maxdepth, 0)
+}
+
+func Round(val float64, roundOn float64, places int) (newVal float64) {
+	var round float64
+	pow := math.Pow(10, float64(places))
+	digit := pow * val
+	_, div := math.Modf(digit)
+	if div >= roundOn {
+		round = math.Ceil(digit)
+	} else {
+		round = math.Floor(digit)
+	}
+	newVal = round / pow
+	return
+}
+
+func CreateDir(path string) error {
+
+	// dir from path
+	dir := filepath.Dir(path)
+
+	var err error
+
+	if _, err = os.Stat(dir); os.IsNotExist(err) {
+		// if not found, create dir
+		err = os.MkdirAll(dir, os.ModePerm)
+	}
+
+	return err
 }

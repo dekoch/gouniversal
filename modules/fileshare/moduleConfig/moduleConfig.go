@@ -9,11 +9,12 @@ import (
 	"sync"
 )
 
-const configFilePath = "data/config/homepage/homepage"
+const configFilePath = "data/config/fileshare/fileshare"
 
 type ModuleConfigFile struct {
 	Header     config.FileHeader
 	UIFileRoot string
+	FileRoot   string
 }
 
 type ModuleConfig struct {
@@ -23,12 +24,13 @@ type ModuleConfig struct {
 
 func (hc ModuleConfig) SaveConfig() error {
 
-	hc.File.Header = config.BuildHeader("homepage", "homepage", 1.0, "homepage config file")
+	hc.File.Header = config.BuildHeader("fileshare", "fileshare", 1.0, "fileshare config file")
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
 
-		hc.File.UIFileRoot = "data/ui/homepage/"
+		hc.File.UIFileRoot = "data/ui/fileshare/1.0/"
+		hc.File.FileRoot = "data/fileshare/"
 	}
 
 	b, err := json.Marshal(hc.File)
@@ -60,7 +62,7 @@ func (hc *ModuleConfig) LoadConfig() error {
 		log.Fatal(err)
 	}
 
-	if config.CheckHeader(hc.File.Header, "homepage") == false {
+	if config.CheckHeader(hc.File.Header, "fileshare") == false {
 		log.Fatal("wrong config")
 	}
 
