@@ -126,21 +126,21 @@ func initCookies(w http.ResponseWriter, r *http.Request) {
 
 func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
-	type program struct {
+	type content struct {
 		Title     string
 		MenuLeft  template.HTML
 		MenuRight template.HTML
 		UUID      template.HTML
 		Content   template.HTML
 	}
-	var p program
+	var c content
 
-	p.Title = nav.Sitemap.PageTitle(nav.Path)
+	c.Title = nav.Sitemap.PageTitle(nav.Path)
 
 	// remove leading numbers
-	if strings.Contains(p.Title, ".") {
-		s := strings.SplitAfterN(p.Title, ".", -1)
-		p.Title = s[1]
+	if strings.Contains(c.Title, ".") {
+		s := strings.SplitAfterN(c.Title, ".", -1)
+		c.Title = s[1]
 	}
 
 	pages := nav.Sitemap.Pages
@@ -273,17 +273,18 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		}
 	}
 
-	p.MenuLeft = template.HTML(htmlMenuLeft)
-	p.MenuRight = template.HTML(htmlMenuRight)
-	p.UUID = template.HTML(nav.User.UUID)
-	p.Content = template.HTML(page.Content)
+	c.MenuLeft = template.HTML(htmlMenuLeft)
+	c.MenuRight = template.HTML(htmlMenuRight)
+	c.UUID = template.HTML(nav.User.UUID)
+	c.Content = template.HTML(page.Content)
 
-	templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "program.html")
+	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"program.html", c)
 	if err != nil {
 		fmt.Println(err)
+		p = err.Error()
 	}
 
-	return []byte(functions.TemplToString(templ, p))
+	return []byte(p)
 }
 
 func selectLang(l string) lang.File {
@@ -323,7 +324,22 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 			initCookies(w, r)
 		}
 
-		http.Redirect(w, r, "/app/", http.StatusSeeOther)
+		// redirect to HTTPS if enabled
+		if global.UiConfig.File.HTTPS.Enabled {
+			host := strings.Split(r.Host, ":")
+			port := strconv.Itoa(global.UiConfig.File.HTTPS.Port)
+
+			http.Redirect(w, r, "https://"+host[0]+":"+port+"/app/", http.StatusSeeOther)
+		} else {
+			http.Redirect(w, r, "/app/", http.StatusSeeOther)
+		}
+
+	} else if r.URL.Path == "/favicon.ico" {
+		f := global.UiConfig.File.StaticFileRoot + "favicon.ico"
+
+		if _, err := os.Stat(f); os.IsNotExist(err) == false {
+			http.ServeFile(w, r, f)
+		}
 	}
 
 	fmt.Println(r.URL.Path)
@@ -355,8 +371,11 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nav.Redirect = "init"
+	loopDetection := 0
 
 	for functions.IsEmpty(nav.Redirect) == false {
+
+		loopDetection++
 
 		nav.CurrentPath = ""
 		nav.Redirect = ""
@@ -381,8 +400,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 			} else if nav.IsNext("Exit") {
 			} else {
-
-				nav.RedirectPath("Account:Login", true)
+				nav.RedirectPath("404", true)
 			}
 		} else if nav.IsNext("App") {
 
@@ -407,15 +425,35 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 				nav.User = guestManagement.NewGuest()
 				nav.RedirectPath("Account:Login", false)
+			} else {
+				nav.RedirectPath("404", true)
 			}
 
+		} else if nav.Path == "404" {
+			page.Content = "<h1>404</h1><br>"
+			page.Content += page.Lang.Error.NotFound404
+		} else if nav.Path == "508" {
+			page.Content = "<h1>508</h1><br>"
+			page.Content += page.Lang.Error.LoopDetected508
 		} else {
-			nav.RedirectPath("Account:Login", true)
+			nav.RedirectPath("404", true)
+		}
+
+		if loopDetection >= 5 {
+			loopDetection = 0
+
+			nav.RedirectPath("508", true)
 		}
 
 		if nav.Redirect != "" {
 
-			nav.NavigatePath(nav.Redirect)
+			if nav.Redirect == "404" ||
+				nav.Redirect == "508" {
+
+				nav.Path = nav.Redirect
+			} else {
+				nav.NavigatePath(nav.Redirect)
+			}
 		}
 	}
 
@@ -519,15 +557,6 @@ func (ui *UI) StartServer() {
 
 	if err == nil {
 
-		for _, a := range addrs {
-			if ipnet, ok := a.(*net.IPNet); ok {
-				if ipnet.IP.To4() != nil {
-
-					fmt.Println("http://" + ipnet.IP.String() + ":" + strconv.Itoa(global.UiConfig.File.Port))
-				}
-			}
-		}
-
 		// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
 		key := securecookie.GenerateRandomKey(32)
 		store = sessions.NewCookieStore(key)
@@ -541,6 +570,16 @@ func (ui *UI) StartServer() {
 		alert.Start()
 		modules.LoadConfig()
 
+		if _, err = os.Stat(global.UiConfig.File.HTTPS.CertFile); os.IsNotExist(err) {
+			global.UiConfig.File.HTTPS.Enabled = false
+			fmt.Println("missing CertFile \"" + global.UiConfig.File.HTTPS.CertFile + "\"")
+		}
+
+		if _, err = os.Stat(global.UiConfig.File.HTTPS.KeyFile); os.IsNotExist(err) {
+			global.UiConfig.File.HTTPS.Enabled = false
+			fmt.Println("missing KeyFile \"" + global.UiConfig.File.HTTPS.KeyFile + "\"")
+		}
+
 		// configure server
 		fs := http.FileServer(http.Dir(global.UiConfig.File.StaticFileRoot))
 		http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -548,7 +587,34 @@ func (ui *UI) StartServer() {
 		http.HandleFunc("/app/", handleApp)
 		http.HandleFunc("/recovery/", handleRecovery)
 
-		http.ListenAndServe(":"+strconv.Itoa(global.UiConfig.File.Port), nil)
+		// start HTTP server
+		if global.UiConfig.File.HTTP.Enabled {
+
+			go http.ListenAndServe(":"+strconv.Itoa(global.UiConfig.File.HTTP.Port), nil)
+		}
+
+		// start HTTPS server
+		if global.UiConfig.File.HTTPS.Enabled {
+
+			go http.ListenAndServeTLS(":"+strconv.Itoa(global.UiConfig.File.HTTPS.Port), global.UiConfig.File.HTTPS.CertFile, global.UiConfig.File.HTTPS.KeyFile, nil)
+		}
+
+		for _, a := range addrs {
+			if ipnet, ok := a.(*net.IPNet); ok {
+				if ipnet.IP.To4() != nil {
+
+					if global.UiConfig.File.HTTP.Enabled {
+
+						fmt.Println("http://" + ipnet.IP.String() + ":" + strconv.Itoa(global.UiConfig.File.HTTP.Port))
+					}
+
+					if global.UiConfig.File.HTTPS.Enabled {
+
+						fmt.Println("https://" + ipnet.IP.String() + ":" + strconv.Itoa(global.UiConfig.File.HTTPS.Port))
+					}
+				}
+			}
+		}
 	} else {
 		fmt.Println("no interface found")
 	}

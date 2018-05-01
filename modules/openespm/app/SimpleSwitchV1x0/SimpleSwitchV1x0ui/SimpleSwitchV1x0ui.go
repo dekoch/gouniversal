@@ -1,7 +1,6 @@
 package SimpleSwitchV1x0ui
 
 import (
-	"fmt"
 	"gouniversal/modules/openespm/app/SimpleSwitchV1x0"
 	"gouniversal/modules/openespm/deviceConfig"
 	"gouniversal/modules/openespm/deviceManagement"
@@ -122,10 +121,10 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	}
 	c.Switch = template.HTML(sw)
 
-	templ, err := template.ParseFiles(globalOESPM.UiConfig.AppFileRoot + "SimpleSwitchV1x0/app.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"SimpleSwitchV1x0/app.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-
-	page.Content += functions.TemplToString(templ, c)
 }

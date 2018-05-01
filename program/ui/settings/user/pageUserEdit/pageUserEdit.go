@@ -2,7 +2,6 @@ package pageUserEdit
 
 import (
 	"errors"
-	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
 	"gouniversal/program/ui/uifunc"
@@ -29,16 +28,16 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	button := r.FormValue("edit")
 
-	type useredit struct {
+	type content struct {
 		Lang     lang.SettingsUserEdit
 		User     userConfig.User
 		CmbLang  template.HTML
 		CmbState template.HTML
 		Groups   template.HTML
 	}
-	var ue useredit
+	var c content
 
-	ue.Lang = page.Lang.Settings.User.UserEdit
+	c.Lang = page.Lang.Settings.User.UserEdit
 
 	// Form input
 	id := nav.Parameter("UUID")
@@ -71,7 +70,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 		if id == global.UserConfig.File.User[i].UUID {
 
-			ue.User = global.UserConfig.File.User[i]
+			c.User = global.UserConfig.File.User[i]
 		}
 	}
 	global.UserConfig.Mut.Unlock()
@@ -84,7 +83,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 		cmbLang += "<option value=\"" + global.Lang.File[i].Header.FileName + "\""
 
-		if ue.User.Lang == global.Lang.File[i].Header.FileName {
+		if c.User.Lang == global.Lang.File[i].Header.FileName {
 			cmbLang += " selected"
 		}
 
@@ -92,7 +91,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 	global.Lang.Mut.Unlock()
 	cmbLang += "</select>"
-	ue.CmbLang = template.HTML(cmbLang)
+	c.CmbLang = template.HTML(cmbLang)
 
 	// combobox State
 	cmbState := "<select name=\"state\">"
@@ -111,14 +110,14 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 		cmbState += "<option value=\"" + strconv.Itoa(i) + "\""
 
-		if ue.User.State == i {
+		if c.User.State == i {
 			cmbState += " selected"
 		}
 
 		cmbState += ">" + statetext + "</option>"
 	}
 	cmbState += "</select>"
-	ue.CmbState = template.HTML(cmbState)
+	c.CmbState = template.HTML(cmbState)
 
 	// list of groups
 	grouplist := ""
@@ -130,7 +129,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		grouplist += "<td>" + global.GroupConfig.File.Group[i].Name + "</td>"
 		grouplist += "<td><input type=\"checkbox\" name=\"selectedgroups\" value=\"" + global.GroupConfig.File.Group[i].UUID + "\""
 
-		if userManagement.IsUserInGroup(global.GroupConfig.File.Group[i].UUID, ue.User) {
+		if userManagement.IsUserInGroup(global.GroupConfig.File.Group[i].UUID, c.User) {
 
 			grouplist += " checked"
 		}
@@ -138,15 +137,15 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 	global.GroupConfig.Mut.Unlock()
 
-	ue.Groups = template.HTML(grouplist)
+	c.Groups = template.HTML(grouplist)
 
 	// display user
-	templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "settings/useredit.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"settings/useredit.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-
-	page.Content += functions.TemplToString(templ, ue)
 }
 
 func newUser() string {

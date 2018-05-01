@@ -194,10 +194,8 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 
 	content, err := functions.PageToString(global.Config.File.UIFileRoot+"home.html", c)
 	if err == nil {
-
 		page.Content += content
-
 	} else {
-		nav.RedirectPath("Account:Login", true)
+		nav.RedirectPath("404", true)
 	}
 }

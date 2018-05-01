@@ -11,13 +11,8 @@ import (
 	"net/http"
 )
 
-func List() []string {
-
-	s := []string{"SimpleSwitchV1x0",
-		"TempHumV1x0"}
-
-	return s
-}
+var UiAppList = [...]string{"SimpleSwitchV1x0"}
+var DeviceAppList = [...]string{"SimpleSwitchV1x0", "TempHumV1x0"}
 
 func Request(resp *typesOESPM.Response, req *typesOESPM.Request) {
 

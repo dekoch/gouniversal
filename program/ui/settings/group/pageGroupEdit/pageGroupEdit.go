@@ -2,7 +2,6 @@ package pageGroupEdit
 
 import (
 	"errors"
-	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/groupConfig"
 	"gouniversal/program/groupManagement"
@@ -28,15 +27,15 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	button := r.FormValue("edit")
 
-	type groupedit struct {
+	type content struct {
 		Lang     lang.SettingsGroupEdit
 		Group    groupConfig.Group
 		CmbState template.HTML
 		Pages    template.HTML
 	}
-	var ge groupedit
+	var c content
 
-	ge.Lang = page.Lang.Settings.Group.GroupEdit
+	c.Lang = page.Lang.Settings.Group.GroupEdit
 
 	// Form input
 	id := nav.Parameter("UUID")
@@ -69,7 +68,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 		if id == global.GroupConfig.File.Group[i].UUID {
 
-			ge.Group = global.GroupConfig.File.Group[i]
+			c.Group = global.GroupConfig.File.Group[i]
 		}
 	}
 	global.GroupConfig.Mut.Unlock()
@@ -89,14 +88,14 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 		cmbState += "<option value=\"" + strconv.Itoa(i) + "\""
 
-		if ge.Group.State == i {
+		if c.Group.State == i {
 			cmbState += " selected"
 		}
 
 		cmbState += ">" + statetext + "</option>"
 	}
 	cmbState += "</select>"
-	ge.CmbState = template.HTML(cmbState)
+	c.CmbState = template.HTML(cmbState)
 
 	// list of pages
 	pagelist := ""
@@ -108,22 +107,22 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		pagelist += "<td>" + sm[i] + "</td>"
 		pagelist += "<td><input type=\"checkbox\" name=\"selectedpages\" value=\"" + sm[i] + "\""
 
-		if groupManagement.IsPageAllowed(sm[i], ge.Group.UUID, false) {
+		if groupManagement.IsPageAllowed(sm[i], c.Group.UUID, false) {
 
 			pagelist += " checked"
 		}
 		pagelist += "></td></tr>"
 	}
 
-	ge.Pages = template.HTML(pagelist)
+	c.Pages = template.HTML(pagelist)
 
 	// display group
-	templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "settings/groupedit.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"settings/groupedit.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-
-	page.Content += functions.TemplToString(templ, ge)
 }
 
 func newGroup() string {

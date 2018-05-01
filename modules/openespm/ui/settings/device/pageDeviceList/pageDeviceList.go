@@ -1,7 +1,6 @@
 package pageDeviceList
 
 import (
-	"fmt"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
@@ -19,13 +18,13 @@ func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {
 
-	type devicelist struct {
+	type content struct {
 		Lang       langOESPM.SettingsDeviceList
 		DeviceList template.HTML
 	}
-	var dl devicelist
+	var c content
 
-	dl.Lang = page.Lang.Settings.Device.List
+	c.Lang = page.Lang.Settings.Device.List
 
 	var tbody string
 	tbody = ""
@@ -43,17 +42,17 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 		tbody += "<th scope='row'>" + strconv.Itoa(intIndex) + "</th>"
 		tbody += "<td>" + dev.Name + "</td>"
 		tbody += "<td>" + dev.App + "</td>"
-		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:openESPM:Settings:Device:Edit$UUID=" + dev.UUID + "\" title=\"" + dl.Lang.Edit + "\"></button></td>"
+		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:openESPM:Settings:Device:Edit$UUID=" + dev.UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"
 		tbody += "</tr>"
 	}
 	globalOESPM.DeviceConfig.Mut.Unlock()
 
-	dl.DeviceList = template.HTML(tbody)
+	c.DeviceList = template.HTML(tbody)
 
-	templ, err := template.ParseFiles(globalOESPM.UiConfig.AppFileRoot + "settings/devicelist.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"settings/devicelist.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-
-	page.Content += functions.TemplToString(templ, dl)
 }

@@ -11,12 +11,25 @@ import (
 
 const configFilePath = "data/config/ui"
 
+type UiHTTP struct {
+	Enabled bool
+	Port    int
+}
+
+type UiHTTPS struct {
+	Enabled  bool
+	Port     int
+	CertFile string
+	KeyFile  string
+}
+
 type UiConfigFile struct {
 	Header          config.FileHeader
 	UIEnabled       bool
 	ProgramFileRoot string
 	StaticFileRoot  string
-	Port            int
+	HTTP            UiHTTP
+	HTTPS           UiHTTPS
 	MaxGuests       int
 	Recovery        bool
 }
@@ -35,7 +48,15 @@ func (uc UiConfig) SaveUiConfig() error {
 		uc.File.UIEnabled = false
 		uc.File.ProgramFileRoot = "data/ui/program/1.0/"
 		uc.File.StaticFileRoot = "data/ui/static/1.0/"
-		uc.File.Port = 8080
+
+		uc.File.HTTP.Enabled = true
+		uc.File.HTTP.Port = 8080
+
+		uc.File.HTTPS.Enabled = false
+		uc.File.HTTPS.Port = 443
+		uc.File.HTTPS.CertFile = "server.crt"
+		uc.File.HTTPS.KeyFile = "server.key"
+
 		uc.File.MaxGuests = 20
 		uc.File.Recovery = false
 	}

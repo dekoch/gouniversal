@@ -20,7 +20,6 @@ func PageToString(path string, data interface{}) (string, error) {
 
 	// check file exist
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-
 		fmt.Println(err)
 		return "", err
 	}
@@ -28,7 +27,6 @@ func PageToString(path string, data interface{}) (string, error) {
 	// read template
 	templ, err := template.ParseFiles(path)
 	if err != nil {
-
 		fmt.Println(err)
 		return "", err
 	}
@@ -36,24 +34,12 @@ func PageToString(path string, data interface{}) (string, error) {
 	// template to buffer
 	var tpl bytes.Buffer
 	if err := templ.Execute(&tpl, data); err != nil {
-
 		fmt.Println(err)
 		return "", err
 	}
 
 	// buffer to string
 	return tpl.String(), nil
-}
-
-// TemplToString converts a Template and struct to string
-func TemplToString(templ *template.Template, data interface{}) string {
-
-	var tpl bytes.Buffer
-	if err := templ.Execute(&tpl, data); err != nil {
-		fmt.Println(err)
-	}
-
-	return tpl.String()
 }
 
 // IsEmpty returns true, if a string is empty or whitespace
@@ -133,6 +119,7 @@ func Round(val float64, roundOn float64, places int) (newVal float64) {
 	return
 }
 
+// CreateDir creates a missing directory
 func CreateDir(path string) error {
 
 	// dir from path

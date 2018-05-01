@@ -1,13 +1,11 @@
 package pageLogin
 
 import (
-	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
-	"html/template"
 	"net/http"
 )
 
@@ -19,16 +17,17 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	type login struct {
+	type content struct {
 		Lang lang.Login
 	}
-	var l login
+	var c content
 
-	l.Lang = page.Lang.Login
+	c.Lang = page.Lang.Login
 
-	templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "login.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"login.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-	page.Content += functions.TemplToString(templ, l)
 }

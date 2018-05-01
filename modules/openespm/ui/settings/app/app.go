@@ -28,5 +28,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	} else if nav.IsNext("Edit") {
 
 		pageAppEdit.Render(page, nav, r)
+	} else {
+		nav.RedirectPath("404", true)
 	}
 }

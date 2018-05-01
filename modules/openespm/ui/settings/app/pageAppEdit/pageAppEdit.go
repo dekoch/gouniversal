@@ -2,7 +2,6 @@ package pageAppEdit
 
 import (
 	"errors"
-	"fmt"
 	"gouniversal/modules/openespm/app"
 	"gouniversal/modules/openespm/appConfig"
 	"gouniversal/modules/openespm/globalOESPM"
@@ -30,15 +29,15 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	button := r.FormValue("edit")
 
-	type appEdit struct {
+	type content struct {
 		Lang     langOESPM.SettingsAppEdit
 		App      appConfig.App
 		CmbApps  template.HTML
 		CmbState template.HTML
 	}
-	var ae appEdit
+	var c content
 
-	ae.Lang = page.Lang.Settings.App.Edit
+	c.Lang = page.Lang.Settings.App.Edit
 
 	// Form input
 	id := nav.Parameter("UUID")
@@ -75,27 +74,27 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 		if id == globalOESPM.AppConfig.File.Apps[i].UUID {
 
-			ae.App = globalOESPM.AppConfig.File.Apps[i]
+			c.App = globalOESPM.AppConfig.File.Apps[i]
 		}
 	}
 	globalOESPM.AppConfig.Mut.Unlock()
 
 	// combobox App
 	cmbApps := "<select name=\"app\">"
-	apps := app.List()
+	apps := app.UiAppList
 
 	for i := 0; i < len(apps); i++ {
 
 		cmbApps += "<option value=\"" + apps[i] + "\""
 
-		if ae.App.App == apps[i] {
+		if c.App.App == apps[i] {
 			cmbApps += " selected"
 		}
 
 		cmbApps += ">" + apps[i] + "</option>"
 	}
 	cmbApps += "</select>"
-	ae.CmbApps = template.HTML(cmbApps)
+	c.CmbApps = template.HTML(cmbApps)
 
 	// combobox State
 	cmbState := "<select name=\"state\">"
@@ -112,22 +111,22 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 		cmbState += "<option value=\"" + strconv.Itoa(i) + "\""
 
-		if ae.App.State == i {
+		if c.App.State == i {
 			cmbState += " selected"
 		}
 
 		cmbState += ">" + statetext + "</option>"
 	}
 	cmbState += "</select>"
-	ae.CmbState = template.HTML(cmbState)
+	c.CmbState = template.HTML(cmbState)
 
 	// display app
-	templ, err := template.ParseFiles(globalOESPM.UiConfig.AppFileRoot + "settings/appedit.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"settings/appedit.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-
-	page.Content += functions.TemplToString(templ, ae)
 }
 
 func newApp() string {
@@ -142,7 +141,7 @@ func newApp() string {
 	newApp[0].Name = u.String()
 	newApp[0].State = 1 // active
 
-	apps := app.List()
+	apps := app.UiAppList
 
 	// select first app as default
 	if len(apps) > 0 {

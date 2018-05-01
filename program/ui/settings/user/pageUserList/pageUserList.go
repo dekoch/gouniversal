@@ -1,7 +1,6 @@
 package pageUserList
 
 import (
-	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
 	"gouniversal/shared/functions"
@@ -19,13 +18,13 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	type userlist struct {
+	type content struct {
 		Lang     lang.SettingsUserList
 		UserList template.HTML
 	}
-	var ul userlist
+	var c content
 
-	ul.Lang = page.Lang.Settings.User.UserList
+	c.Lang = page.Lang.Settings.User.UserList
 
 	var tbody string
 	tbody = ""
@@ -41,17 +40,17 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		tbody += "<th scope='row'>" + strconv.Itoa(intIndex) + "</th>"
 		tbody += "<td>" + global.UserConfig.File.User[i].LoginName + "</td>"
 		tbody += "<td>" + global.UserConfig.File.User[i].Name + "</td>"
-		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"Program:Settings:User:Edit$UUID=" + global.UserConfig.File.User[i].UUID + "\" title=\"" + ul.Lang.Edit + "\"></button></td>"
+		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"Program:Settings:User:Edit$UUID=" + global.UserConfig.File.User[i].UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"
 		tbody += "</tr>"
 	}
 	global.UserConfig.Mut.Unlock()
 
-	ul.UserList = template.HTML(tbody)
+	c.UserList = template.HTML(tbody)
 
-	templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "settings/userlist.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"settings/userlist.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-
-	page.Content += functions.TemplToString(templ, ul)
 }

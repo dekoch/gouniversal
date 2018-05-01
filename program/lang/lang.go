@@ -144,6 +144,11 @@ type Alert struct {
 	Error   string
 }
 
+type Error struct {
+	NotFound404     string
+	LoopDetected508 string
+}
+
 type File struct {
 	Header   config.FileHeader
 	Menu     Menu
@@ -153,6 +158,7 @@ type File struct {
 	Logout   Logout
 	Exit     Exit
 	Alert    Alert
+	Error    Error
 }
 
 type Global struct {
@@ -235,6 +241,9 @@ func SaveLang(lang File, n string) error {
 		lang.Alert.Info = "Info"
 		lang.Alert.Warning = "Warning"
 		lang.Alert.Error = "Error"
+
+		lang.Error.NotFound404 = "Not Found"
+		lang.Error.LoopDetected508 = "Loop Detected"
 	}
 
 	b, err := json.Marshal(lang)

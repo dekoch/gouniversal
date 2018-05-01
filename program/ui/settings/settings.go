@@ -27,5 +27,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	} else if nav.IsNext("Group") {
 
 		group.Render(page, nav, r)
+	} else {
+		nav.RedirectPath("404", true)
 	}
 }

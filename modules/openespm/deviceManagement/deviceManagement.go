@@ -105,12 +105,11 @@ func HTMLSelectDevice(name string, appname string, uid string) template.HTML {
 	c.Title = template.HTML(title)
 	c.Select = template.HTML(sel)
 
-	templ, err := template.ParseFiles(globalOESPM.UiConfig.AppFileRoot + "selectdevice.html")
+	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"selectdevice.html", c)
 	if err != nil {
 		fmt.Println(err)
+		p = err.Error()
 	}
-
-	p := functions.TemplToString(templ, c)
 
 	return template.HTML(p)
 }

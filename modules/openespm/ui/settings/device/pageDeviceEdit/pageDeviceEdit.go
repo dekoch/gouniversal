@@ -2,7 +2,6 @@ package pageDeviceEdit
 
 import (
 	"errors"
-	"fmt"
 	"gouniversal/modules/openespm/app"
 	"gouniversal/modules/openespm/deviceConfig"
 	"gouniversal/modules/openespm/globalOESPM"
@@ -30,15 +29,15 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	button := r.FormValue("edit")
 
-	type deviceEdit struct {
+	type content struct {
 		Lang     langOESPM.SettingsDeviceEdit
 		Device   deviceConfig.Device
 		CmbApps  template.HTML
 		CmbState template.HTML
 	}
-	var de deviceEdit
+	var c content
 
-	de.Lang = page.Lang.Settings.Device.Edit
+	c.Lang = page.Lang.Settings.Device.Edit
 
 	// Form input
 	id := nav.Parameter("UUID")
@@ -73,27 +72,27 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 		if id == globalOESPM.DeviceConfig.File.Devices[i].UUID {
 
-			de.Device = globalOESPM.DeviceConfig.File.Devices[i]
+			c.Device = globalOESPM.DeviceConfig.File.Devices[i]
 		}
 	}
 	globalOESPM.DeviceConfig.Mut.Unlock()
 
 	// combobox App
 	cmbApps := "<select name=\"app\">"
-	apps := app.List()
+	apps := app.DeviceAppList
 
 	for i := 0; i < len(apps); i++ {
 
 		cmbApps += "<option value=\"" + apps[i] + "\""
 
-		if de.Device.App == apps[i] {
+		if c.Device.App == apps[i] {
 			cmbApps += " selected"
 		}
 
 		cmbApps += ">" + apps[i] + "</option>"
 	}
 	cmbApps += "</select>"
-	de.CmbApps = template.HTML(cmbApps)
+	c.CmbApps = template.HTML(cmbApps)
 
 	// combobox State
 	cmbState := "<select name=\"state\">"
@@ -110,22 +109,22 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 		cmbState += "<option value=\"" + strconv.Itoa(i) + "\""
 
-		if de.Device.State == i {
+		if c.Device.State == i {
 			cmbState += " selected"
 		}
 
 		cmbState += ">" + statetext + "</option>"
 	}
 	cmbState += "</select>"
-	de.CmbState = template.HTML(cmbState)
+	c.CmbState = template.HTML(cmbState)
 
 	// display device
-	templ, err := template.ParseFiles(globalOESPM.UiConfig.AppFileRoot + "settings/deviceedit.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"settings/deviceedit.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-
-	page.Content += functions.TemplToString(templ, de)
 }
 
 func newDevice() string {
@@ -143,7 +142,7 @@ func newDevice() string {
 	newDevice[0].RequestID = u.String()
 	newDevice[0].RequestKey = key.String()
 
-	apps := app.List()
+	apps := app.DeviceAppList
 
 	// select first app as default
 	if len(apps) > 0 {

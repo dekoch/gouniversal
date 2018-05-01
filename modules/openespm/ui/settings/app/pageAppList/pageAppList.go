@@ -1,7 +1,6 @@
 package pageAppList
 
 import (
-	"fmt"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
@@ -19,13 +18,13 @@ func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {
 
-	type appList struct {
+	type content struct {
 		Lang    langOESPM.SettingsAppList
 		AppList template.HTML
 	}
-	var al appList
+	var c content
 
-	al.Lang = page.Lang.Settings.App.List
+	c.Lang = page.Lang.Settings.App.List
 
 	var tbody string
 	tbody = ""
@@ -43,17 +42,17 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 		tbody += "<th scope='row'>" + strconv.Itoa(intIndex) + "</th>"
 		tbody += "<td>" + a.Name + "</td>"
 		tbody += "<td>" + a.App + "</td>"
-		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:openESPM:Settings:App:Edit$UUID=" + a.UUID + "\" title=\"" + al.Lang.Edit + "\"></button></td>"
+		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:openESPM:Settings:App:Edit$UUID=" + a.UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"
 		tbody += "</tr>"
 	}
 	globalOESPM.AppConfig.Mut.Unlock()
 
-	al.AppList = template.HTML(tbody)
+	c.AppList = template.HTML(tbody)
 
-	templ, err := template.ParseFiles(globalOESPM.UiConfig.AppFileRoot + "settings/applist.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"settings/applist.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-
-	page.Content += functions.TemplToString(templ, al)
 }

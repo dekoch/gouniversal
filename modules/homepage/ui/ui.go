@@ -51,23 +51,20 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	type Content struct {
+	type content struct {
 		Index template.HTML
 	}
-	var c Content
+	var c content
 
 	// use navigation path to get path to html
 	path := strings.Replace(nav.Path, "App:Homepage:", "", -1)
 	path = strings.Replace(path, ":", "/", -1)
 	path = global.Config.File.UIFileRoot + path
 
-	content, err := functions.PageToString(path, c)
+	p, err := functions.PageToString(path, c)
 	if err == nil {
-
-		page.Content += content
-
+		page.Content += p
 	} else {
-
-		nav.RedirectPath("Account:Login", true)
+		nav.RedirectPath("404", true)
 	}
 }

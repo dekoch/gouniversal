@@ -56,6 +56,8 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	if nav.IsNext("Home") {
 
 		home.Render(appPage, nav, r)
+	} else {
+		nav.RedirectPath("404", true)
 	}
 
 	page.Content += appPage.Content

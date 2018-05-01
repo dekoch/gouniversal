@@ -1,7 +1,6 @@
 package pageGroupList
 
 import (
-	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
 	"gouniversal/shared/functions"
@@ -19,13 +18,13 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	type grouplist struct {
+	type content struct {
 		Lang      lang.SettingsGroupList
 		GroupList template.HTML
 	}
-	var gl grouplist
+	var c content
 
-	gl.Lang = page.Lang.Settings.Group.GroupList
+	c.Lang = page.Lang.Settings.Group.GroupList
 
 	var tbody string
 	tbody = ""
@@ -41,17 +40,17 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		tbody += "<th scope='row'>" + strconv.Itoa(intIndex) + "</th>"
 		tbody += "<td>" + global.GroupConfig.File.Group[i].Name + "</td>"
 		tbody += "<td>" + global.GroupConfig.File.Group[i].Comment + "</td>"
-		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"Program:Settings:Group:Edit$UUID=" + global.GroupConfig.File.Group[i].UUID + "\" title=\"" + gl.Lang.Edit + "\"></button></td>"
+		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"Program:Settings:Group:Edit$UUID=" + global.GroupConfig.File.Group[i].UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"
 		tbody += "</tr>"
 	}
 	global.GroupConfig.Mut.Unlock()
 
-	gl.GroupList = template.HTML(tbody)
+	c.GroupList = template.HTML(tbody)
 
-	templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "settings/grouplist.html")
-	if err != nil {
-		fmt.Println(err)
+	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"settings/grouplist.html", c)
+	if err == nil {
+		page.Content += p
+	} else {
+		nav.RedirectPath("404", true)
 	}
-
-	page.Content += functions.TemplToString(templ, gl)
 }
