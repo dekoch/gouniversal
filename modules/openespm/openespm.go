@@ -5,6 +5,7 @@ import (
 	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/request"
 	"gouniversal/modules/openespm/ui"
+	"gouniversal/shared/language"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
 	"net/http"
@@ -22,9 +23,8 @@ func LoadConfig() {
 	globalOESPM.DeviceConfig.LoadConfig()
 	globalOESPM.DeviceConfig.Mut.Unlock()
 
-	globalOESPM.Lang.Mut.Lock()
-	globalOESPM.Lang.File = langOESPM.LoadLangFiles()
-	globalOESPM.Lang.Mut.Unlock()
+	en := langOESPM.DefaultEn()
+	globalOESPM.Lang = language.New("data/lang/openespm/", en, "en")
 
 	request.LoadConfig()
 }

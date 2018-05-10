@@ -7,7 +7,7 @@ import (
 
 type Page struct {
 	Content string
-	Lang    lang.File
+	Lang    lang.LangFile
 }
 
 type Request struct {

@@ -45,7 +45,7 @@ type JsonHeader struct {
 
 type Page struct {
 	Content string
-	Lang    langOESPM.File
+	Lang    langOESPM.LangFile
 	App     appConfig.App
 }
 

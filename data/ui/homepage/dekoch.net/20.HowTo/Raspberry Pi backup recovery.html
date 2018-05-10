@@ -1,0 +1,24 @@
+Laufwerkspfad suchen:<br>
+<br>
+lsblk<br>
+<br>
+<pre class="text-left">
+mario@XPS13:~$ lsblk
+NAME           MAJ:MIN RM   SIZE RO TYPE  MOUNTPOINT
+loop0            7:0    0  72,8M  1 loop  
+<b>mmcblk0</b>        179:0    0    29G  0 disk  
+├─mmcblk0p1    179:1    0    63M  0 part  /media/mario/boot
+└─mmcblk0p2    179:2    0  28,9G  0 part  /media/mario/202638e1-4ce4-45df-9a00-a
+</pre>
+<br>
+Backup:<br>
+ohne Kompression<br>
+<pre>sudo dd if=/dev/<b>mmcblk0</b> of=/path/to/image</pre>
+mit Kompression<br>
+<pre>sudo dd if=/dev/<b>mmcblk0</b> | gzip > /path/to/image.gz</pre>
+<br>
+Recovery:<br>
+ohne Kompression<br>
+<pre>sudo dd if=/path/to/image of=/dev/<b>mmcblk0</b></pre>
+mit Kompression<br>
+<pre>gzip -dc /path/to/image.gz | sudo dd of=/dev/<b>mmcblk0</b></pre><br>

@@ -1,16 +1,6 @@
 package lang
 
-import (
-	"encoding/json"
-	"gouniversal/shared/config"
-	"gouniversal/shared/io/file"
-	"io/ioutil"
-	"log"
-	"os"
-	"sync"
-)
-
-const LangDir = "data/lang/program/"
+import "gouniversal/shared/config"
 
 // menu
 type MenuProgram struct {
@@ -149,7 +139,7 @@ type Error struct {
 	LoopDetected508 string
 }
 
-type File struct {
+type LangFile struct {
 	Header   config.FileHeader
 	Menu     Menu
 	Home     Home
@@ -161,165 +151,84 @@ type File struct {
 	Error    Error
 }
 
-type Global struct {
-	Mut  sync.Mutex
-	File []File
-}
+func DefaultEn() LangFile {
 
-func SaveLang(lang File, n string) error {
+	var l LangFile
 
-	lang.Header = config.BuildHeader(n, "LangGlobal", 1.0, "Language File")
+	l.Header = config.BuildHeader("en", "LangProgram", 1.0, "Language File")
 
-	if _, err := os.Stat(LangDir + n); os.IsNotExist(err) {
-		// if not found, create default file
-		lang.Menu.Program.Title = "Program"
+	l.Menu.Program.Title = "Program"
 
-		lang.Menu.App.Title = "Application"
+	l.Menu.App.Title = "Application"
 
-		lang.Menu.Account.Title = "Account"
-		lang.Menu.Account.Login = "Login"
-		lang.Menu.Account.Logout = "Logout"
+	l.Menu.Account.Title = "Account"
+	l.Menu.Account.Login = "Login"
+	l.Menu.Account.Logout = "Logout"
 
-		lang.Home.Title = "Home"
+	l.Home.Title = "Home"
 
-		lang.Settings.Title = "Settings"
-		lang.Settings.GeneralEdit.Title = "General"
-		lang.Settings.GeneralEdit.Apply = "Apply"
+	l.Settings.Title = "Settings"
+	l.Settings.GeneralEdit.Title = "General"
+	l.Settings.GeneralEdit.Apply = "Apply"
 
-		lang.Settings.User.Title = "User"
-		lang.Settings.User.UserList.Title = "User List"
-		lang.Settings.User.UserList.AddUser = "Add User"
-		lang.Settings.User.UserList.LoginName = "Login Name"
-		lang.Settings.User.UserList.Name = "Name"
-		lang.Settings.User.UserList.Options = "Options"
-		lang.Settings.User.UserList.Edit = "Edit"
+	l.Settings.User.Title = "User"
+	l.Settings.User.UserList.Title = "User List"
+	l.Settings.User.UserList.AddUser = "Add User"
+	l.Settings.User.UserList.LoginName = "Login Name"
+	l.Settings.User.UserList.Name = "Name"
+	l.Settings.User.UserList.Options = "Options"
+	l.Settings.User.UserList.Edit = "Edit"
 
-		lang.Settings.User.UserEdit.Title = "User Edit"
-		lang.Settings.User.UserEdit.LoginName = "Login Name"
-		lang.Settings.User.UserEdit.Name = "Name"
-		lang.Settings.User.UserEdit.State = "State"
-		lang.Settings.User.UserEdit.States.Public = "Public"
-		lang.Settings.User.UserEdit.States.Active = "Active"
-		lang.Settings.User.UserEdit.States.Inactive = "Inactive"
-		lang.Settings.User.UserEdit.Language = "Language"
-		lang.Settings.User.UserEdit.Password = "Password"
-		lang.Settings.User.UserEdit.Comment = "Comment"
-		lang.Settings.User.UserEdit.Groups = "Groups"
-		lang.Settings.User.UserEdit.Apply = "Apply"
-		lang.Settings.User.UserEdit.Delete = "Delete"
+	l.Settings.User.UserEdit.Title = "User Edit"
+	l.Settings.User.UserEdit.LoginName = "Login Name"
+	l.Settings.User.UserEdit.Name = "Name"
+	l.Settings.User.UserEdit.State = "State"
+	l.Settings.User.UserEdit.States.Public = "Public"
+	l.Settings.User.UserEdit.States.Active = "Active"
+	l.Settings.User.UserEdit.States.Inactive = "Inactive"
+	l.Settings.User.UserEdit.Language = "Language"
+	l.Settings.User.UserEdit.Password = "Password"
+	l.Settings.User.UserEdit.Comment = "Comment"
+	l.Settings.User.UserEdit.Groups = "Groups"
+	l.Settings.User.UserEdit.Apply = "Apply"
+	l.Settings.User.UserEdit.Delete = "Delete"
 
-		lang.Settings.Group.Title = "Group"
-		lang.Settings.Group.GroupList.Title = "Group List"
-		lang.Settings.Group.GroupList.AddGroup = "Add Group"
-		lang.Settings.Group.GroupList.Name = "Name"
-		lang.Settings.Group.GroupList.Comment = "Comment"
-		lang.Settings.Group.GroupList.Options = "Options"
-		lang.Settings.Group.GroupList.Edit = "Edit"
+	l.Settings.Group.Title = "Group"
+	l.Settings.Group.GroupList.Title = "Group List"
+	l.Settings.Group.GroupList.AddGroup = "Add Group"
+	l.Settings.Group.GroupList.Name = "Name"
+	l.Settings.Group.GroupList.Comment = "Comment"
+	l.Settings.Group.GroupList.Options = "Options"
+	l.Settings.Group.GroupList.Edit = "Edit"
 
-		lang.Settings.Group.GroupEdit.Title = "Group Edit"
-		lang.Settings.Group.GroupEdit.Name = "Name"
-		lang.Settings.Group.GroupEdit.State = "State"
-		lang.Settings.Group.GroupEdit.States.Active = "Active"
-		lang.Settings.Group.GroupEdit.States.Inactive = "Inactive"
-		lang.Settings.Group.GroupEdit.Comment = "Comment"
-		lang.Settings.Group.GroupEdit.Pages = "Pages"
-		lang.Settings.Group.GroupEdit.Apply = "Apply"
-		lang.Settings.Group.GroupEdit.Delete = "Delete"
+	l.Settings.Group.GroupEdit.Title = "Group Edit"
+	l.Settings.Group.GroupEdit.Name = "Name"
+	l.Settings.Group.GroupEdit.State = "State"
+	l.Settings.Group.GroupEdit.States.Active = "Active"
+	l.Settings.Group.GroupEdit.States.Inactive = "Inactive"
+	l.Settings.Group.GroupEdit.Comment = "Comment"
+	l.Settings.Group.GroupEdit.Pages = "Pages"
+	l.Settings.Group.GroupEdit.Apply = "Apply"
+	l.Settings.Group.GroupEdit.Delete = "Delete"
 
-		lang.Settings.About.Title = "About"
+	l.Settings.About.Title = "About"
 
-		lang.Login.Title = "Login"
-		lang.Login.User = "User"
-		lang.Login.Password = "Password"
-		lang.Login.Login = "Login"
+	l.Login.Title = "Login"
+	l.Login.User = "User"
+	l.Login.Password = "Password"
+	l.Login.Login = "Login"
 
-		lang.Logout.Title = "Logout"
+	l.Logout.Title = "Logout"
 
-		lang.Exit.Title = "Exit"
+	l.Exit.Title = "Exit"
 
-		lang.Alert.Success = "Success"
-		lang.Alert.Info = "Info"
-		lang.Alert.Warning = "Warning"
-		lang.Alert.Error = "Error"
+	l.Alert.Success = "Success"
+	l.Alert.Info = "Info"
+	l.Alert.Warning = "Warning"
+	l.Alert.Error = "Error"
 
-		lang.Error.NotFound404 = "Not Found"
-		lang.Error.LoopDetected508 = "Loop Detected"
-	}
+	l.Error.NotFound404 = "Not Found"
+	l.Error.LoopDetected508 = "Loop Detected"
 
-	b, err := json.Marshal(lang)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	f := new(file.File)
-	err = f.WriteFile(LangDir+n, b)
-
-	return err
-}
-
-func LoadLang(n string) File {
-
-	var lg File
-
-	if _, err := os.Stat(LangDir + n); os.IsNotExist(err) {
-		// if not found, create default file
-		SaveLang(lg, n)
-	}
-
-	f := new(file.File)
-	b, err := f.ReadFile(LangDir + n)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = json.Unmarshal(b, &lg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if config.CheckHeader(lg.Header, "LangGlobal") == false {
-		log.Fatal("wrong config")
-	}
-
-	return lg
-}
-
-func LoadLangFiles() []File {
-
-	lg := make([]File, 0)
-
-	if _, err := os.Stat(LangDir + "en"); os.IsNotExist(err) {
-		// if not found, create default file
-		var newlg File
-		SaveLang(newlg, "en")
-	}
-
-	files, err := ioutil.ReadDir(LangDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, fl := range files {
-
-		var langfile File
-
-		f := new(file.File)
-		b, err := f.ReadFile(LangDir + fl.Name())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = json.Unmarshal(b, &langfile)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if config.CheckHeader(langfile.Header, "LangGlobal") {
-
-			lg = append(lg, langfile)
-		}
-
-	}
-
-	return lg
+	return l
 }

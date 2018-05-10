@@ -1,16 +1,8 @@
 package langOESPM
 
 import (
-	"encoding/json"
 	"gouniversal/shared/config"
-	"gouniversal/shared/io/file"
-	"io/ioutil"
-	"log"
-	"os"
-	"sync"
 )
-
-const LangDir = "data/lang/openespm/"
 
 type SettingsAppList struct {
 	Title   string
@@ -94,147 +86,66 @@ type SimpleSwitchV1x0 struct {
 	DeviceSettings string
 }
 
-type File struct {
+type LangFile struct {
 	Header           config.FileHeader
 	Settings         Settings
 	Alert            Alert
 	SimpleSwitchV1x0 SimpleSwitchV1x0
 }
 
-type Global struct {
-	Mut  sync.Mutex
-	File []File
-}
+func DefaultEn() LangFile {
 
-func SaveLang(lang File, n string) error {
+	var l LangFile
 
-	lang.Header = config.BuildHeader(n, "LangOpenESPM", 1.0, "Language File")
+	l.Header = config.BuildHeader("en", "LangOpenESPM", 1.0, "Language File")
 
-	if _, err := os.Stat(LangDir + n); os.IsNotExist(err) {
-		// if not found, create default file
-		lang.Settings.Title = "Settings"
+	l.Settings.Title = "Settings"
 
-		lang.Settings.App.Title = "openESPM Apps"
-		lang.Settings.App.List.Title = "App List"
-		lang.Settings.App.List.AddApp = "Add App"
-		lang.Settings.App.List.Name = "Name"
-		lang.Settings.App.List.App = "App"
-		lang.Settings.App.List.Options = "Options"
-		lang.Settings.App.List.Edit = "Edit"
+	l.Settings.App.Title = "openESPM Apps"
+	l.Settings.App.List.Title = "App List"
+	l.Settings.App.List.AddApp = "Add App"
+	l.Settings.App.List.Name = "Name"
+	l.Settings.App.List.App = "App"
+	l.Settings.App.List.Options = "Options"
+	l.Settings.App.List.Edit = "Edit"
 
-		lang.Settings.App.Edit.Title = "App Edit"
-		lang.Settings.App.Edit.Name = "Name"
-		lang.Settings.App.Edit.App = "App"
-		lang.Settings.App.Edit.State = "State"
-		lang.Settings.App.Edit.States.Active = "Active"
-		lang.Settings.App.Edit.States.Inactive = "Inactive"
-		lang.Settings.App.Edit.Comment = "Comment"
-		lang.Settings.App.Edit.Apply = "Apply"
-		lang.Settings.App.Edit.Delete = "Delete"
-		lang.Settings.App.Edit.InfoGroup = "Don't forget to enable new page."
+	l.Settings.App.Edit.Title = "App Edit"
+	l.Settings.App.Edit.Name = "Name"
+	l.Settings.App.Edit.App = "App"
+	l.Settings.App.Edit.State = "State"
+	l.Settings.App.Edit.States.Active = "Active"
+	l.Settings.App.Edit.States.Inactive = "Inactive"
+	l.Settings.App.Edit.Comment = "Comment"
+	l.Settings.App.Edit.Apply = "Apply"
+	l.Settings.App.Edit.Delete = "Delete"
+	l.Settings.App.Edit.InfoGroup = "Don't forget to enable new page."
 
-		lang.Settings.Device.Title = "openESPM Devices"
-		lang.Settings.Device.List.Title = "Device List"
-		lang.Settings.Device.List.AddDevice = "Add Device"
-		lang.Settings.Device.List.Name = "Name"
-		lang.Settings.Device.List.App = "App"
-		lang.Settings.Device.List.Options = "Options"
-		lang.Settings.Device.List.Edit = "Edit"
+	l.Settings.Device.Title = "openESPM Devices"
+	l.Settings.Device.List.Title = "Device List"
+	l.Settings.Device.List.AddDevice = "Add Device"
+	l.Settings.Device.List.Name = "Name"
+	l.Settings.Device.List.App = "App"
+	l.Settings.Device.List.Options = "Options"
+	l.Settings.Device.List.Edit = "Edit"
 
-		lang.Settings.Device.Edit.Title = "Device Edit"
-		lang.Settings.Device.Edit.Name = "Name"
-		lang.Settings.Device.Edit.App = "App"
-		lang.Settings.Device.Edit.State = "State"
-		lang.Settings.Device.Edit.States.Active = "Active"
-		lang.Settings.Device.Edit.States.Inactive = "Inactive"
-		lang.Settings.Device.Edit.Comment = "Comment"
-		lang.Settings.Device.Edit.Apply = "Apply"
-		lang.Settings.Device.Edit.Delete = "Delete"
+	l.Settings.Device.Edit.Title = "Device Edit"
+	l.Settings.Device.Edit.Name = "Name"
+	l.Settings.Device.Edit.App = "App"
+	l.Settings.Device.Edit.State = "State"
+	l.Settings.Device.Edit.States.Active = "Active"
+	l.Settings.Device.Edit.States.Inactive = "Inactive"
+	l.Settings.Device.Edit.Comment = "Comment"
+	l.Settings.Device.Edit.Apply = "Apply"
+	l.Settings.Device.Edit.Delete = "Delete"
 
-		lang.Alert.Success = "Success"
-		lang.Alert.Info = "Info"
-		lang.Alert.Warning = "Warning"
-		lang.Alert.Error = "Error"
+	l.Alert.Success = "Success"
+	l.Alert.Info = "Info"
+	l.Alert.Warning = "Warning"
+	l.Alert.Error = "Error"
 
-		lang.SimpleSwitchV1x0.On = "On"
-		lang.SimpleSwitchV1x0.Off = "Off"
-		lang.SimpleSwitchV1x0.DeviceSettings = "Device Settings"
-	}
+	l.SimpleSwitchV1x0.On = "On"
+	l.SimpleSwitchV1x0.Off = "Off"
+	l.SimpleSwitchV1x0.DeviceSettings = "Device Settings"
 
-	b, err := json.Marshal(lang)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	f := new(file.File)
-	err = f.WriteFile(LangDir+n, b)
-
-	return err
-}
-
-func LoadLang(n string) File {
-
-	var lg File
-
-	if _, err := os.Stat(LangDir + n); os.IsNotExist(err) {
-		// if not found, create default file
-		SaveLang(lg, n)
-	}
-
-	f := new(file.File)
-	b, err := f.ReadFile(LangDir + n)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = json.Unmarshal(b, &lg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if config.CheckHeader(lg.Header, "LangOpenESPM") == false {
-		log.Fatal("wrong config")
-	}
-
-	return lg
-}
-
-func LoadLangFiles() []File {
-
-	lg := make([]File, 0)
-
-	if _, err := os.Stat(LangDir + "en"); os.IsNotExist(err) {
-		// if not found, create default file
-		var newlg File
-		SaveLang(newlg, "en")
-	}
-
-	files, err := ioutil.ReadDir(LangDir)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, fl := range files {
-
-		var langfile File
-
-		f := new(file.File)
-		b, err := f.ReadFile(LangDir + fl.Name())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		err = json.Unmarshal(b, &langfile)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if config.CheckHeader(langfile.Header, "LangOpenESPM") {
-
-			lg = append(lg, langfile)
-		}
-
-	}
-
-	return lg
+	return l
 }

@@ -5,7 +5,6 @@ import (
 	"gouniversal/modules"
 	"gouniversal/program/global"
 	"gouniversal/program/guestManagement"
-	"gouniversal/program/lang"
 	"gouniversal/program/ui/pageHome"
 	"gouniversal/program/ui/pageLogin"
 	"gouniversal/program/ui/settings"
@@ -287,35 +286,6 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	return []byte(p)
 }
 
-func selectLang(l string) lang.File {
-
-	global.Lang.Mut.Lock()
-	defer global.Lang.Mut.Unlock()
-
-	// search lang
-	for i := 0; i < len(global.Lang.File); i++ {
-
-		if l == global.Lang.File[i].Header.FileName {
-
-			return global.Lang.File[i]
-		}
-	}
-
-	// if nothing found
-	// search "en"
-	for i := 0; i < len(global.Lang.File); i++ {
-
-		if "en" == global.Lang.File[i].Header.FileName {
-
-			return global.Lang.File[i]
-		}
-	}
-
-	// if nothing found
-	// load or create "en"
-	return lang.LoadLang("en")
-}
-
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path == "/" {
@@ -354,7 +324,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 	getSession(nav, w, r)
 
-	page.Lang = selectLang(nav.User.Lang)
+	global.Lang.SelectLang(nav.User.Lang, &page.Lang)
 
 	pageHome.RegisterPage(page, nav)
 	modules.RegisterPage(page, nav)
@@ -544,13 +514,11 @@ func (ui *UI) StartServer() {
 	if _, err := os.Stat(global.UiConfig.File.ProgramFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
 		fmt.Println("error: ProgramFileRoot not found")
-		os.Exit(1)
 	}
 
 	if _, err := os.Stat(global.UiConfig.File.StaticFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
 		fmt.Println("error: StaticFileRoot not found")
-		os.Exit(1)
 	}
 
 	addrs, err := net.InterfaceAddrs()
@@ -570,14 +538,17 @@ func (ui *UI) StartServer() {
 		alert.Start()
 		modules.LoadConfig()
 
-		if _, err = os.Stat(global.UiConfig.File.HTTPS.CertFile); os.IsNotExist(err) {
-			global.UiConfig.File.HTTPS.Enabled = false
-			fmt.Println("missing CertFile \"" + global.UiConfig.File.HTTPS.CertFile + "\"")
-		}
+		// if HTTPS is enabled, check cert and key file
+		if global.UiConfig.File.HTTPS.Enabled {
+			if _, err = os.Stat(global.UiConfig.File.HTTPS.CertFile); os.IsNotExist(err) {
+				global.UiConfig.File.HTTPS.Enabled = false
+				fmt.Println("missing CertFile \"" + global.UiConfig.File.HTTPS.CertFile + "\"")
+			}
 
-		if _, err = os.Stat(global.UiConfig.File.HTTPS.KeyFile); os.IsNotExist(err) {
-			global.UiConfig.File.HTTPS.Enabled = false
-			fmt.Println("missing KeyFile \"" + global.UiConfig.File.HTTPS.KeyFile + "\"")
+			if _, err = os.Stat(global.UiConfig.File.HTTPS.KeyFile); os.IsNotExist(err) {
+				global.UiConfig.File.HTTPS.Enabled = false
+				fmt.Println("missing KeyFile \"" + global.UiConfig.File.HTTPS.KeyFile + "\"")
+			}
 		}
 
 		// configure server

@@ -3,8 +3,8 @@ package globalOESPM
 import (
 	"gouniversal/modules/openespm/appConfig"
 	"gouniversal/modules/openespm/deviceConfig"
-	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
+	"gouniversal/shared/language"
 )
 
 const AppDataFolder = "data/openespm/app/"
@@ -16,5 +16,5 @@ var (
 	AppConfig    appConfig.AppConfig
 	DeviceConfig deviceConfig.DeviceConfig
 
-	Lang langOESPM.Global
+	Lang language.Language
 )

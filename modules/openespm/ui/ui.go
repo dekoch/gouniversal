@@ -4,7 +4,6 @@ import (
 	"gouniversal/modules/openespm/app"
 	"gouniversal/modules/openespm/appManagement"
 	"gouniversal/modules/openespm/globalOESPM"
-	"gouniversal/modules/openespm/langOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/modules/openespm/ui/settings"
 	"gouniversal/shared/navigation"
@@ -16,7 +15,7 @@ import (
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	appPage := new(typesOESPM.Page)
-	appPage.Lang = selectLang(nav.User.Lang)
+	globalOESPM.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
 	settings.RegisterPage(appPage, nav)
 
@@ -34,40 +33,11 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 	globalOESPM.AppConfig.Mut.Unlock()
 }
 
-func selectLang(l string) langOESPM.File {
-
-	globalOESPM.Lang.Mut.Lock()
-	defer globalOESPM.Lang.Mut.Unlock()
-
-	// search lang
-	for i := 0; i < len(globalOESPM.Lang.File); i++ {
-
-		if l == globalOESPM.Lang.File[i].Header.FileName {
-
-			return globalOESPM.Lang.File[i]
-		}
-	}
-
-	// if nothing found
-	// search "en"
-	for i := 0; i < len(globalOESPM.Lang.File); i++ {
-
-		if "en" == globalOESPM.Lang.File[i].Header.FileName {
-
-			return globalOESPM.Lang.File[i]
-		}
-	}
-
-	// if nothing found
-	// load or create "en"
-	return langOESPM.LoadLang("en")
-}
-
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	appPage := new(typesOESPM.Page)
 	appPage.Content = page.Content
-	appPage.Lang = selectLang(nav.User.Lang)
+	globalOESPM.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
 	if nav.IsNext("Settings") {
 

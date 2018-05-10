@@ -5,6 +5,7 @@ import (
 	"gouniversal/modules/fileshare/lang"
 	"gouniversal/modules/fileshare/request"
 	"gouniversal/modules/fileshare/ui"
+	"gouniversal/shared/language"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
 	"net/http"
@@ -12,7 +13,8 @@ import (
 
 func LoadConfig() {
 
-	global.Lang.Files = lang.LoadLangFiles()
+	en := lang.DefaultEn()
+	global.Lang = language.New("data/lang/fileshare/", en, "en")
 
 	global.Config.LoadConfig()
 

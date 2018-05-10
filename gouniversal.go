@@ -7,6 +7,7 @@ import (
 	"gouniversal/program/global"
 	"gouniversal/program/lang"
 	"gouniversal/program/ui"
+	"gouniversal/shared/language"
 	"os"
 	"strings"
 	"time"
@@ -21,7 +22,8 @@ func main() {
 
 	global.UiConfig.LoadConfig()
 
-	global.Lang.File = lang.LoadLangFiles()
+	en := lang.DefaultEn()
+	global.Lang = language.New("data/lang/program/", en, "en")
 
 	if global.UiConfig.File.UIEnabled {
 		go web.StartServer()

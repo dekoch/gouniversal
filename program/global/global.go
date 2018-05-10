@@ -2,10 +2,10 @@ package global
 
 import (
 	"gouniversal/program/groupConfig"
-	"gouniversal/program/lang"
 	"gouniversal/program/programTypes"
 	"gouniversal/program/uiConfig"
 	"gouniversal/program/userConfig"
+	"gouniversal/shared/language"
 )
 
 type Global struct{}
@@ -19,5 +19,5 @@ var (
 
 	GroupConfig groupConfig.GroupConfig
 
-	Lang lang.Global
+	Lang language.Language
 )

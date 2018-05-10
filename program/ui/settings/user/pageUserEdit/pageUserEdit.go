@@ -78,18 +78,19 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	// combobox Language
 	cmbLang := "<select name=\"language\">"
 
-	global.Lang.Mut.Lock()
-	for i := 0; i < len(global.Lang.File); i++ {
+	global.Lang.LoadLangFiles()
 
-		cmbLang += "<option value=\"" + global.Lang.File[i].Header.FileName + "\""
+	for i := 0; i < len(global.Lang.Storage.Files); i++ {
 
-		if c.User.Lang == global.Lang.File[i].Header.FileName {
+		cmbLang += "<option value=\"" + global.Lang.Storage.Files[i].Name + "\""
+
+		if c.User.Lang == global.Lang.Storage.Files[i].Name {
 			cmbLang += " selected"
 		}
 
-		cmbLang += ">" + global.Lang.File[i].Header.FileName + "</option>"
+		cmbLang += ">" + global.Lang.Storage.Files[i].Name + "</option>"
 	}
-	global.Lang.Mut.Unlock()
+
 	cmbLang += "</select>"
 	c.CmbLang = template.HTML(cmbLang)
 
