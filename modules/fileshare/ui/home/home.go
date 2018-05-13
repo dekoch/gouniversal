@@ -5,14 +5,15 @@ import (
 	"gouniversal/modules/fileshare/global"
 	"gouniversal/modules/fileshare/lang"
 	"gouniversal/modules/fileshare/typesFileshare"
+	"gouniversal/shared/datasize"
 	"gouniversal/shared/functions"
 	"gouniversal/shared/navigation"
 	"html/template"
-	"io"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type fileInfo struct {
@@ -44,7 +45,8 @@ func searchContent(path string) ([]fileInfo, []fileInfo) {
 			folders = append(folders, fi)
 		} else {
 
-			fi.Size = strconv.Itoa(int(l.Size()))
+			s := datasize.ByteSize(l.Size()).HumanReadable()
+			fi.Size = s
 			files = append(files, fi)
 		}
 	}
@@ -76,62 +78,24 @@ func parentDir(path string) string {
 	return newPath + "/"
 }
 
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
-
-	path := r.FormValue("path")
-	path = global.Config.File.FileRoot + path
-
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		fmt.Fprintf(w, "path does not exist")
-		return
-	}
-
-	// the FormFile function takes in the POST input id file
-	file, header, err := r.FormFile("uploadfile")
-
-	if err != nil {
-		fmt.Fprintln(w, err)
-		return
-	}
-
-	defer file.Close()
-
-	out, err := os.Create(path + header.Filename)
-	if err != nil {
-		fmt.Fprintf(w, "Unable to create the file for writing. Check your write access privilege")
-		return
-	}
-
-	defer out.Close()
-
-	// write the content from POST to the file
-	_, err = io.Copy(out, file)
-	if err != nil {
-		fmt.Fprintln(w, err)
-	}
-
-	//fmt.Fprintf(w, "File uploaded successfully: ")
-	//fmt.Fprintf(w, header.Filename)
-
-	fmt.Fprintf(w, "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/app\" /></head></html>")
-}
-
 func LoadConfig() {
 
-	//disabled ToDo: upload authentication
-	//http.HandleFunc("/fileserver/upload", uploadHandler) // Handle the incoming file
 }
 
 func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type Content struct {
-		Lang lang.Home
-		Path template.HTML
-		List template.HTML
+		Lang  lang.Home
+		UUID  template.HTML
+		Token template.HTML
+		Path  template.HTML
+		List  template.HTML
 	}
 	var c Content
 
 	c.Lang = page.Lang.Home
+
+	fileRoot := global.Config.File.FileRoot + nav.User.UUID + "/"
 
 	selFolder := nav.Parameter("Folder")
 	path := ""
@@ -144,8 +108,36 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 		}
 	}
 
+	edit := r.FormValue("edit")
+
+	if edit == "newfolder" {
+
+		u := uuid.Must(uuid.NewRandom())
+
+		err := functions.CreateDir(fileRoot + path + u.String() + "/")
+		if err != nil {
+			fmt.Println(err)
+		}
+
+	} else if strings.HasPrefix(edit, "deletefolder") {
+
+		folder := strings.Replace(edit, "deletefolder", "", 1)
+		err := os.RemoveAll(fileRoot + path + folder)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+	} else if strings.HasPrefix(edit, "deletefile") {
+
+		file := strings.Replace(edit, "deletefile", "", 1)
+		err := os.Remove(fileRoot + path + file)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
 	// scan directory
-	folders, files := searchContent(global.Config.File.FileRoot + path)
+	folders, files := searchContent(fileRoot + path)
 
 	htmlFolders := ""
 
@@ -173,7 +165,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 		htmlFolders += "<td><i class=\"fa fa-folder\" aria-hidden=\"true\">"
 		htmlFolders += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Home$Folder=" + path + f.Name + "/" + "\">" + f.Name + "</button></td>"
 		htmlFolders += "<td>" + f.Size + "</td>"
-		htmlFolders += "<td></td>"
+		htmlFolders += "<td><button class=\"btn btn-danger fa fa-trash\" type=\"submit\" name=\"edit\" value=\"deletefolder" + f.Name + "\" title=\"" + c.Lang.Delete + "\"></button></td>"
 		htmlFolders += "</tr>"
 	}
 
@@ -183,14 +175,17 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 
 		htmlFiles += "<tr>"
 		htmlFiles += "<td><i class=\"fa fa-file\" aria-hidden=\"true\">"
-		htmlFiles += "<td><a href=\"/fileshare/req/?file=" + path + f.Name + "\" download=\"" + f.Name + "\">" + f.Name + "</a></td>"
+		htmlFiles += "<td><a href=\"/fileshare/req/?file=" + nav.User.UUID + "/" + path + f.Name + "\" download=\"" + f.Name + "\">" + f.Name + "</a></td>"
 		htmlFiles += "<td>" + f.Size + "</td>"
-		htmlFiles += "<td></td>"
+		htmlFiles += "<td><button class=\"btn btn-danger fa fa-trash\" type=\"submit\" name=\"edit\" value=\"deletefile" + f.Name + "\" title=\"" + c.Lang.Delete + "\"></button></td>"
 		htmlFiles += "</tr>"
 	}
 
 	c.List = template.HTML(htmlFolders + htmlFiles)
-	c.Path = template.HTML(path)
+	c.Path = template.HTML(nav.User.UUID + "/" + path)
+
+	c.UUID = template.HTML(nav.User.UUID)
+	c.Token = template.HTML(global.Tokens.New(nav.User.UUID))
 
 	content, err := functions.PageToString(global.Config.File.UIFileRoot+"home.html", c)
 	if err == nil {

@@ -2,7 +2,7 @@
     <table class="table table-sm table-hover">
         <thead>
             <tr>
-                <th scope="col"></th>
+                <th scope="col"><button class="btn btn-default fa fa-plus" type="submit" name="edit" value="newfolder" title="{{.Lang.NewFolder}}"></button></th>
                 <th scope="col">{{.Lang.Name}}</th>
                 <th scope="col">{{.Lang.Size}}</th>
                 <th scope="col">{{.Lang.Options}}</th>
@@ -13,8 +13,10 @@
         </tbody>
     </table>
 </form>
-<!-- <form enctype="multipart/form-data" action="/fileserver/upload" method="post">
+<form enctype="multipart/form-data" action="/fileshare/upload/" method="post">
     <input type="file" name="uploadfile" />
+    <input type="hidden" name="uuid" value="{{.UUID}}" />
+    <input type="hidden" name="token" value="{{.Token}}" />
     <input type="hidden" name="path" value="{{.Path}}" />
-    <input type="submit" value="upload" />
-</form> -->
+    <button class="btn btn-outline-secondary fa fa-upload" type="submit" value="upload" title="{{.Lang.Upload}}"></button>
+</form>

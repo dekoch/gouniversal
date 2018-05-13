@@ -24,14 +24,16 @@ type UiHTTPS struct {
 }
 
 type UiConfigFile struct {
-	Header          config.FileHeader
-	UIEnabled       bool
-	ProgramFileRoot string
-	StaticFileRoot  string
-	HTTP            UiHTTP
-	HTTPS           UiHTTPS
-	MaxGuests       int
-	Recovery        bool
+	Header           config.FileHeader
+	UIEnabled        bool
+	Title            string
+	ProgramFileRoot  string
+	StaticFileRoot   string
+	HTTP             UiHTTP
+	HTTPS            UiHTTPS
+	MaxGuests        int
+	MaxLoginAttempts int
+	Recovery         bool
 }
 
 type UiConfig struct {
@@ -46,6 +48,7 @@ func (uc UiConfig) SaveUiConfig() error {
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
 		uc.File.UIEnabled = false
+		uc.File.Title = ""
 		uc.File.ProgramFileRoot = "data/ui/program/1.0/"
 		uc.File.StaticFileRoot = "data/ui/static/1.0/"
 
@@ -58,6 +61,7 @@ func (uc UiConfig) SaveUiConfig() error {
 		uc.File.HTTPS.KeyFile = "server.key"
 
 		uc.File.MaxGuests = 20
+		uc.File.MaxLoginAttempts = 10
 		uc.File.Recovery = false
 	}
 

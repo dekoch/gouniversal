@@ -127,6 +127,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	type content struct {
 		Title     string
+		MenuBrand string
 		MenuLeft  template.HTML
 		MenuRight template.HTML
 		UUID      template.HTML
@@ -134,12 +135,18 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	}
 	var c content
 
-	c.Title = nav.Sitemap.PageTitle(nav.Path)
+	c.MenuBrand = nav.Sitemap.PageTitle(nav.Path)
 
 	// remove leading numbers
-	if strings.Contains(c.Title, ".") {
-		s := strings.SplitAfterN(c.Title, ".", -1)
-		c.Title = s[1]
+	if strings.Contains(c.MenuBrand, ".") {
+		s := strings.SplitAfterN(c.MenuBrand, ".", -1)
+		c.MenuBrand = s[1]
+	}
+
+	if global.UiConfig.File.Title != "" {
+		c.Title = global.UiConfig.File.Title + " - " + c.MenuBrand
+	} else {
+		c.Title = c.MenuBrand
 	}
 
 	pages := nav.Sitemap.Pages
@@ -382,8 +389,9 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 				user := r.FormValue("user")
 				pwd := r.FormValue("pwd")
+				maxAttempts := guestManagement.MaxLoginAttempts(nav.User.UUID)
 
-				if uifunc.CheckLogin(user, pwd) {
+				if uifunc.CheckLogin(user, pwd) && maxAttempts == false {
 
 					nav.User = userManagement.SelectUser(uifunc.LoginNameToUUID(user))
 					nav.RedirectPath("Program:Home", false)

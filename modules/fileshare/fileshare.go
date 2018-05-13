@@ -5,6 +5,7 @@ import (
 	"gouniversal/modules/fileshare/lang"
 	"gouniversal/modules/fileshare/request"
 	"gouniversal/modules/fileshare/ui"
+	"gouniversal/modules/fileshare/upload"
 	"gouniversal/shared/language"
 	"gouniversal/shared/navigation"
 	"gouniversal/shared/types"
@@ -19,6 +20,7 @@ func LoadConfig() {
 	global.Config.LoadConfig()
 
 	request.LoadConfig()
+	upload.LoadConfig()
 
 	ui.LoadConfig()
 }
