@@ -1,7 +1,7 @@
-package SimpleSwitchV1x0ui
+package TempHumV1x0ui
 
 import (
-	"gouniversal/modules/openespm/app/SimpleSwitchV1x0"
+	"gouniversal/modules/openespm/app/TempHumV1x0"
 	"gouniversal/modules/openespm/deviceConfig"
 	"gouniversal/modules/openespm/deviceManagement"
 	"gouniversal/modules/openespm/globalOESPM"
@@ -18,16 +18,18 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	edit, _ := functions.CheckFormInput("edit", r)
 
-	var app SimpleSwitchV1x0.AppConfig
-	var dev SimpleSwitchV1x0.DeviceConfig
+	var app TempHumV1x0.AppConfig
+	var dev TempHumV1x0.DeviceConfig
 	var device deviceConfig.Device
 
 	type content struct {
-		Lang      langOESPM.SimpleSwitchV1x0
+		Lang      langOESPM.TempHumV1x0
 		SelectDev template.HTML
 		Switch    template.HTML
 	}
 	var c content
+
+	c.Lang = page.Lang.TempHumV1x0
 
 	var err error
 	err = nil
@@ -37,7 +39,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 			case 0:
 				// init new app
 				if functions.IsEmpty(page.App.Config) {
-					page.App.Config = SimpleSwitchV1x0.InitAppConfig()
+					page.App.Config = TempHumV1x0.InitAppConfig()
 				}
 
 			case 1:
@@ -61,7 +63,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 				}
 				// init new device
 				if functions.IsEmpty(device.Config) {
-					device.Config = SimpleSwitchV1x0.InitDeviceConfig()
+					device.Config = TempHumV1x0.InitDeviceConfig()
 				}
 
 			case 4:
@@ -71,7 +73,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 			case 5:
 				// form input
 				// toggle switch
-				newState, err := functions.CheckFormInput("switch", r)
+				/*newState, err := functions.CheckFormInput("switch", r)
 				if err == nil {
 					if functions.IsEmpty(newState) == false {
 						if newState == "on" {
@@ -80,7 +82,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 							dev.Switch = false
 						}
 					}
-				}
+				}*/
 
 			case 6:
 				// struct to app config
@@ -108,18 +110,10 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	}
 
 	// render page
-	c.Lang = page.Lang.SimpleSwitchV1x0
+
 	c.SelectDev = deviceManagement.HTMLSelectDevice("device", page.App.App, app.DeviceUUID)
 
-	var sw string
-	if dev.Switch {
-		sw = "<button class=\"btn btn-success fa fa-toggle-on\" type=\"submit\" name=\"switch\" value=\"off\" title=\"" + c.Lang.On + "\"></button>"
-	} else {
-		sw = "<button class=\"btn btn-danger fa fa-toggle-off\" type=\"submit\" name=\"switch\" value=\"on\" title=\"" + c.Lang.Off + "\"></button>"
-	}
-	c.Switch = template.HTML(sw)
-
-	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"SimpleSwitchV1x0/app.html", c)
+	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"TempHumV1x0/app.html", c)
 	if err == nil {
 		page.Content += p
 	} else {

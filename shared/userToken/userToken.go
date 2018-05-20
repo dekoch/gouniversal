@@ -28,7 +28,7 @@ func (t *UserToken) New(uid string) string {
 	newToken[0].Uid = uid
 	newToken[0].Token = ut
 
-	t.Tokens = append(newToken, t.Tokens...)
+	t.Tokens = append(t.Tokens, newToken...)
 
 	return ut
 }

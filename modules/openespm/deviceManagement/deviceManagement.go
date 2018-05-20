@@ -1,69 +1,11 @@
 package deviceManagement
 
 import (
-	"errors"
 	"fmt"
-	"gouniversal/modules/openespm/deviceConfig"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/shared/functions"
 	"html/template"
 )
-
-func LoadDevice(uid string) (deviceConfig.Device, error) {
-
-	globalOESPM.DeviceConfig.Mut.Lock()
-	defer globalOESPM.DeviceConfig.Mut.Unlock()
-
-	for u := 0; u < len(globalOESPM.DeviceConfig.File.Devices); u++ {
-
-		// search device with UUID
-		if uid == globalOESPM.DeviceConfig.File.Devices[u].UUID {
-
-			return globalOESPM.DeviceConfig.File.Devices[u], nil
-		}
-	}
-
-	var device deviceConfig.Device
-	device.State = -1
-	return device, errors.New("LoadDevice() device \"" + uid + "\" not found")
-}
-
-func LoadDeviceWithReqID(id string) (deviceConfig.Device, error) {
-
-	globalOESPM.DeviceConfig.Mut.Lock()
-	defer globalOESPM.DeviceConfig.Mut.Unlock()
-
-	for u := 0; u < len(globalOESPM.DeviceConfig.File.Devices); u++ {
-
-		// search device with RequestID
-		if id == globalOESPM.DeviceConfig.File.Devices[u].RequestID {
-
-			return globalOESPM.DeviceConfig.File.Devices[u], nil
-		}
-	}
-
-	var device deviceConfig.Device
-	device.State = -1
-	return device, errors.New("LoadDeviceWithReqID() device \"" + id + "\" not found")
-}
-
-func SaveDevice(dev deviceConfig.Device) error {
-
-	globalOESPM.DeviceConfig.Mut.Lock()
-	defer globalOESPM.DeviceConfig.Mut.Unlock()
-
-	for u := 0; u < len(globalOESPM.DeviceConfig.File.Devices); u++ {
-
-		// search device with UUID
-		if dev.UUID == globalOESPM.DeviceConfig.File.Devices[u].UUID {
-
-			globalOESPM.DeviceConfig.File.Devices[u] = dev
-			return nil
-		}
-	}
-
-	return errors.New("SaveDevice() device \"" + dev.UUID + "\" not found")
-}
 
 func HTMLSelectDevice(name string, appname string, uid string) template.HTML {
 
@@ -81,22 +23,21 @@ func HTMLSelectDevice(name string, appname string, uid string) template.HTML {
 		sel += "<option value=\"\"></option>"
 	}
 
-	globalOESPM.DeviceConfig.Mut.Lock()
-	defer globalOESPM.DeviceConfig.Mut.Unlock()
+	devices := globalOESPM.DeviceConfig.List()
 
-	for u := 0; u < len(globalOESPM.DeviceConfig.File.Devices); u++ {
+	for u := 0; u < len(devices); u++ {
 
 		// list only devices with the same app
-		if appname == globalOESPM.DeviceConfig.File.Devices[u].App {
-			sel += "<option value=\"" + globalOESPM.DeviceConfig.File.Devices[u].UUID + "\""
+		if appname == devices[u].App {
+			sel += "<option value=\"" + devices[u].UUID + "\""
 
-			if uid == globalOESPM.DeviceConfig.File.Devices[u].UUID {
+			if uid == devices[u].UUID {
 				sel += " selected"
 
-				title = globalOESPM.DeviceConfig.File.Devices[u].Name
+				title = devices[u].Name
 			}
 
-			sel += ">" + globalOESPM.DeviceConfig.File.Devices[u].Name + "</option>"
+			sel += ">" + devices[u].Name + "</option>"
 		}
 	}
 

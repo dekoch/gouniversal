@@ -41,31 +41,34 @@ type UiConfig struct {
 	File UiConfigFile
 }
 
-func (uc UiConfig) SaveUiConfig() error {
+func (c *UiConfig) SaveUiConfig() error {
 
-	uc.File.Header = config.BuildHeader("ui", "ui", 1.0, "UI config file")
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	c.File.Header = config.BuildHeader("ui", "ui", 1.0, "UI config file")
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
-		uc.File.UIEnabled = false
-		uc.File.Title = ""
-		uc.File.ProgramFileRoot = "data/ui/program/1.0/"
-		uc.File.StaticFileRoot = "data/ui/static/1.0/"
+		c.File.UIEnabled = false
+		c.File.Title = ""
+		c.File.ProgramFileRoot = "data/ui/program/1.0/"
+		c.File.StaticFileRoot = "data/ui/static/1.0/"
 
-		uc.File.HTTP.Enabled = true
-		uc.File.HTTP.Port = 8080
+		c.File.HTTP.Enabled = true
+		c.File.HTTP.Port = 8080
 
-		uc.File.HTTPS.Enabled = false
-		uc.File.HTTPS.Port = 443
-		uc.File.HTTPS.CertFile = "server.crt"
-		uc.File.HTTPS.KeyFile = "server.key"
+		c.File.HTTPS.Enabled = false
+		c.File.HTTPS.Port = 443
+		c.File.HTTPS.CertFile = "server.crt"
+		c.File.HTTPS.KeyFile = "server.key"
 
-		uc.File.MaxGuests = 20
-		uc.File.MaxLoginAttempts = 10
-		uc.File.Recovery = false
+		c.File.MaxGuests = 20
+		c.File.MaxLoginAttempts = 10
+		c.File.Recovery = false
 	}
 
-	b, err := json.Marshal(uc.File)
+	b, err := json.Marshal(c.File)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -76,12 +79,15 @@ func (uc UiConfig) SaveUiConfig() error {
 	return err
 }
 
-func (uc *UiConfig) LoadConfig() {
+func (c *UiConfig) LoadConfig() {
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
-		uc.SaveUiConfig()
+		c.SaveUiConfig()
 	}
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
 
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
@@ -89,12 +95,12 @@ func (uc *UiConfig) LoadConfig() {
 		log.Fatal(err)
 	}
 
-	err = json.Unmarshal(b, &uc.File)
+	err = json.Unmarshal(b, &c.File)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if config.CheckHeader(uc.File.Header, "ui") == false {
+	if config.CheckHeader(c.File.Header, "ui") == false {
 		log.Fatal("wrong config \"" + configFilePath + "\"")
 	}
 }

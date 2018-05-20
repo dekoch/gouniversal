@@ -67,15 +67,8 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	}
 
 	// copy device from array
-	globalOESPM.DeviceConfig.Mut.Lock()
-	for i := 0; i < len(globalOESPM.DeviceConfig.File.Devices); i++ {
-
-		if id == globalOESPM.DeviceConfig.File.Devices[i].UUID {
-
-			c.Device = globalOESPM.DeviceConfig.File.Devices[i]
-		}
-	}
-	globalOESPM.DeviceConfig.Mut.Unlock()
+	var err error
+	c.Device, err = globalOESPM.DeviceConfig.Get(id)
 
 	// combobox App
 	cmbApps := "<select name=\"app\">"
@@ -129,38 +122,35 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 func newDevice() string {
 
-	globalOESPM.DeviceConfig.Mut.Lock()
-	defer globalOESPM.DeviceConfig.Mut.Unlock()
-
 	u := uuid.Must(uuid.NewRandom())
 	key := uuid.Must(uuid.NewRandom())
 
-	newDevice := make([]deviceConfig.Device, 1)
-	newDevice[0].UUID = u.String()
-	newDevice[0].Name = u.String()
-	newDevice[0].State = 1 // active
-	newDevice[0].RequestID = u.String()
-	newDevice[0].RequestKey = key.String()
+	var newDevice deviceConfig.Device
+	newDevice.UUID = u.String()
+	newDevice.Name = u.String()
+	newDevice.State = 1 // active
+	newDevice.RequestID = u.String()
+	newDevice.RequestKey = key.String()
 
 	apps := app.DeviceAppList
 
 	// select first app as default
 	if len(apps) > 0 {
-		newDevice[0].App = apps[0]
+		newDevice.App = apps[0]
 	}
 
-	globalOESPM.DeviceConfig.File.Devices = append(newDevice, globalOESPM.DeviceConfig.File.Devices...)
+	globalOESPM.DeviceConfig.Add(newDevice)
 
 	err := globalOESPM.DeviceConfig.SaveConfig()
 	if err == nil {
-		deviceDataFolder := globalOESPM.DeviceDataFolder + newDevice[0].UUID + "/"
+		deviceDataFolder := globalOESPM.DeviceDataFolder + newDevice.UUID + "/"
 		os.MkdirAll(deviceDataFolder, os.ModePerm)
 	}
 
 	return u.String()
 }
 
-func editDevice(r *http.Request, u string) error {
+func editDevice(r *http.Request, uid string) error {
 
 	name, _ := functions.CheckFormInput("name", r)
 	app, _ := functions.CheckFormInput("app", r)
@@ -182,58 +172,38 @@ func editDevice(r *http.Request, u string) error {
 		return errors.New("bad input")
 	}
 
-	globalOESPM.DeviceConfig.Mut.Lock()
-	defer globalOESPM.DeviceConfig.Mut.Unlock()
-
-	for i := 0; i < len(globalOESPM.DeviceConfig.File.Devices); i++ {
-
-		if u == globalOESPM.DeviceConfig.File.Devices[i].UUID {
-
-			intState, err := strconv.Atoi(state)
-			if err != nil {
-				return err
-			}
-
-			globalOESPM.DeviceConfig.File.Devices[i].Name = name
-			globalOESPM.DeviceConfig.File.Devices[i].App = app
-			globalOESPM.DeviceConfig.File.Devices[i].State = intState
-			globalOESPM.DeviceConfig.File.Devices[i].Comment = comment
-			globalOESPM.DeviceConfig.File.Devices[i].RequestID = reqId
-			globalOESPM.DeviceConfig.File.Devices[i].RequestKey = reqKey
-
-			return globalOESPM.DeviceConfig.SaveConfig()
-		}
+	intState, err := strconv.Atoi(state)
+	if err != nil {
+		return err
 	}
 
-	return errors.New("UUID not found")
+	var d deviceConfig.Device
+	d.UUID = uid
+	d.Name = name
+	d.App = app
+	d.State = intState
+	d.Comment = comment
+	d.RequestID = reqId
+	d.RequestKey = reqKey
+
+	err = globalOESPM.DeviceConfig.Edit(uid, d)
+	if err != nil {
+		return err
+	}
+
+	return globalOESPM.DeviceConfig.SaveConfig()
 }
 
-func deleteDevice(u string) error {
+func deleteDevice(uid string) error {
 
-	globalOESPM.DeviceConfig.Mut.Lock()
-	defer globalOESPM.DeviceConfig.Mut.Unlock()
-
-	var dl []deviceConfig.Device
-	n := make([]deviceConfig.Device, 1)
-
-	for i := 0; i < len(globalOESPM.DeviceConfig.File.Devices); i++ {
-
-		if u != globalOESPM.DeviceConfig.File.Devices[i].UUID {
-
-			n[0] = globalOESPM.DeviceConfig.File.Devices[i]
-
-			dl = append(dl, n...)
-		}
-	}
-
-	globalOESPM.DeviceConfig.File.Devices = dl
+	globalOESPM.DeviceConfig.Delete(uid)
 
 	err := globalOESPM.DeviceConfig.SaveConfig()
 	if err != nil {
 		return err
 	}
 
-	deviceDataFolder := globalOESPM.DeviceDataFolder + u + "/"
+	deviceDataFolder := globalOESPM.DeviceDataFolder + uid + "/"
 
 	if _, err := os.Stat(deviceDataFolder); os.IsNotExist(err) {
 		return nil

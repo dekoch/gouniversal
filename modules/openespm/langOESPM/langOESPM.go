@@ -86,11 +86,16 @@ type SimpleSwitchV1x0 struct {
 	DeviceSettings string
 }
 
+type TempHumV1x0 struct {
+	DeviceSettings string
+}
+
 type LangFile struct {
 	Header           config.FileHeader
 	Settings         Settings
 	Alert            Alert
 	SimpleSwitchV1x0 SimpleSwitchV1x0
+	TempHumV1x0      TempHumV1x0
 }
 
 func DefaultEn() LangFile {
@@ -146,6 +151,8 @@ func DefaultEn() LangFile {
 	l.SimpleSwitchV1x0.On = "On"
 	l.SimpleSwitchV1x0.Off = "Off"
 	l.SimpleSwitchV1x0.DeviceSettings = "Device Settings"
+
+	l.TempHumV1x0.DeviceSettings = "Device Settings"
 
 	return l
 }

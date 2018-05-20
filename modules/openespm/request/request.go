@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"gouniversal/modules/openespm/app"
-	"gouniversal/modules/openespm/deviceManagement"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/shared/functions"
@@ -47,7 +46,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				}
 
 			case 2:
-				req.Device, resp.Err = deviceManagement.LoadDeviceWithReqID(req.ID)
+				req.Device, resp.Err = globalOESPM.DeviceConfig.GetWithReqID(req.ID)
 				if resp.Err != nil {
 					resp.Status = http.StatusForbidden
 				}
@@ -69,7 +68,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				app.Request(resp, req)
 
 			case 6:
-				resp.Err = deviceManagement.SaveDevice(req.Device)
+				resp.Err = globalOESPM.DeviceConfig.Edit(req.Device.UUID, req.Device)
 			}
 		}
 	}
@@ -107,7 +106,5 @@ func LoadConfig() {
 
 func Exit() {
 	// save device config on exit
-	globalOESPM.DeviceConfig.Mut.Lock()
 	globalOESPM.DeviceConfig.SaveConfig()
-	globalOESPM.DeviceConfig.Mut.Unlock()
 }

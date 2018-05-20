@@ -18,7 +18,7 @@ func main() {
 
 	web := new(ui.UI)
 
-	global.Console.Input = ""
+	global.Console.Input("")
 
 	global.UiConfig.LoadConfig()
 
@@ -33,33 +33,28 @@ func main() {
 		modules.LoadConfig()
 	}
 
+	go consoleInput()
+
 	exitApp := false
-	reader := bufio.NewReader(os.Stdin)
 
 	for exitApp == false {
-		input, _ := reader.ReadString('\n')
-		input = strings.Replace(input, "\n", "", -1)
 
-		global.Console.Mut.Lock()
-		if input != "" {
-			global.Console.Input = input
-		}
+		if global.Console.Get() != "" {
 
-		if global.Console.Input != "" {
+			s := global.Console.Get()
 
-			if global.Console.Input == "help" {
+			if s == "help" {
 				printHelp()
-			} else if global.Console.Input == "exit" {
+			} else if s == "exit" {
 				exitApp = true
 			} else {
 				fmt.Println("")
-				fmt.Println("unrecognized command \"" + global.Console.Input + "\"")
+				fmt.Println("unrecognized command \"" + s + "\"")
 				fmt.Println("Type 'help' for a list of available commands.")
 			}
 
-			global.Console.Input = ""
+			global.Console.Input("")
 		}
-		global.Console.Mut.Unlock()
 
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -80,4 +75,23 @@ func printHelp() {
 	fmt.Println("")
 	fmt.Println("help\t\tShow this help text")
 	fmt.Println("exit\t\tExit this program")
+}
+
+func consoleInput() {
+	var input string
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for {
+		if scanner.Scan() {
+			input = scanner.Text()
+
+			if input != "" {
+
+				input = strings.Replace(input, "\n", "", -1)
+				input = strings.Replace(input, "\r", "", -1)
+
+				global.Console.Input(input)
+			}
+		}
+	}
 }

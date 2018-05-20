@@ -1,6 +1,7 @@
 package guestManagement
 
 import (
+	"fmt"
 	"gouniversal/program/global"
 	"gouniversal/program/userConfig"
 	"sync"
@@ -13,58 +14,54 @@ type guestUser struct {
 	LoginAttempts int
 }
 
-type guest struct {
+type GuestManagement struct {
 	Mut  sync.Mutex
 	User []guestUser
 }
 
-var Guest guest
-
-func NewGuest() userConfig.User {
+func (c *GuestManagement) NewGuest() userConfig.User {
 
 	newGuest := make([]guestUser, 1)
 
 	// search for public user
-	global.UserConfig.Mut.Lock()
-	for u := 0; u < len(global.UserConfig.File.User); u++ {
-
-		if global.UserConfig.File.User[u].State == 0 {
-			newGuest[0].User = global.UserConfig.File.User[u]
-			newGuest[0].LoginAttempts = 0
-		}
+	var err error
+	newGuest[0].User, err = global.UserConfig.GetWithState(0)
+	if err != nil {
+		fmt.Println(err)
 	}
-	global.UserConfig.Mut.Unlock()
+
+	newGuest[0].LoginAttempts = 0
 
 	// set new uuid for guest
 	u := uuid.Must(uuid.NewRandom())
 	newGuest[0].User.UUID = u.String()
 
 	// add new guest to list
-	Guest.Mut.Lock()
-	defer Guest.Mut.Unlock()
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
 
-	guests := len(Guest.User)
+	guests := len(c.User)
 	// if number of guests exceeds maximum, remove the oldest
 	if guests > global.UiConfig.File.MaxGuests {
-		Guest.User = Guest.User[0 : guests-1]
+		c.User = c.User[0 : guests-1]
 	}
 
-	Guest.User = append(newGuest, Guest.User...)
+	c.User = append(c.User, newGuest...)
 
 	return newGuest[0].User
 }
 
-func SelectGuest(uid string) userConfig.User {
+func (c *GuestManagement) SelectGuest(uid string) userConfig.User {
 
-	Guest.Mut.Lock()
-	defer Guest.Mut.Unlock()
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
 
-	for u := 0; u < len(Guest.User); u++ {
+	for u := 0; u < len(c.User); u++ {
 
 		// search guest with UUID
-		if uid == Guest.User[u].User.UUID {
+		if uid == c.User[u].User.UUID {
 
-			return Guest.User[u].User
+			return c.User[u].User
 		}
 	}
 
@@ -73,19 +70,19 @@ func SelectGuest(uid string) userConfig.User {
 	return user
 }
 
-func MaxLoginAttempts(uid string) bool {
+func (c *GuestManagement) MaxLoginAttempts(uid string) bool {
 
-	Guest.Mut.Lock()
-	defer Guest.Mut.Unlock()
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
 
-	for u := 0; u < len(Guest.User); u++ {
+	for u := 0; u < len(c.User); u++ {
 
 		// search guest with UUID
-		if uid == Guest.User[u].User.UUID {
+		if uid == c.User[u].User.UUID {
 
-			Guest.User[u].LoginAttempts++
+			c.User[u].LoginAttempts++
 
-			if Guest.User[u].LoginAttempts > global.UiConfig.File.MaxLoginAttempts {
+			if c.User[u].LoginAttempts > global.UiConfig.File.MaxLoginAttempts {
 				return true
 			}
 

@@ -69,15 +69,8 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	}
 
 	// copy app from array
-	globalOESPM.AppConfig.Mut.Lock()
-	for i := 0; i < len(globalOESPM.AppConfig.File.Apps); i++ {
-
-		if id == globalOESPM.AppConfig.File.Apps[i].UUID {
-
-			c.App = globalOESPM.AppConfig.File.Apps[i]
-		}
-	}
-	globalOESPM.AppConfig.Mut.Unlock()
+	var err error
+	c.App, err = globalOESPM.AppConfig.Get(id)
 
 	// combobox App
 	cmbApps := "<select name=\"app\">"
@@ -131,35 +124,32 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 func newApp() string {
 
-	globalOESPM.AppConfig.Mut.Lock()
-	defer globalOESPM.AppConfig.Mut.Unlock()
-
 	u := uuid.Must(uuid.NewRandom())
 
-	newApp := make([]appConfig.App, 1)
-	newApp[0].UUID = u.String()
-	newApp[0].Name = u.String()
-	newApp[0].State = 1 // active
+	var newApp appConfig.App
+	newApp.UUID = u.String()
+	newApp.Name = u.String()
+	newApp.State = 1 // active
 
 	apps := app.UiAppList
 
 	// select first app as default
 	if len(apps) > 0 {
-		newApp[0].App = apps[0]
+		newApp.App = apps[0]
 	}
 
-	globalOESPM.AppConfig.File.Apps = append(newApp, globalOESPM.AppConfig.File.Apps...)
+	globalOESPM.AppConfig.Add(newApp)
 
 	err := globalOESPM.AppConfig.SaveConfig()
 	if err == nil {
-		appDataFolder := globalOESPM.AppDataFolder + newApp[0].UUID + "/"
+		appDataFolder := globalOESPM.AppDataFolder + newApp.UUID + "/"
 		os.MkdirAll(appDataFolder, os.ModePerm)
 	}
 
 	return u.String()
 }
 
-func editApp(r *http.Request, u string) error {
+func editApp(r *http.Request, uid string) error {
 
 	name, _ := functions.CheckFormInput("name", r)
 	app, _ := functions.CheckFormInput("app", r)
@@ -177,56 +167,36 @@ func editApp(r *http.Request, u string) error {
 		return errors.New("bad input")
 	}
 
-	globalOESPM.AppConfig.Mut.Lock()
-	defer globalOESPM.AppConfig.Mut.Unlock()
-
-	for i := 0; i < len(globalOESPM.AppConfig.File.Apps); i++ {
-
-		if u == globalOESPM.AppConfig.File.Apps[i].UUID {
-
-			intState, err := strconv.Atoi(state)
-			if err != nil {
-				return err
-			}
-
-			globalOESPM.AppConfig.File.Apps[i].Name = name
-			globalOESPM.AppConfig.File.Apps[i].App = app
-			globalOESPM.AppConfig.File.Apps[i].State = intState
-			globalOESPM.AppConfig.File.Apps[i].Comment = comment
-
-			return globalOESPM.AppConfig.SaveConfig()
-		}
+	intState, err := strconv.Atoi(state)
+	if err != nil {
+		return err
 	}
 
-	return errors.New("UUID not found")
+	var a appConfig.App
+	a.UUID = uid
+	a.Name = name
+	a.App = app
+	a.State = intState
+	a.Comment = comment
+
+	err = globalOESPM.AppConfig.Edit(uid, a)
+	if err != nil {
+		return err
+	}
+
+	return globalOESPM.AppConfig.SaveConfig()
 }
 
-func deleteApp(u string) error {
+func deleteApp(uid string) error {
 
-	globalOESPM.AppConfig.Mut.Lock()
-	defer globalOESPM.AppConfig.Mut.Unlock()
-
-	var al []appConfig.App
-	n := make([]appConfig.App, 1)
-
-	for i := 0; i < len(globalOESPM.AppConfig.File.Apps); i++ {
-
-		if u != globalOESPM.AppConfig.File.Apps[i].UUID {
-
-			n[0] = globalOESPM.AppConfig.File.Apps[i]
-
-			al = append(al, n...)
-		}
-	}
-
-	globalOESPM.AppConfig.File.Apps = al
+	globalOESPM.AppConfig.Delete(uid)
 
 	err := globalOESPM.AppConfig.SaveConfig()
 	if err != nil {
 		return err
 	}
 
-	appDataFolder := globalOESPM.AppDataFolder + u + "/"
+	appDataFolder := globalOESPM.AppDataFolder + uid + "/"
 
 	if _, err := os.Stat(appDataFolder); os.IsNotExist(err) {
 		return nil

@@ -27,7 +27,7 @@ func (site *Sitemap) Register(menu string, path string, title string) {
 	newpage[0].Path = path
 	newpage[0].Title = title
 
-	site.Pages = append(newpage, site.Pages...)
+	site.Pages = append(site.Pages, newpage...)
 }
 
 // PageList returns all registered pages

@@ -2,62 +2,38 @@ package uifunc
 
 import (
 	"gouniversal/program/global"
-	"gouniversal/program/userConfig"
 	"gouniversal/shared/functions"
 	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-func LoginNameToUUID(user string) string {
+func LoginNameToUUID(name string) string {
 
-	global.UserConfig.Mut.Lock()
-	defer global.UserConfig.Mut.Unlock()
+	user := global.UserConfig.List()
 
-	for i := 0; i < len(global.UserConfig.File.User); i++ {
+	for i := 0; i < len(user); i++ {
 
-		if user == global.UserConfig.File.User[i].LoginName {
+		if name == user[i].LoginName {
 
-			return global.UserConfig.File.User[i].UUID
+			return user[i].UUID
 		}
 	}
 
 	return ""
 }
 
-func GetUserWithUUID(u string) userConfig.User {
+func CheckLogin(name string, pwd string) bool {
 
-	global.UserConfig.Mut.Lock()
-	defer global.UserConfig.Mut.Unlock()
-
-	for i := 0; i < len(global.UserConfig.File.User); i++ {
-
-		if u == global.UserConfig.File.User[i].UUID {
-
-			return global.UserConfig.File.User[i]
-		}
-	}
-
-	var nu userConfig.User
-
-	return nu
-}
-
-func CheckLogin(user string, pwd string) bool {
-
-	if functions.IsEmpty(user) == false &&
+	if functions.IsEmpty(name) == false &&
 		functions.IsEmpty(pwd) == false {
 
-		global.UserConfig.Mut.Lock()
-		defer global.UserConfig.Mut.Unlock()
-
-		for i := 0; i < len(global.UserConfig.File.User); i++ {
-
-			if user == global.UserConfig.File.User[i].LoginName {
-
-				return CheckPasswordHash(pwd, global.UserConfig.File.User[i].PWDHash)
-			}
+		u, err := global.UserConfig.GetWithName(name)
+		if err != nil {
+			return false
 		}
+
+		return CheckPasswordHash(pwd, u.PWDHash)
 	}
 	return false
 }

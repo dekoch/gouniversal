@@ -1,8 +1,8 @@
 package global
 
 import (
+	"gouniversal/program/console"
 	"gouniversal/program/groupConfig"
-	"gouniversal/program/programTypes"
 	"gouniversal/program/uiConfig"
 	"gouniversal/program/userConfig"
 	"gouniversal/shared/language"
@@ -11,7 +11,7 @@ import (
 type Global struct{}
 
 var (
-	Console programTypes.Console
+	Console console.Console
 
 	UiConfig uiConfig.UiConfig
 

@@ -31,19 +31,21 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	var intIndex int
 	intIndex = 0
 
-	global.UserConfig.Mut.Lock()
-	for i := 0; i < len(global.UserConfig.File.User); i++ {
+	user := global.UserConfig.List()
+	
+	for i := 0; i < len(user); i++ {
+
+		u := user[i]
 
 		intIndex += 1
 
 		tbody += "<tr>"
 		tbody += "<th scope='row'>" + strconv.Itoa(intIndex) + "</th>"
-		tbody += "<td>" + global.UserConfig.File.User[i].LoginName + "</td>"
-		tbody += "<td>" + global.UserConfig.File.User[i].Name + "</td>"
-		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"Program:Settings:User:Edit$UUID=" + global.UserConfig.File.User[i].UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"
+		tbody += "<td>" + u.LoginName + "</td>"
+		tbody += "<td>" + u.Name + "</td>"
+		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"Program:Settings:User:Edit$UUID=" + u.UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"
 		tbody += "</tr>"
 	}
-	global.UserConfig.Mut.Unlock()
 
 	c.UserList = template.HTML(tbody)
 

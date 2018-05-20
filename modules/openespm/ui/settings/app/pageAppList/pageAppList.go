@@ -31,10 +31,11 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	var intIndex int
 	intIndex = 0
 
-	globalOESPM.AppConfig.Mut.Lock()
-	for i := 0; i < len(globalOESPM.AppConfig.File.Apps); i++ {
+	apps := globalOESPM.AppConfig.List()
 
-		a := globalOESPM.AppConfig.File.Apps[i]
+	for i := 0; i < len(apps); i++ {
+
+		a := apps[i]
 
 		intIndex += 1
 
@@ -45,7 +46,6 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:openESPM:Settings:App:Edit$UUID=" + a.UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"
 		tbody += "</tr>"
 	}
-	globalOESPM.AppConfig.Mut.Unlock()
 
 	c.AppList = template.HTML(tbody)
 

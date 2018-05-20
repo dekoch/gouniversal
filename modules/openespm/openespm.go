@@ -15,13 +15,8 @@ func LoadConfig() {
 
 	globalOESPM.UiConfig.AppFileRoot = "data/ui/openespm/1.0/"
 
-	globalOESPM.AppConfig.Mut.Lock()
 	globalOESPM.AppConfig.LoadConfig()
-	globalOESPM.AppConfig.Mut.Unlock()
-
-	globalOESPM.DeviceConfig.Mut.Lock()
 	globalOESPM.DeviceConfig.LoadConfig()
-	globalOESPM.DeviceConfig.Mut.Unlock()
 
 	en := langOESPM.DefaultEn()
 	globalOESPM.Lang = language.New("data/lang/openespm/", en, "en")

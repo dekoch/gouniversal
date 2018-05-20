@@ -88,7 +88,7 @@ func readDir(dir string, maxdepth int, currdepth int) ([]os.FileInfo, error) {
 					sub, err = readDir(dir+fl.Name()+"/", maxdepth, currdepth+1)
 
 					if err == nil {
-						files = append(sub, files...)
+						files = append(files, sub...)
 					}
 				}
 			}

@@ -2,7 +2,6 @@ package ui
 
 import (
 	"gouniversal/modules/openespm/app"
-	"gouniversal/modules/openespm/appManagement"
 	"gouniversal/modules/openespm/globalOESPM"
 	"gouniversal/modules/openespm/typesOESPM"
 	"gouniversal/modules/openespm/ui/settings"
@@ -20,17 +19,16 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 	settings.RegisterPage(appPage, nav)
 
 	// register apps
-	globalOESPM.AppConfig.Mut.Lock()
-	for i := 0; i < len(globalOESPM.AppConfig.File.Apps); i++ {
+	apps := globalOESPM.AppConfig.List()
+	for i := 0; i < len(apps); i++ {
 
-		a := globalOESPM.AppConfig.File.Apps[i]
+		a := apps[i]
 
 		// only active apps
 		if a.State == 1 {
 			nav.Sitemap.Register("openESPM", "App:openESPM:App:"+a.App+":"+a.UUID, a.Name)
 		}
 	}
-	globalOESPM.AppConfig.Mut.Unlock()
 }
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
@@ -51,12 +49,10 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 			app.Render(appPage, nav, r)
 
 			// save config to ram
-			appManagement.SaveApp(appPage.App)
+			globalOESPM.AppConfig.Edit(appPage.App.UUID, appPage.App)
 
 			// save config to file
-			globalOESPM.AppConfig.Mut.Lock()
 			globalOESPM.AppConfig.SaveConfig()
-			globalOESPM.AppConfig.Mut.Unlock()
 		}
 	} else {
 		nav.RedirectPath("404", true)
@@ -70,13 +66,13 @@ func loadAppConfig(page *typesOESPM.Page, nav *navigation.Navigation) error {
 	// search app UUID inside path
 	index := strings.LastIndex(nav.Path, ":")
 
-	var u string
+	var uid string
 	if index > 0 {
-		u = nav.Path[index+1:]
+		uid = nav.Path[index+1:]
 	}
 
 	var err error
-	page.App, err = appManagement.LoadApp(u)
+	page.App, err = globalOESPM.AppConfig.Get(uid)
 
 	return err
 }

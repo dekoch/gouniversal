@@ -2,6 +2,7 @@ package appConfig
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"gouniversal/shared/config"
 	"gouniversal/shared/io/file"
@@ -48,9 +49,12 @@ type AppConfig struct {
 	File AppConfigFile
 }
 
-func (ac AppConfig) SaveConfig() error {
+func (c *AppConfig) SaveConfig() error {
 
-	ac.File.Header = config.BuildHeader("apps", "apps", 1.0, "app config file")
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	c.File.Header = config.BuildHeader("apps", "apps", 1.0, "app config file")
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
@@ -64,10 +68,10 @@ func (ac AppConfig) SaveConfig() error {
 		newApp[0].State = 1 // active
 		newApp[0].App = "SimpleSwitchV1x0"
 
-		ac.File.Apps = newApp
+		c.File.Apps = newApp
 	}
 
-	b, err := json.Marshal(ac.File)
+	b, err := json.Marshal(c.File)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -78,12 +82,15 @@ func (ac AppConfig) SaveConfig() error {
 	return err
 }
 
-func (ac *AppConfig) LoadConfig() error {
+func (c *AppConfig) LoadConfig() error {
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
-		ac.SaveConfig()
+		c.SaveConfig()
 	}
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
 
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
@@ -91,14 +98,90 @@ func (ac *AppConfig) LoadConfig() error {
 		log.Fatal(err)
 	}
 
-	err = json.Unmarshal(b, &ac.File)
+	err = json.Unmarshal(b, &c.File)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if config.CheckHeader(ac.File.Header, "apps") == false {
+	if config.CheckHeader(c.File.Header, "apps") == false {
 		log.Fatal("wrong config")
 	}
 
 	return err
+}
+
+func (c *AppConfig) Add(a App) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	newApp := make([]App, 1)
+
+	newApp[0] = a
+
+	c.File.Apps = append(c.File.Apps, newApp...)
+}
+
+func (c *AppConfig) Edit(uid string, a App) error {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	for i := 0; i < len(c.File.Apps); i++ {
+
+		if uid == c.File.Apps[i].UUID {
+
+			c.File.Apps[i] = a
+			return nil
+		}
+	}
+
+	return errors.New("Edit() app \"" + a.UUID + "\" not found")
+}
+
+func (c *AppConfig) Get(uid string) (App, error) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	for i := 0; i < len(c.File.Apps); i++ {
+
+		if uid == c.File.Apps[i].UUID {
+
+			return c.File.Apps[i], nil
+		}
+	}
+
+	var a App
+	a.State = -1
+	return a, errors.New("Get() app \"" + uid + "\" not found")
+}
+
+func (c *AppConfig) List() []App {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	return c.File.Apps
+}
+
+func (c *AppConfig) Delete(uid string) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	var al []App
+	n := make([]App, 1)
+
+	for i := 0; i < len(c.File.Apps); i++ {
+
+		if uid != c.File.Apps[i].UUID {
+
+			n[0] = c.File.Apps[i]
+
+			al = append(al, n...)
+		}
+	}
+
+	c.File.Apps = al
 }

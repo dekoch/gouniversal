@@ -2,10 +2,12 @@ package userConfig
 
 import (
 	"encoding/json"
+	"errors"
 	"gouniversal/shared/config"
 	"gouniversal/shared/io/file"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/google/uuid"
@@ -35,9 +37,12 @@ type UserConfig struct {
 	File UserConfigFile
 }
 
-func (uc UserConfig) SaveConfig() error {
+func (c *UserConfig) SaveConfig() error {
 
-	uc.File.Header = config.BuildHeader("user", "users", 1.0, "user config file")
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	c.File.Header = config.BuildHeader("user", "users", 1.0, "user config file")
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
@@ -56,10 +61,10 @@ func (uc UserConfig) SaveConfig() error {
 		groups := []string{"admin"}
 		newuser[0].Groups = groups
 
-		uc.File.User = newuser
+		c.File.User = newuser
 	}
 
-	b, err := json.Marshal(uc.File)
+	b, err := json.Marshal(c.File)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,12 +75,15 @@ func (uc UserConfig) SaveConfig() error {
 	return err
 }
 
-func (uc *UserConfig) LoadConfig() error {
+func (c *UserConfig) LoadConfig() error {
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
-		uc.SaveConfig()
+		c.SaveConfig()
 	}
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
 
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
@@ -83,14 +91,127 @@ func (uc *UserConfig) LoadConfig() error {
 		log.Fatal(err)
 	}
 
-	err = json.Unmarshal(b, &uc.File)
+	err = json.Unmarshal(b, &c.File)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if config.CheckHeader(uc.File.Header, "users") == false {
+	if config.CheckHeader(c.File.Header, "users") == false {
 		log.Fatal("wrong config \"" + configFilePath + "\"")
 	}
 
 	return err
+}
+
+func (c *UserConfig) Add(u User) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	newUser := make([]User, 1)
+
+	newUser[0] = u
+
+	c.File.User = append(c.File.User, newUser...)
+}
+
+func (c *UserConfig) Edit(u User) error {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	for i := 0; i < len(c.File.User); i++ {
+
+		if u.UUID == c.File.User[i].UUID {
+
+			c.File.User[i] = u
+			return nil
+		}
+	}
+
+	return errors.New("Edit() user \"" + u.UUID + "\" not found")
+}
+
+func (c *UserConfig) Get(uid string) (User, error) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	for i := 0; i < len(c.File.User); i++ {
+
+		if uid == c.File.User[i].UUID {
+
+			return c.File.User[i], nil
+		}
+	}
+
+	var u User
+	u.State = -1
+	return u, errors.New("Get() user \"" + uid + "\" not found")
+}
+
+func (c *UserConfig) GetWithName(name string) (User, error) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	for i := 0; i < len(c.File.User); i++ {
+
+		if name == c.File.User[i].LoginName {
+
+			return c.File.User[i], nil
+		}
+	}
+
+	var u User
+	u.State = -1
+	return u, errors.New("GetWithName() user \"" + name + "\" not found")
+}
+
+func (c *UserConfig) GetWithState(state int) (User, error) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	for i := 0; i < len(c.File.User); i++ {
+
+		if state == c.File.User[i].State {
+
+			return c.File.User[i], nil
+		}
+	}
+
+	var u User
+	u.State = -1
+	sState := strconv.Itoa(state)
+	return u, errors.New("GetWithState() user \"" + sState + "\" not found")
+}
+
+func (c *UserConfig) List() []User {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	return c.File.User
+}
+
+func (c *UserConfig) Delete(uid string) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	var l []User
+	n := make([]User, 1)
+
+	for i := 0; i < len(c.File.User); i++ {
+
+		if uid != c.File.User[i].UUID {
+
+			n[0] = c.File.User[i]
+
+			l = append(l, n...)
+		}
+	}
+
+	c.File.User = l
 }

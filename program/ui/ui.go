@@ -40,6 +40,7 @@ type menuDropdown struct {
 var (
 	store      = new(sessions.CookieStore)
 	cookieName string
+	guest      guestManagement.GuestManagement
 )
 
 func setCookie(parameter string, value string, w http.ResponseWriter, r *http.Request) {
@@ -88,19 +89,19 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 	}
 
 	// get stored user UUID
-	u, err := getCookie("authenticated", w, r)
+	uid, err := getCookie("authenticated", w, r)
 	if err == nil {
 
-		nav.User = userManagement.SelectUser(u)
+		nav.User, err = global.UserConfig.Get(uid)
 
 		if nav.User.State < 0 {
 			// if no user found
-			nav.User = guestManagement.SelectGuest(u)
+			nav.User = guest.SelectGuest(uid)
 		}
 
 		if nav.User.State < 0 {
 			// if no guest found, create new
-			nav.User = guestManagement.NewGuest()
+			nav.User = guest.NewGuest()
 		}
 	}
 
@@ -117,7 +118,7 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 func initCookies(w http.ResponseWriter, r *http.Request) {
 	nav := new(navigation.Navigation)
 	nav.Path = "Account:Login"
-	nav.User = guestManagement.NewGuest()
+	nav.User = guest.NewGuest()
 	nav.GodMode = false
 
 	setSession(nav, w, r)
@@ -190,7 +191,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 						newDropdown[0].Order = 999 - len(mDropdown)
 					}
 
-					mDropdown = append(newDropdown, mDropdown...)
+					mDropdown = append(mDropdown, newDropdown...)
 				}
 
 				// add items to dropdown
@@ -201,7 +202,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 						newItem := make([]sitemap.Page, 1)
 						newItem[0] = pages[i]
 
-						mDropdown[d].Items = append(newItem, mDropdown[d].Items...)
+						mDropdown[d].Items = append(mDropdown[d].Items, newItem...)
 					}
 				}
 			}
@@ -387,21 +388,26 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 			if nav.IsNext("Login") {
 
-				user := r.FormValue("user")
+				name := r.FormValue("name")
 				pwd := r.FormValue("pwd")
-				maxAttempts := guestManagement.MaxLoginAttempts(nav.User.UUID)
+				maxAttempts := guest.MaxLoginAttempts(nav.User.UUID)
 
-				if uifunc.CheckLogin(user, pwd) && maxAttempts == false {
+				if uifunc.CheckLogin(name, pwd) && maxAttempts == false {
 
-					nav.User = userManagement.SelectUser(uifunc.LoginNameToUUID(user))
-					nav.RedirectPath("Program:Home", false)
+					var err error
+					nav.User, err = global.UserConfig.Get(uifunc.LoginNameToUUID(name))
+					if err != nil {
+						pageLogin.Render(page, nav, r)
+					} else {
+						nav.RedirectPath("Program:Home", false)
+					}
 				} else {
 					pageLogin.Render(page, nav, r)
 				}
 
 			} else if nav.IsNext("Logout") {
 
-				nav.User = guestManagement.NewGuest()
+				nav.User = guest.NewGuest()
 				nav.RedirectPath("Account:Login", false)
 			} else {
 				nav.RedirectPath("404", true)
@@ -439,9 +445,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 		page.Content = "goodbye"
 
-		global.Console.Mut.Lock()
-		global.Console.Input = "exit"
-		global.Console.Mut.Unlock()
+		global.Console.Input("exit")
 	} else {
 
 		setSession(nav, w, r)

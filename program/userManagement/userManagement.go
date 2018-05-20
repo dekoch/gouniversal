@@ -1,29 +1,9 @@
 package userManagement
 
 import (
-	"gouniversal/program/global"
 	"gouniversal/program/groupManagement"
 	"gouniversal/program/userConfig"
 )
-
-func SelectUser(uid string) userConfig.User {
-
-	global.UserConfig.Mut.Lock()
-	defer global.UserConfig.Mut.Unlock()
-
-	for u := 0; u < len(global.UserConfig.File.User); u++ {
-
-		// search user with UUID
-		if uid == global.UserConfig.File.User[u].UUID {
-
-			return global.UserConfig.File.User[u]
-		}
-	}
-
-	var user userConfig.User
-	user.State = -1
-	return user
-}
 
 func IsUserInGroup(gid string, user userConfig.User) bool {
 

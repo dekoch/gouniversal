@@ -2,6 +2,7 @@ package groupConfig
 
 import (
 	"encoding/json"
+	"errors"
 	"gouniversal/shared/config"
 	"gouniversal/shared/io/file"
 	"log"
@@ -30,9 +31,12 @@ type GroupConfig struct {
 	File GroupConfigFile
 }
 
-func (gc GroupConfig) SaveConfig() error {
+func (c *GroupConfig) SaveConfig() error {
 
-	gc.File.Header = config.BuildHeader("group", "groups", 1.0, "group config file")
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	c.File.Header = config.BuildHeader("group", "groups", 1.0, "group config file")
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
@@ -46,10 +50,10 @@ func (gc GroupConfig) SaveConfig() error {
 		pages := []string{"Program:Settings:User", "Program:Settings:User:List", "Program:Settings:User:Edit", "Program:Settings:Group", "Program:Settings:Group:List", "Program:Settings:Group:Edit"}
 		newgroup[0].AllowedPages = pages
 
-		gc.File.Group = newgroup
+		c.File.Group = newgroup
 	}
 
-	b, err := json.Marshal(gc.File)
+	b, err := json.Marshal(c.File)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,12 +64,15 @@ func (gc GroupConfig) SaveConfig() error {
 	return err
 }
 
-func (gc *GroupConfig) LoadConfig() error {
+func (c *GroupConfig) LoadConfig() error {
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
-		gc.SaveConfig()
+		c.SaveConfig()
 	}
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
 
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
@@ -73,14 +80,90 @@ func (gc *GroupConfig) LoadConfig() error {
 		log.Fatal(err)
 	}
 
-	err = json.Unmarshal(b, &gc.File)
+	err = json.Unmarshal(b, &c.File)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if config.CheckHeader(gc.File.Header, "groups") == false {
+	if config.CheckHeader(c.File.Header, "groups") == false {
 		log.Fatal("wrong config \"" + configFilePath + "\"")
 	}
 
 	return err
+}
+
+func (c *GroupConfig) Add(g Group) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	newGroup := make([]Group, 1)
+
+	newGroup[0] = g
+
+	c.File.Group = append(c.File.Group, newGroup...)
+}
+
+func (c *GroupConfig) Edit(g Group) error {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	for i := 0; i < len(c.File.Group); i++ {
+
+		if g.UUID == c.File.Group[i].UUID {
+
+			c.File.Group[i] = g
+			return nil
+		}
+	}
+
+	return errors.New("Edit() group \"" + g.UUID + "\" not found")
+}
+
+func (c *GroupConfig) Get(uid string) (Group, error) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	for i := 0; i < len(c.File.Group); i++ {
+
+		if uid == c.File.Group[i].UUID {
+
+			return c.File.Group[i], nil
+		}
+	}
+
+	var g Group
+	g.State = -1
+	return g, errors.New("Get() group \"" + uid + "\" not found")
+}
+
+func (c *GroupConfig) List() []Group {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	return c.File.Group
+}
+
+func (c *GroupConfig) Delete(uid string) {
+
+	c.Mut.Lock()
+	defer c.Mut.Unlock()
+
+	var l []Group
+	n := make([]Group, 1)
+
+	for i := 0; i < len(c.File.Group); i++ {
+
+		if uid != c.File.Group[i].UUID {
+
+			n[0] = c.File.Group[i]
+
+			l = append(l, n...)
+		}
+	}
+
+	c.File.Group = l
 }

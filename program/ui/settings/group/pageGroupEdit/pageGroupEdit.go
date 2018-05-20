@@ -63,15 +63,8 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 
 	// copy group from array
-	global.GroupConfig.Mut.Lock()
-	for i := 0; i < len(global.GroupConfig.File.Group); i++ {
-
-		if id == global.GroupConfig.File.Group[i].UUID {
-
-			c.Group = global.GroupConfig.File.Group[i]
-		}
-	}
-	global.GroupConfig.Mut.Unlock()
+	var err error
+	c.Group, err = global.GroupConfig.Get(id)
 
 	// combobox State
 	cmbState := "<select name=\"state\">"
@@ -127,24 +120,21 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 func newGroup() string {
 
-	global.GroupConfig.Mut.Lock()
-	defer global.GroupConfig.Mut.Unlock()
-
 	u := uuid.Must(uuid.NewRandom())
 
-	newgroup := make([]groupConfig.Group, 1)
-	newgroup[0].UUID = u.String()
-	newgroup[0].Name = u.String()
-	newgroup[0].State = 1 // active
+	var newGroup groupConfig.Group
+	newGroup.UUID = u.String()
+	newGroup.Name = u.String()
+	newGroup.State = 1 // active
 
-	global.GroupConfig.File.Group = append(newgroup, global.GroupConfig.File.Group...)
+	global.GroupConfig.Add(newGroup)
 
 	global.GroupConfig.SaveConfig()
 
 	return u.String()
 }
 
-func editGroup(r *http.Request, u string) error {
+func editGroup(r *http.Request, uid string) error {
 
 	name, _ := functions.CheckFormInput("name", r)
 	state, _ := functions.CheckFormInput("state", r)
@@ -160,51 +150,34 @@ func editGroup(r *http.Request, u string) error {
 		return errors.New("bad input")
 	}
 
-	global.GroupConfig.Mut.Lock()
-	defer global.GroupConfig.Mut.Unlock()
-
-	for i := 0; i < len(global.GroupConfig.File.Group); i++ {
-
-		if u == global.GroupConfig.File.Group[i].UUID {
-
-			intState, err := strconv.Atoi(state)
-			if err != nil {
-				return err
-			}
-
-			selpages := r.Form["selectedpages"]
-
-			global.GroupConfig.File.Group[i].Name = name
-			global.GroupConfig.File.Group[i].State = intState
-			global.GroupConfig.File.Group[i].Comment = comment
-			global.GroupConfig.File.Group[i].AllowedPages = selpages
-
-			return global.GroupConfig.SaveConfig()
-		}
+	intState, err := strconv.Atoi(state)
+	if err != nil {
+		return err
 	}
 
-	return errors.New("UUID not found")
+	selpages := r.Form["selectedpages"]
+
+	g, err := global.GroupConfig.Get(uid)
+	if err != nil {
+		return err
+	}
+
+	g.Name = name
+	g.State = intState
+	g.Comment = comment
+	g.AllowedPages = selpages
+
+	err = global.GroupConfig.Edit(g)
+	if err != nil {
+		return err
+	}
+
+	return global.GroupConfig.SaveConfig()
 }
 
-func deleteGroup(u string) error {
+func deleteGroup(uid string) error {
 
-	global.GroupConfig.Mut.Lock()
-	defer global.GroupConfig.Mut.Unlock()
-
-	var gl []groupConfig.Group
-	n := make([]groupConfig.Group, 1)
-
-	for i := 0; i < len(global.GroupConfig.File.Group); i++ {
-
-		if u != global.GroupConfig.File.Group[i].UUID {
-
-			n[0] = global.GroupConfig.File.Group[i]
-
-			gl = append(gl, n...)
-		}
-	}
-
-	global.GroupConfig.File.Group = gl
+	global.GroupConfig.Delete(uid)
 
 	return global.GroupConfig.SaveConfig()
 }

@@ -65,30 +65,25 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 
 	// copy user from array
-	global.UserConfig.Mut.Lock()
-	for i := 0; i < len(global.UserConfig.File.User); i++ {
-
-		if id == global.UserConfig.File.User[i].UUID {
-
-			c.User = global.UserConfig.File.User[i]
-		}
-	}
-	global.UserConfig.Mut.Unlock()
+	var err error
+	c.User, err = global.UserConfig.Get(id)
 
 	// combobox Language
 	cmbLang := "<select name=\"language\">"
 
 	global.Lang.LoadLangFiles()
 
-	for i := 0; i < len(global.Lang.Storage.Files); i++ {
+	langFiles := global.Lang.ListNames()
 
-		cmbLang += "<option value=\"" + global.Lang.Storage.Files[i].Name + "\""
+	for i := 0; i < len(langFiles); i++ {
 
-		if c.User.Lang == global.Lang.Storage.Files[i].Name {
+		cmbLang += "<option value=\"" + langFiles[i] + "\""
+
+		if c.User.Lang == langFiles[i] {
 			cmbLang += " selected"
 		}
 
-		cmbLang += ">" + global.Lang.Storage.Files[i].Name + "</option>"
+		cmbLang += ">" + langFiles[i] + "</option>"
 	}
 
 	cmbLang += "</select>"
@@ -123,20 +118,22 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	// list of groups
 	grouplist := ""
 
-	global.GroupConfig.Mut.Lock()
-	for i := 0; i < len(global.GroupConfig.File.Group); i++ {
+	groups := global.GroupConfig.List()
+
+	for i := 0; i < len(groups); i++ {
+
+		g := groups[i]
 
 		grouplist += "<tr>"
-		grouplist += "<td>" + global.GroupConfig.File.Group[i].Name + "</td>"
-		grouplist += "<td><input type=\"checkbox\" name=\"selectedgroups\" value=\"" + global.GroupConfig.File.Group[i].UUID + "\""
+		grouplist += "<td>" + g.Name + "</td>"
+		grouplist += "<td><input type=\"checkbox\" name=\"selectedgroups\" value=\"" + g.UUID + "\""
 
-		if userManagement.IsUserInGroup(global.GroupConfig.File.Group[i].UUID, c.User) {
+		if userManagement.IsUserInGroup(g.UUID, c.User) {
 
 			grouplist += " checked"
 		}
 		grouplist += "></td></tr>"
 	}
-	global.GroupConfig.Mut.Unlock()
 
 	c.Groups = template.HTML(grouplist)
 
@@ -151,25 +148,22 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 func newUser() string {
 
-	global.UserConfig.Mut.Lock()
-	defer global.UserConfig.Mut.Unlock()
-
 	u := uuid.Must(uuid.NewRandom())
 
-	newuser := make([]userConfig.User, 1)
-	newuser[0].UUID = u.String()
-	newuser[0].LoginName = u.String()
-	newuser[0].Lang = "en"
-	newuser[0].State = 1 // active
+	var newUser userConfig.User
+	newUser.UUID = u.String()
+	newUser.LoginName = u.String()
+	newUser.Lang = "en"
+	newUser.State = 1 // active
 
-	global.UserConfig.File.User = append(newuser, global.UserConfig.File.User...)
+	global.UserConfig.Add(newUser)
 
 	global.UserConfig.SaveConfig()
 
 	return u.String()
 }
 
-func editUser(r *http.Request, u string) error {
+func editUser(r *http.Request, uid string) error {
 
 	loginName, _ := functions.CheckFormInput("loginname", r)
 	name, errName := functions.CheckFormInput("name", r)
@@ -189,71 +183,54 @@ func editUser(r *http.Request, u string) error {
 		return errors.New("bad input")
 	}
 
-	global.UserConfig.Mut.Lock()
-	defer global.UserConfig.Mut.Unlock()
+	iState, err := strconv.Atoi(state)
+	if err != nil {
+		return err
+	}
 
-	for i := 0; i < len(global.UserConfig.File.User); i++ {
+	selgroups := r.Form["selectedgroups"]
 
-		if u == global.UserConfig.File.User[i].UUID {
+	u, err := global.UserConfig.Get(uid)
+	if err != nil {
+		return err
+	}
 
-			iState, err := strconv.Atoi(state)
-			if err != nil {
+	u.LoginName = loginName
+	u.Name = name
+	u.State = iState
+	u.Lang = sellang
+	u.Comment = comment
+	u.Groups = selgroups
+
+	pwd := r.FormValue("pwd")
+
+	if pwd != "" {
+
+		if functions.IsEmpty(pwd) {
+
+			u.PWDHash = ""
+		} else {
+
+			hash, err := uifunc.HashPassword(pwd)
+			if err == nil {
+				u.PWDHash = hash
+			} else {
 				return err
 			}
-
-			selgroups := r.Form["selectedgroups"]
-
-			global.UserConfig.File.User[i].LoginName = loginName
-			global.UserConfig.File.User[i].Name = name
-			global.UserConfig.File.User[i].State = iState
-			global.UserConfig.File.User[i].Lang = sellang
-			global.UserConfig.File.User[i].Comment = comment
-			global.UserConfig.File.User[i].Groups = selgroups
-
-			pwd := r.FormValue("pwd")
-
-			if pwd != "" {
-
-				if functions.IsEmpty(pwd) {
-
-					global.UserConfig.File.User[i].PWDHash = ""
-				} else {
-
-					hash, err := uifunc.HashPassword(pwd)
-					if err == nil {
-						global.UserConfig.File.User[i].PWDHash = hash
-					} else {
-						return err
-					}
-				}
-			}
-
-			return global.UserConfig.SaveConfig()
 		}
 	}
 
-	return errors.New("UUID not found")
+	err = global.UserConfig.Edit(u)
+	if err != nil {
+		return err
+	}
+
+	return global.UserConfig.SaveConfig()
 }
 
-func deleteUser(u string) error {
+func deleteUser(uid string) error {
 
-	global.UserConfig.Mut.Lock()
-	defer global.UserConfig.Mut.Unlock()
-
-	var ul []userConfig.User
-	n := make([]userConfig.User, 1)
-
-	for i := 0; i < len(global.UserConfig.File.User); i++ {
-
-		if u != global.UserConfig.File.User[i].UUID {
-
-			n[0] = global.UserConfig.File.User[i]
-
-			ul = append(ul, n...)
-		}
-	}
-
-	global.UserConfig.File.User = ul
+	global.UserConfig.Delete(uid)
 
 	return global.UserConfig.SaveConfig()
 }

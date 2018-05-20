@@ -31,10 +31,11 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	var intIndex int
 	intIndex = 0
 
-	globalOESPM.DeviceConfig.Mut.Lock()
-	for i := 0; i < len(globalOESPM.DeviceConfig.File.Devices); i++ {
+	devices := globalOESPM.DeviceConfig.List()
 
-		dev := globalOESPM.DeviceConfig.File.Devices[i]
+	for u := 0; u < len(devices); u++ {
+
+		dev := devices[u]
 
 		intIndex += 1
 
@@ -45,7 +46,6 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:openESPM:Settings:Device:Edit$UUID=" + dev.UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"
 		tbody += "</tr>"
 	}
-	globalOESPM.DeviceConfig.Mut.Unlock()
 
 	c.DeviceList = template.HTML(tbody)
 
