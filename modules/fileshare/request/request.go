@@ -2,12 +2,13 @@ package request
 
 import (
 	"fmt"
-	"gouniversal/modules/fileshare/global"
-	"gouniversal/modules/fileshare/typesFileshare"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/dekoch/gouniversal/modules/fileshare/global"
+	"github.com/dekoch/gouniversal/modules/fileshare/typesFileshare"
 )
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {

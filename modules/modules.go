@@ -1,13 +1,14 @@
 package modules
 
 import (
-	"gouniversal/modules/fileshare"
-	"gouniversal/modules/homepage"
-	"gouniversal/modules/modbustest"
-	"gouniversal/modules/openespm"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/fileshare"
+	"github.com/dekoch/gouniversal/modules/homepage"
+	"github.com/dekoch/gouniversal/modules/modbustest"
+	"github.com/dekoch/gouniversal/modules/openespm"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 // Modules provide a interface to nest apps and modules

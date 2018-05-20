@@ -5,9 +5,10 @@ package modbustest
 import (
 	"encoding/binary"
 	"fmt"
-	"gouniversal/modules/modbustest/modbusConfig"
 	"sync"
 	"time"
+
+	"github.com/dekoch/gouniversal/modules/modbustest/modbusConfig"
 
 	"github.com/goburrow/modbus"
 )

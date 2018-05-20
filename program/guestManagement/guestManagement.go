@@ -2,9 +2,10 @@ package guestManagement
 
 import (
 	"fmt"
-	"gouniversal/program/global"
-	"gouniversal/program/userConfig"
 	"sync"
+
+	"github.com/dekoch/gouniversal/program/global"
+	"github.com/dekoch/gouniversal/program/userConfig"
 
 	"github.com/google/uuid"
 )

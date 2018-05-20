@@ -1,11 +1,12 @@
 package settings
 
 import (
-	"gouniversal/program/ui/settings/group"
-	"gouniversal/program/ui/settings/user"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/program/ui/settings/group"
+	"github.com/dekoch/gouniversal/program/ui/settings/user"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {

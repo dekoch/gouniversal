@@ -3,13 +3,14 @@ package request
 import (
 	"errors"
 	"fmt"
-	"gouniversal/modules/openespm/app"
-	"gouniversal/modules/openespm/globalOESPM"
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/shared/functions"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/dekoch/gouniversal/modules/openespm/app"
+	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/shared/functions"
 )
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {

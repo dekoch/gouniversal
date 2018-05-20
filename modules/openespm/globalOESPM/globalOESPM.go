@@ -1,10 +1,10 @@
 package globalOESPM
 
 import (
-	"gouniversal/modules/openespm/appConfig"
-	"gouniversal/modules/openespm/deviceConfig"
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/shared/language"
+	"github.com/dekoch/gouniversal/modules/openespm/appConfig"
+	"github.com/dekoch/gouniversal/modules/openespm/deviceConfig"
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/shared/language"
 )
 
 const AppDataFolder = "data/openespm/app/"

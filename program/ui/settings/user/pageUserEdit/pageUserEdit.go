@@ -2,18 +2,19 @@ package pageUserEdit
 
 import (
 	"errors"
-	"gouniversal/program/global"
-	"gouniversal/program/lang"
-	"gouniversal/program/ui/uifunc"
-	"gouniversal/program/userConfig"
-	"gouniversal/program/userManagement"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/dekoch/gouniversal/program/global"
+	"github.com/dekoch/gouniversal/program/lang"
+	"github.com/dekoch/gouniversal/program/ui/uifunc"
+	"github.com/dekoch/gouniversal/program/userConfig"
+	"github.com/dekoch/gouniversal/program/userManagement"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"

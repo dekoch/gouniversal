@@ -2,16 +2,17 @@ package home
 
 import (
 	"fmt"
-	"gouniversal/modules/fileshare/global"
-	"gouniversal/modules/fileshare/lang"
-	"gouniversal/modules/fileshare/typesFileshare"
-	"gouniversal/shared/datasize"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/navigation"
 	"html/template"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/dekoch/gouniversal/modules/fileshare/global"
+	"github.com/dekoch/gouniversal/modules/fileshare/lang"
+	"github.com/dekoch/gouniversal/modules/fileshare/typesFileshare"
+	"github.com/dekoch/gouniversal/shared/datasize"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/navigation"
 
 	"github.com/google/uuid"
 )

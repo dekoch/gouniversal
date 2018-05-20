@@ -2,8 +2,9 @@ package respDevConfig
 
 import (
 	"fmt"
-	"gouniversal/shared/functions"
 	"time"
+
+	"github.com/dekoch/gouniversal/shared/functions"
 )
 
 type RespDevConfig struct {

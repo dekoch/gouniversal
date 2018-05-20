@@ -1,12 +1,13 @@
 package ui
 
 import (
-	"gouniversal/modules/fileshare/global"
-	"gouniversal/modules/fileshare/typesFileshare"
-	"gouniversal/modules/fileshare/ui/home"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/fileshare/global"
+	"github.com/dekoch/gouniversal/modules/fileshare/typesFileshare"
+	"github.com/dekoch/gouniversal/modules/fileshare/ui/home"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {

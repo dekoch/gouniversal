@@ -1,10 +1,11 @@
 package navigation
 
 import (
-	"gouniversal/program/userConfig"
-	"gouniversal/program/userManagement"
-	"gouniversal/shared/sitemap"
 	"strings"
+
+	"github.com/dekoch/gouniversal/program/userConfig"
+	"github.com/dekoch/gouniversal/program/userManagement"
+	"github.com/dekoch/gouniversal/shared/sitemap"
 )
 
 type Navigation struct {

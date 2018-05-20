@@ -4,12 +4,13 @@ package TempHumV1x0request
 
 import (
 	"encoding/json"
-	"gouniversal/modules/openespm/app/TempHumV1x0"
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/io/csv"
 	"strconv"
 	"time"
+
+	"github.com/dekoch/gouniversal/modules/openespm/app/TempHumV1x0"
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/io/csv"
 )
 
 type appResp struct {

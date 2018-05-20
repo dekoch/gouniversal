@@ -2,19 +2,20 @@ package pageDeviceEdit
 
 import (
 	"errors"
-	"gouniversal/modules/openespm/app"
-	"gouniversal/modules/openespm/deviceConfig"
-	"gouniversal/modules/openespm/globalOESPM"
-	"gouniversal/modules/openespm/langOESPM"
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/shared/alert"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/navigation"
 	"html/template"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/dekoch/gouniversal/modules/openespm/app"
+	"github.com/dekoch/gouniversal/modules/openespm/deviceConfig"
+	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/shared/alert"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/navigation"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"

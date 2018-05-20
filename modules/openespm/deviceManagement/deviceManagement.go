@@ -2,9 +2,10 @@ package deviceManagement
 
 import (
 	"fmt"
-	"gouniversal/modules/openespm/globalOESPM"
-	"gouniversal/shared/functions"
 	"html/template"
+
+	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/shared/functions"
 )
 
 func HTMLSelectDevice(name string, appname string, uid string) template.HTML {

@@ -1,17 +1,18 @@
 package SimpleSwitchV1x0ui
 
 import (
-	"gouniversal/modules/openespm/app/SimpleSwitchV1x0"
-	"gouniversal/modules/openespm/deviceConfig"
-	"gouniversal/modules/openespm/deviceManagement"
-	"gouniversal/modules/openespm/globalOESPM"
-	"gouniversal/modules/openespm/langOESPM"
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/shared/alert"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/navigation"
 	"html/template"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/openespm/app/SimpleSwitchV1x0"
+	"github.com/dekoch/gouniversal/modules/openespm/deviceConfig"
+	"github.com/dekoch/gouniversal/modules/openespm/deviceManagement"
+	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/shared/alert"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/navigation"
 )
 
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {

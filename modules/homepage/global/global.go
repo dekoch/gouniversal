@@ -1,6 +1,6 @@
 package global
 
-import "gouniversal/modules/homepage/moduleConfig"
+import "github.com/dekoch/gouniversal/modules/homepage/moduleConfig"
 
 var (
 	Config moduleConfig.ModuleConfig

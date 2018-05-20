@@ -1,11 +1,12 @@
 package group
 
 import (
-	"gouniversal/program/ui/settings/group/pageGroupEdit"
-	"gouniversal/program/ui/settings/group/pageGroupList"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/program/ui/settings/group/pageGroupEdit"
+	"github.com/dekoch/gouniversal/program/ui/settings/group/pageGroupList"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {

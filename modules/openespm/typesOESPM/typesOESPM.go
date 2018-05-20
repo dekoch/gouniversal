@@ -1,11 +1,12 @@
 package typesOESPM
 
 import (
-	"gouniversal/modules/openespm/appConfig"
-	"gouniversal/modules/openespm/deviceConfig"
-	"gouniversal/modules/openespm/langOESPM"
-	"gouniversal/shared/config"
 	"net/url"
+
+	"github.com/dekoch/gouniversal/modules/openespm/appConfig"
+	"github.com/dekoch/gouniversal/modules/openespm/deviceConfig"
+	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/shared/config"
 )
 
 type RespType int

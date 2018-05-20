@@ -1,11 +1,12 @@
 package pageHome
 
 import (
-	"gouniversal/program/global"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/program/global"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {

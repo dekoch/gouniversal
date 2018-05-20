@@ -1,11 +1,12 @@
 package app
 
 import (
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/modules/openespm/ui/settings/app/pageAppEdit"
-	"gouniversal/modules/openespm/ui/settings/app/pageAppList"
-	"gouniversal/shared/navigation"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/ui/settings/app/pageAppEdit"
+	"github.com/dekoch/gouniversal/modules/openespm/ui/settings/app/pageAppList"
+	"github.com/dekoch/gouniversal/shared/navigation"
 )
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {

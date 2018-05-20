@@ -1,8 +1,9 @@
 package typesFileshare
 
 import (
-	"gouniversal/modules/fileshare/lang"
 	"net/url"
+
+	"github.com/dekoch/gouniversal/modules/fileshare/lang"
 )
 
 type Page struct {

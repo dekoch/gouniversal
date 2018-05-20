@@ -1,15 +1,16 @@
 package fileshare
 
 import (
-	"gouniversal/modules/fileshare/global"
-	"gouniversal/modules/fileshare/lang"
-	"gouniversal/modules/fileshare/request"
-	"gouniversal/modules/fileshare/ui"
-	"gouniversal/modules/fileshare/upload"
-	"gouniversal/shared/language"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/fileshare/global"
+	"github.com/dekoch/gouniversal/modules/fileshare/lang"
+	"github.com/dekoch/gouniversal/modules/fileshare/request"
+	"github.com/dekoch/gouniversal/modules/fileshare/ui"
+	"github.com/dekoch/gouniversal/modules/fileshare/upload"
+	"github.com/dekoch/gouniversal/shared/language"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func LoadConfig() {

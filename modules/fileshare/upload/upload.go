@@ -2,11 +2,12 @@ package upload
 
 import (
 	"fmt"
-	"gouniversal/modules/fileshare/global"
-	"gouniversal/shared/functions"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/dekoch/gouniversal/modules/fileshare/global"
+	"github.com/dekoch/gouniversal/shared/functions"
 )
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {

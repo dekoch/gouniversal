@@ -2,11 +2,12 @@ package modbusConfig
 
 import (
 	"encoding/json"
-	"gouniversal/shared/config"
-	"gouniversal/shared/io/file"
 	"log"
 	"os"
 	"sync"
+
+	"github.com/dekoch/gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
 const ConfigFilePath = "data/config/modbustest/modbus"

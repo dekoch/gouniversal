@@ -1,14 +1,15 @@
 package pageUserList
 
 import (
-	"gouniversal/program/global"
-	"gouniversal/program/lang"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/dekoch/gouniversal/program/global"
+	"github.com/dekoch/gouniversal/program/lang"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
@@ -32,7 +33,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	intIndex = 0
 
 	user := global.UserConfig.List()
-	
+
 	for i := 0; i < len(user); i++ {
 
 		u := user[i]

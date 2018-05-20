@@ -1,8 +1,8 @@
 package groupManagement
 
 import (
-	"gouniversal/program/global"
-	"gouniversal/program/ui/uifunc"
+	"github.com/dekoch/gouniversal/program/global"
+	"github.com/dekoch/gouniversal/program/ui/uifunc"
 )
 
 func IsPageAllowed(path string, gid string, checkState bool) bool {

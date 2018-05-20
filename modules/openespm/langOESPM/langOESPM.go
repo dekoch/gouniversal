@@ -1,7 +1,7 @@
 package langOESPM
 
 import (
-	"gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/config"
 )
 
 type SettingsAppList struct {

@@ -1,11 +1,12 @@
 package user
 
 import (
-	"gouniversal/program/ui/settings/user/pageUserEdit"
-	"gouniversal/program/ui/settings/user/pageUserList"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/program/ui/settings/user/pageUserEdit"
+	"github.com/dekoch/gouniversal/program/ui/settings/user/pageUserList"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {

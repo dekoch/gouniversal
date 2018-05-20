@@ -3,14 +3,15 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"gouniversal/modules"
-	"gouniversal/program/global"
-	"gouniversal/program/lang"
-	"gouniversal/program/ui"
-	"gouniversal/shared/language"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/dekoch/gouniversal/modules"
+	"github.com/dekoch/gouniversal/program/global"
+	"github.com/dekoch/gouniversal/program/lang"
+	"github.com/dekoch/gouniversal/program/ui"
+	"github.com/dekoch/gouniversal/shared/language"
 )
 
 func main() {

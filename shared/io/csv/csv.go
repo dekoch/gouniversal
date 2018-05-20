@@ -2,8 +2,9 @@ package csv
 
 import (
 	"encoding/csv"
-	"gouniversal/shared/functions"
 	"os"
+
+	"github.com/dekoch/gouniversal/shared/functions"
 )
 
 func AddRow(fname string, row []string) error {

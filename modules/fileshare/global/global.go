@@ -1,9 +1,9 @@
 package global
 
 import (
-	"gouniversal/modules/fileshare/moduleConfig"
-	"gouniversal/shared/language"
-	"gouniversal/shared/userToken"
+	"github.com/dekoch/gouniversal/modules/fileshare/moduleConfig"
+	"github.com/dekoch/gouniversal/shared/language"
+	"github.com/dekoch/gouniversal/shared/userToken"
 )
 
 var (

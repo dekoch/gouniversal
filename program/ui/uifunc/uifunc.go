@@ -1,9 +1,10 @@
 package uifunc
 
 import (
-	"gouniversal/program/global"
-	"gouniversal/shared/functions"
 	"strings"
+
+	"github.com/dekoch/gouniversal/program/global"
+	"github.com/dekoch/gouniversal/shared/functions"
 
 	"golang.org/x/crypto/bcrypt"
 )

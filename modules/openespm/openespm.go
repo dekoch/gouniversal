@@ -1,14 +1,15 @@
 package openespm
 
 import (
-	"gouniversal/modules/openespm/globalOESPM"
-	"gouniversal/modules/openespm/langOESPM"
-	"gouniversal/modules/openespm/request"
-	"gouniversal/modules/openespm/ui"
-	"gouniversal/shared/language"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/request"
+	"github.com/dekoch/gouniversal/modules/openespm/ui"
+	"github.com/dekoch/gouniversal/shared/language"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func LoadConfig() {

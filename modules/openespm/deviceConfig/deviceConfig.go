@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gouniversal/shared/config"
-	"gouniversal/shared/io/file"
 	"log"
 	"os"
 	"sync"
+
+	"github.com/dekoch/gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
 const configFilePath = "data/config/openespm/devices"

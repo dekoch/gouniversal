@@ -1,11 +1,11 @@
 package global
 
 import (
-	"gouniversal/program/console"
-	"gouniversal/program/groupConfig"
-	"gouniversal/program/uiConfig"
-	"gouniversal/program/userConfig"
-	"gouniversal/shared/language"
+	"github.com/dekoch/gouniversal/program/console"
+	"github.com/dekoch/gouniversal/program/groupConfig"
+	"github.com/dekoch/gouniversal/program/uiConfig"
+	"github.com/dekoch/gouniversal/program/userConfig"
+	"github.com/dekoch/gouniversal/shared/language"
 )
 
 type Global struct{}

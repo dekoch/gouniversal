@@ -1,8 +1,8 @@
 package userManagement
 
 import (
-	"gouniversal/program/groupManagement"
-	"gouniversal/program/userConfig"
+	"github.com/dekoch/gouniversal/program/groupManagement"
+	"github.com/dekoch/gouniversal/program/userConfig"
 )
 
 func IsUserInGroup(gid string, user userConfig.User) bool {

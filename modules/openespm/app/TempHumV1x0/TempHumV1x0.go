@@ -3,7 +3,8 @@ package TempHumV1x0
 import (
 	"encoding/json"
 	"fmt"
-	"gouniversal/modules/openespm/respDevConfig"
+
+	"github.com/dekoch/gouniversal/modules/openespm/respDevConfig"
 )
 
 type DeviceConfig struct {

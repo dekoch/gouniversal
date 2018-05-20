@@ -1,14 +1,15 @@
 package ui
 
 import (
-	"gouniversal/modules/openespm/app"
-	"gouniversal/modules/openespm/globalOESPM"
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/modules/openespm/ui/settings"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
 	"strings"
+
+	"github.com/dekoch/gouniversal/modules/openespm/app"
+	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/ui/settings"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {

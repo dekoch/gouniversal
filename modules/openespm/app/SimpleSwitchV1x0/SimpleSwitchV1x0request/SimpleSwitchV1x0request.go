@@ -4,9 +4,10 @@ package SimpleSwitchV1x0request
 
 import (
 	"encoding/json"
-	"gouniversal/modules/openespm/app/SimpleSwitchV1x0"
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/shared/functions"
+
+	"github.com/dekoch/gouniversal/modules/openespm/app/SimpleSwitchV1x0"
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/shared/functions"
 )
 
 type appResp struct {

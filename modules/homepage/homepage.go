@@ -1,11 +1,12 @@
 package homepage
 
 import (
-	"gouniversal/modules/homepage/global"
-	"gouniversal/modules/homepage/ui"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/homepage/global"
+	"github.com/dekoch/gouniversal/modules/homepage/ui"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func LoadConfig() {

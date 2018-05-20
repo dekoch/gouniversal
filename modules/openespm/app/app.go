@@ -2,14 +2,15 @@ package app
 
 import (
 	"errors"
-	"gouniversal/modules/openespm/app/SimpleSwitchV1x0/SimpleSwitchV1x0request"
-	"gouniversal/modules/openespm/app/SimpleSwitchV1x0/SimpleSwitchV1x0ui"
-	"gouniversal/modules/openespm/app/TempHumV1x0/TempHumV1x0request"
-	"gouniversal/modules/openespm/app/TempHumV1x0/TempHumV1x0ui"
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/shared/alert"
-	"gouniversal/shared/navigation"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/openespm/app/SimpleSwitchV1x0/SimpleSwitchV1x0request"
+	"github.com/dekoch/gouniversal/modules/openespm/app/SimpleSwitchV1x0/SimpleSwitchV1x0ui"
+	"github.com/dekoch/gouniversal/modules/openespm/app/TempHumV1x0/TempHumV1x0request"
+	"github.com/dekoch/gouniversal/modules/openespm/app/TempHumV1x0/TempHumV1x0ui"
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/shared/alert"
+	"github.com/dekoch/gouniversal/shared/navigation"
 )
 
 var UiAppList = [...]string{"SimpleSwitchV1x0", "TempHumV1x0"}

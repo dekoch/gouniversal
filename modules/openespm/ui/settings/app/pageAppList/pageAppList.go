@@ -1,14 +1,15 @@
 package pageAppList
 
 import (
-	"gouniversal/modules/openespm/globalOESPM"
-	"gouniversal/modules/openespm/langOESPM"
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/navigation"
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/navigation"
 )
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {

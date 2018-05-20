@@ -1,11 +1,12 @@
 package device
 
 import (
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/modules/openespm/ui/settings/device/pageDeviceEdit"
-	"gouniversal/modules/openespm/ui/settings/device/pageDeviceList"
-	"gouniversal/shared/navigation"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/ui/settings/device/pageDeviceEdit"
+	"github.com/dekoch/gouniversal/modules/openespm/ui/settings/device/pageDeviceList"
+	"github.com/dekoch/gouniversal/shared/navigation"
 )
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {

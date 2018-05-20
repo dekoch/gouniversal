@@ -3,11 +3,12 @@ package language
 import (
 	"encoding/json"
 	"fmt"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/io/file"
 	"io/ioutil"
 	"os"
 	"sync"
+
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
 type Lang struct {

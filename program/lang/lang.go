@@ -1,6 +1,6 @@
 package lang
 
-import "gouniversal/shared/config"
+import "github.com/dekoch/gouniversal/shared/config"
 
 // menu
 type MenuProgram struct {

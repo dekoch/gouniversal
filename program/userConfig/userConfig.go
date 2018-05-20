@@ -3,12 +3,13 @@ package userConfig
 import (
 	"encoding/json"
 	"errors"
-	"gouniversal/shared/config"
-	"gouniversal/shared/io/file"
 	"log"
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/dekoch/gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/io/file"
 
 	"github.com/google/uuid"
 )

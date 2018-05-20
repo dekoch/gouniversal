@@ -1,11 +1,12 @@
 package settings
 
 import (
-	"gouniversal/modules/openespm/typesOESPM"
-	"gouniversal/modules/openespm/ui/settings/app"
-	"gouniversal/modules/openespm/ui/settings/device"
-	"gouniversal/shared/navigation"
 	"net/http"
+
+	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/ui/settings/app"
+	"github.com/dekoch/gouniversal/modules/openespm/ui/settings/device"
+	"github.com/dekoch/gouniversal/shared/navigation"
 )
 
 func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {

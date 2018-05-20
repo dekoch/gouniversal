@@ -1,13 +1,14 @@
 package ui
 
 import (
-	"gouniversal/modules/homepage/global"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 	"strings"
+
+	"github.com/dekoch/gouniversal/modules/homepage/global"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func registerMenuItems(menu string, filepath string, navpath string, nav *navigation.Navigation) {

@@ -2,17 +2,18 @@ package pageGroupEdit
 
 import (
 	"errors"
-	"gouniversal/program/global"
-	"gouniversal/program/groupConfig"
-	"gouniversal/program/groupManagement"
-	"gouniversal/program/lang"
-	"gouniversal/shared/functions"
-	"gouniversal/shared/navigation"
-	"gouniversal/shared/types"
 	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/dekoch/gouniversal/program/global"
+	"github.com/dekoch/gouniversal/program/groupConfig"
+	"github.com/dekoch/gouniversal/program/groupManagement"
+	"github.com/dekoch/gouniversal/program/lang"
+	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
