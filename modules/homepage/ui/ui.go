@@ -1,15 +1,56 @@
 package ui
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
+
+	"github.com/asaskevich/govalidator"
 
 	"github.com/dekoch/gouniversal/modules/homepage/global"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 )
+
+func LoadConfig() {
+
+	path := global.Config.File.UIFileRoot + "static/"
+	// if exist handle static folder
+	if _, err := os.Stat(path); os.IsNotExist(err) == false {
+		fs := http.FileServer(http.Dir(path))
+		http.Handle("/homepage/static/", http.StripPrefix("/homepage/static/", fs))
+	}
+}
+
+func getNameAndOrder(s string) (string, int) {
+
+	name := s
+	no := ""
+	order := -1
+
+	if strings.Contains(s, ".") {
+		s := strings.SplitAfterN(s, ".", -1)
+		no = s[0]
+		name = s[1]
+
+		no = strings.Replace(no, ".", "", -1)
+	}
+
+	if no != "" && govalidator.IsNumeric(no) {
+		newOrder, err := strconv.Atoi(no)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			order = newOrder
+		}
+	}
+
+	return name, order
+}
 
 func registerMenuItems(menu string, filepath string, navpath string, nav *navigation.Navigation) {
 
@@ -23,8 +64,13 @@ func registerMenuItems(menu string, filepath string, navpath string, nav *naviga
 		} else {
 
 			if strings.HasSuffix(i.Name(), ".html") {
-				title := strings.Replace(i.Name(), ".html", "", -1)
-				nav.Sitemap.Register(menu, navpath+":"+i.Name(), title)
+
+				menuName, menuOrder := getNameAndOrder(menu)
+
+				file := strings.Replace(i.Name(), ".html", "", -1)
+				fileName, fileOrder := getNameAndOrder(file)
+
+				nav.Sitemap.RegisterWithOrder(menuName, menuOrder, navpath+":"+i.Name(), fileName, fileOrder)
 			}
 		}
 	}
@@ -43,8 +89,11 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 		} else {
 
 			if strings.HasSuffix(f.Name(), ".html") {
-				title := strings.Replace(f.Name(), ".html", "", -1)
-				nav.Sitemap.Register(title, "App:Homepage:"+f.Name(), title)
+
+				file := strings.Replace(f.Name(), ".html", "", -1)
+				fileName, fileOrder := getNameAndOrder(file)
+
+				nav.Sitemap.RegisterWithOrder(fileName, fileOrder, "App:Homepage:"+f.Name(), fileName, -1)
 			}
 		}
 	}

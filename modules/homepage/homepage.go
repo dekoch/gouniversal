@@ -12,6 +12,8 @@ import (
 func LoadConfig() {
 
 	global.Config.LoadConfig()
+
+	ui.LoadConfig()
 }
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {

@@ -139,12 +139,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	c.MenuBrand = nav.Sitemap.PageTitle(nav.Path)
 
-	// remove leading numbers
-	if strings.Contains(c.MenuBrand, ".") {
-		s := strings.SplitAfterN(c.MenuBrand, ".", -1)
-		c.MenuBrand = s[1]
-	}
-
+	// title
 	if global.UiConfig.File.Title != "" {
 		c.Title = global.UiConfig.File.Title + " - " + c.MenuBrand
 	} else {
@@ -175,21 +170,26 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 					newDropdown := make([]menuDropdown, 1)
 					newDropdown[0].Title = pages[i].Menu
 
-					// set predefined order
-					if newDropdown[0].Title == "Program" {
+					if pages[i].MenuOrder > -1 {
 
-						newDropdown[0].Order = 0
-
-					} else if newDropdown[0].Title == "App" {
-
-						newDropdown[0].Order = 1
-
-					} else if newDropdown[0].Title == "Account" {
-
-						newDropdown[0].Order = 999
-
+						newDropdown[0].Order = pages[i].MenuOrder
 					} else {
-						newDropdown[0].Order = 999 - len(mDropdown)
+						// set predefined order
+						if newDropdown[0].Title == "Program" {
+
+							newDropdown[0].Order = 0
+
+						} else if newDropdown[0].Title == "App" {
+
+							newDropdown[0].Order = 1
+
+						} else if newDropdown[0].Title == "Account" {
+
+							newDropdown[0].Order = 999
+
+						} else {
+							newDropdown[0].Order = 999 - len(mDropdown)
+						}
 					}
 
 					mDropdown = append(mDropdown, newDropdown...)
@@ -240,12 +240,6 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 			}
 		}
 
-		// remove leading numbers
-		if strings.Contains(dropDownTitle, ".") {
-			s := strings.SplitAfterN(dropDownTitle, ".", -1)
-			dropDownTitle = s[1]
-		}
-
 		dropDown := "<li class=\"nav-item dropdown\">\n"
 		dropDown += "<a class=\"nav-link dropdown-toggle\" href=\"\" id=\"navbar" + mDropdown[d].Title + "\" role=\"button\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">\n"
 		dropDown += dropDownTitle + "\n"
@@ -260,14 +254,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 		for i := 0; i < len(mDropdown[d].Items); i++ {
 
-			itemTitle := mDropdown[d].Items[i].Title
-			// remove leading numbers
-			if strings.Contains(itemTitle, ".") {
-				s := strings.SplitAfterN(itemTitle, ".", -1)
-				itemTitle = s[1]
-			}
-
-			dropDown += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + mDropdown[d].Items[i].Path + "\">" + itemTitle + "</button>\n"
+			dropDown += "<button class=\"dropdown-item\" type=\"submit\" name=\"navigation\" value=\"" + mDropdown[d].Items[i].Path + "\">" + mDropdown[d].Items[i].Title + "</button>\n"
 		}
 
 		dropDown += "</div>\n</li>\n"

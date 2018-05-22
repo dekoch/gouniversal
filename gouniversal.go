@@ -94,5 +94,7 @@ func consoleInput() {
 				global.Console.Input(input)
 			}
 		}
+
+		time.Sleep(100 * time.Millisecond)
 	}
 }

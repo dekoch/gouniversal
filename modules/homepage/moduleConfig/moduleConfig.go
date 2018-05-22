@@ -29,7 +29,7 @@ func (hc ModuleConfig) SaveConfig() error {
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
 
-		hc.File.UIFileRoot = "data/ui/homepage/"
+		hc.File.UIFileRoot = "data/homepage/"
 	}
 
 	b, err := json.Marshal(hc.File)
