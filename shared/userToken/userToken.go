@@ -1,45 +1,58 @@
 package userToken
 
-import "github.com/google/uuid"
+import (
+	"sync"
+
+	"github.com/google/uuid"
+)
 
 type uToken struct {
-	Uid   string
-	Token string
+	uid   string
+	token string
 }
 
 type UserToken struct {
-	Tokens []uToken
+	mut    sync.Mutex
+	tokens []uToken
 }
 
+// New returns and adds a unique token
 func (t *UserToken) New(uid string) string {
+
+	t.mut.Lock()
+	defer t.mut.Unlock()
 
 	u := uuid.Must(uuid.NewRandom())
 	ut := u.String()
 
-	for i := 0; i < len(t.Tokens); i++ {
+	for i := 0; i < len(t.tokens); i++ {
 
-		if uid == t.Tokens[i].Uid {
-			t.Tokens[i].Token = ut
+		if uid == t.tokens[i].uid {
+			t.tokens[i].token = ut
 			return ut
 		}
 	}
 
 	newToken := make([]uToken, 1)
-	newToken[0].Uid = uid
-	newToken[0].Token = ut
+	newToken[0].uid = uid
+	newToken[0].token = ut
 
-	t.Tokens = append(t.Tokens, newToken...)
+	t.tokens = append(t.tokens, newToken...)
 
 	return ut
 }
 
+// Check returns true, if the UUID and token match with items inside list
 func (t *UserToken) Check(uid string, ut string) bool {
 
-	for i := 0; i < len(t.Tokens); i++ {
+	t.mut.Lock()
+	defer t.mut.Unlock()
 
-		if uid == t.Tokens[i].Uid {
+	for i := 0; i < len(t.tokens); i++ {
 
-			if ut == t.Tokens[i].Token {
+		if uid == t.tokens[i].uid {
+
+			if ut == t.tokens[i].token {
 				return true
 			}
 
@@ -48,4 +61,26 @@ func (t *UserToken) Check(uid string, ut string) bool {
 	}
 
 	return false
+}
+
+// Remove removes UUID and token from list
+func (t *UserToken) Remove(uid string) {
+
+	t.mut.Lock()
+	defer t.mut.Unlock()
+
+	var l []uToken
+	n := make([]uToken, 1)
+
+	for i := 0; i < len(t.tokens); i++ {
+
+		if uid != t.tokens[i].uid {
+
+			n[0] = t.tokens[i]
+
+			l = append(l, n...)
+		}
+	}
+
+	t.tokens = l
 }

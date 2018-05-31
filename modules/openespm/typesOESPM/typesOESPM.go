@@ -5,7 +5,7 @@ import (
 
 	"github.com/dekoch/gouniversal/modules/openespm/appConfig"
 	"github.com/dekoch/gouniversal/modules/openespm/deviceConfig"
-	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/lang"
 	"github.com/dekoch/gouniversal/shared/config"
 )
 
@@ -46,7 +46,7 @@ type JsonHeader struct {
 
 type Page struct {
 	Content string
-	Lang    langOESPM.LangFile
+	Lang    lang.LangFile
 	App     appConfig.App
 }
 

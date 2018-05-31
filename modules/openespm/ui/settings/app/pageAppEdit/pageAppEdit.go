@@ -10,8 +10,8 @@ import (
 
 	"github.com/dekoch/gouniversal/modules/openespm/app"
 	"github.com/dekoch/gouniversal/modules/openespm/appConfig"
-	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
-	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/global"
+	"github.com/dekoch/gouniversal/modules/openespm/lang"
 	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
@@ -31,7 +31,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	button := r.FormValue("edit")
 
 	type content struct {
-		Lang     langOESPM.SettingsAppEdit
+		Lang     lang.SettingsAppEdit
 		App      appConfig.App
 		CmbApps  template.HTML
 		CmbState template.HTML
@@ -71,7 +71,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	// copy app from array
 	var err error
-	c.App, err = globalOESPM.AppConfig.Get(id)
+	c.App, err = global.AppConfig.Get(id)
 
 	// combobox App
 	cmbApps := "<select name=\"app\">"
@@ -115,7 +115,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	c.CmbState = template.HTML(cmbState)
 
 	// display app
-	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"settings/appedit.html", c)
+	p, err := functions.PageToString(global.UiConfig.AppFileRoot+"settings/appedit.html", c)
 	if err == nil {
 		page.Content += p
 	} else {
@@ -139,11 +139,11 @@ func newApp() string {
 		newApp.App = apps[0]
 	}
 
-	globalOESPM.AppConfig.Add(newApp)
+	global.AppConfig.Add(newApp)
 
-	err := globalOESPM.AppConfig.SaveConfig()
+	err := global.AppConfig.SaveConfig()
 	if err == nil {
-		appDataFolder := globalOESPM.AppDataFolder + newApp.UUID + "/"
+		appDataFolder := global.AppDataFolder + newApp.UUID + "/"
 		os.MkdirAll(appDataFolder, os.ModePerm)
 	}
 
@@ -180,24 +180,24 @@ func editApp(r *http.Request, uid string) error {
 	a.State = intState
 	a.Comment = comment
 
-	err = globalOESPM.AppConfig.Edit(uid, a)
+	err = global.AppConfig.Edit(uid, a)
 	if err != nil {
 		return err
 	}
 
-	return globalOESPM.AppConfig.SaveConfig()
+	return global.AppConfig.SaveConfig()
 }
 
 func deleteApp(uid string) error {
 
-	globalOESPM.AppConfig.Delete(uid)
+	global.AppConfig.Delete(uid)
 
-	err := globalOESPM.AppConfig.SaveConfig()
+	err := global.AppConfig.SaveConfig()
 	if err != nil {
 		return err
 	}
 
-	appDataFolder := globalOESPM.AppDataFolder + uid + "/"
+	appDataFolder := global.AppDataFolder + uid + "/"
 
 	if _, err := os.Stat(appDataFolder); os.IsNotExist(err) {
 		return nil

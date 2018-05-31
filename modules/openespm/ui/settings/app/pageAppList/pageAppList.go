@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
-	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/global"
+	"github.com/dekoch/gouniversal/modules/openespm/lang"
 	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
@@ -20,7 +20,7 @@ func RegisterPage(page *typesOESPM.Page, nav *navigation.Navigation) {
 func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type content struct {
-		Lang    langOESPM.SettingsAppList
+		Lang    lang.SettingsAppList
 		AppList template.HTML
 	}
 	var c content
@@ -32,7 +32,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	var intIndex int
 	intIndex = 0
 
-	apps := globalOESPM.AppConfig.List()
+	apps := global.AppConfig.List()
 
 	for i := 0; i < len(apps); i++ {
 
@@ -50,7 +50,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	c.AppList = template.HTML(tbody)
 
-	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"settings/applist.html", c)
+	p, err := functions.PageToString(global.UiConfig.AppFileRoot+"settings/applist.html", c)
 	if err == nil {
 		page.Content += p
 	} else {

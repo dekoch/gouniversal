@@ -52,6 +52,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, err)
 	}
 
+	global.Tokens.Remove(uid)
+
 	fmt.Fprintf(w, "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/app\" /></head></html>")
 }
 

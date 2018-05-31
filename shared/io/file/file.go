@@ -8,12 +8,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/console"
 )
 
-type File struct {
-	String string
-	Bytes  []byte
-}
-
-func (f File) ReadFile(path string) ([]byte, error) {
+func ReadFile(path string) ([]byte, error) {
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -33,7 +28,7 @@ func (f File) ReadFile(path string) ([]byte, error) {
 	return b, err
 }
 
-func (f File) WriteFile(path string, content []byte) error {
+func WriteFile(path string, content []byte) error {
 
 	// directory from path
 	dir := filepath.Dir(path)

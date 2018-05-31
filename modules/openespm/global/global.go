@@ -1,4 +1,4 @@
-package globalOESPM
+package global
 
 import (
 	"github.com/dekoch/gouniversal/modules/openespm/appConfig"

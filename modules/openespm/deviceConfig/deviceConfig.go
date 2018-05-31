@@ -76,8 +76,7 @@ func (c *DeviceConfig) SaveConfig() error {
 		console.Log(err, "openESPM/deviceConfig.SaveConfig()")
 	}
 
-	f := new(file.File)
-	err = f.WriteFile(configFilePath, b)
+	err = file.WriteFile(configFilePath, b)
 
 	return err
 }
@@ -92,8 +91,7 @@ func (c *DeviceConfig) LoadConfig() error {
 	c.Mut.Lock()
 	defer c.Mut.Unlock()
 
-	f := new(file.File)
-	b, err := f.ReadFile(configFilePath)
+	b, err := file.ReadFile(configFilePath)
 	if err != nil {
 		console.Log(err, "openESPM/deviceConfig.LoadConfig()")
 	}

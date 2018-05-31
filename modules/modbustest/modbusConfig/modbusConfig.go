@@ -58,8 +58,7 @@ func (mc *ModbusConfig) SaveConfig() error {
 		console.Log(err, "modbus SaveConfig()")
 	}
 
-	f := new(file.File)
-	err = f.WriteFile(configFilePath, b)
+	err = file.WriteFile(configFilePath, b)
 
 	return err
 }
@@ -74,8 +73,7 @@ func (mc *ModbusConfig) LoadConfig() {
 	mc.Mut.Lock()
 	defer mc.Mut.Unlock()
 
-	f := new(file.File)
-	b, err := f.ReadFile(configFilePath)
+	b, err := file.ReadFile(configFilePath)
 	if err != nil {
 		console.Log(err, "modbus LoadConfig()")
 	}

@@ -45,8 +45,7 @@ func (hc ModuleConfig) SaveConfig() error {
 		console.Log(err, "console/moduleConfig.SaveConfig()")
 	}
 
-	f := new(file.File)
-	err = f.WriteFile(configFilePath, b)
+	err = file.WriteFile(configFilePath, b)
 
 	return err
 }
@@ -61,8 +60,7 @@ func (hc *ModuleConfig) LoadConfig() error {
 	hc.Mut.Lock()
 	defer hc.Mut.Unlock()
 
-	f := new(file.File)
-	b, err := f.ReadFile(configFilePath)
+	b, err := file.ReadFile(configFilePath)
 	if err != nil {
 		console.Log(err, "console/moduleConfig.LoadConfig()")
 	}

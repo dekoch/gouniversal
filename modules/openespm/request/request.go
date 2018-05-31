@@ -9,7 +9,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/console"
 
 	"github.com/dekoch/gouniversal/modules/openespm/app"
-	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/global"
 	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
 	"github.com/dekoch/gouniversal/shared/functions"
 )
@@ -49,7 +49,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				}
 
 			case 2:
-				req.Device, resp.Err = globalOESPM.DeviceConfig.GetWithReqID(req.ID)
+				req.Device, resp.Err = global.DeviceConfig.GetWithReqID(req.ID)
 				if resp.Err != nil {
 					resp.Status = http.StatusForbidden
 				}
@@ -67,11 +67,11 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 				}
 
 			case 5:
-				req.DeviceDataFolder = globalOESPM.DeviceDataFolder + req.Device.UUID + "/"
+				req.DeviceDataFolder = global.DeviceDataFolder + req.Device.UUID + "/"
 				app.Request(resp, req)
 
 			case 6:
-				resp.Err = globalOESPM.DeviceConfig.Edit(req.Device.UUID, req.Device)
+				resp.Err = global.DeviceConfig.Edit(req.Device.UUID, req.Device)
 			}
 		}
 	}
@@ -110,5 +110,5 @@ func LoadConfig() {
 
 func Exit() {
 	// save device config on exit
-	globalOESPM.DeviceConfig.SaveConfig()
+	global.DeviceConfig.SaveConfig()
 }

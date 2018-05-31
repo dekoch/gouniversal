@@ -10,8 +10,8 @@ import (
 
 	"github.com/dekoch/gouniversal/modules/openespm/app"
 	"github.com/dekoch/gouniversal/modules/openespm/deviceConfig"
-	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
-	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/global"
+	"github.com/dekoch/gouniversal/modules/openespm/lang"
 	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
@@ -31,7 +31,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	button := r.FormValue("edit")
 
 	type content struct {
-		Lang     langOESPM.SettingsDeviceEdit
+		Lang     lang.SettingsDeviceEdit
 		Device   deviceConfig.Device
 		CmbApps  template.HTML
 		CmbState template.HTML
@@ -69,7 +69,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	// copy device from array
 	var err error
-	c.Device, err = globalOESPM.DeviceConfig.Get(id)
+	c.Device, err = global.DeviceConfig.Get(id)
 
 	// combobox App
 	cmbApps := "<select name=\"app\">"
@@ -113,7 +113,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	c.CmbState = template.HTML(cmbState)
 
 	// display device
-	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"settings/deviceedit.html", c)
+	p, err := functions.PageToString(global.UiConfig.AppFileRoot+"settings/deviceedit.html", c)
 	if err == nil {
 		page.Content += p
 	} else {
@@ -140,11 +140,11 @@ func newDevice() string {
 		newDevice.App = apps[0]
 	}
 
-	globalOESPM.DeviceConfig.Add(newDevice)
+	global.DeviceConfig.Add(newDevice)
 
-	err := globalOESPM.DeviceConfig.SaveConfig()
+	err := global.DeviceConfig.SaveConfig()
 	if err == nil {
-		deviceDataFolder := globalOESPM.DeviceDataFolder + newDevice.UUID + "/"
+		deviceDataFolder := global.DeviceDataFolder + newDevice.UUID + "/"
 		os.MkdirAll(deviceDataFolder, os.ModePerm)
 	}
 
@@ -187,24 +187,24 @@ func editDevice(r *http.Request, uid string) error {
 	d.RequestID = reqId
 	d.RequestKey = reqKey
 
-	err = globalOESPM.DeviceConfig.Edit(uid, d)
+	err = global.DeviceConfig.Edit(uid, d)
 	if err != nil {
 		return err
 	}
 
-	return globalOESPM.DeviceConfig.SaveConfig()
+	return global.DeviceConfig.SaveConfig()
 }
 
 func deleteDevice(uid string) error {
 
-	globalOESPM.DeviceConfig.Delete(uid)
+	global.DeviceConfig.Delete(uid)
 
-	err := globalOESPM.DeviceConfig.SaveConfig()
+	err := global.DeviceConfig.SaveConfig()
 	if err != nil {
 		return err
 	}
 
-	deviceDataFolder := globalOESPM.DeviceDataFolder + uid + "/"
+	deviceDataFolder := global.DeviceDataFolder + uid + "/"
 
 	if _, err := os.Stat(deviceDataFolder); os.IsNotExist(err) {
 		return nil

@@ -1,4 +1,4 @@
-package langOESPM
+package lang
 
 import (
 	"github.com/dekoch/gouniversal/shared/config"

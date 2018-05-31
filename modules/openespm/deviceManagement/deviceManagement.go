@@ -3,7 +3,7 @@ package deviceManagement
 import (
 	"html/template"
 
-	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/global"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 )
@@ -24,7 +24,7 @@ func HTMLSelectDevice(name string, appname string, uid string) template.HTML {
 		sel += "<option value=\"\"></option>"
 	}
 
-	devices := globalOESPM.DeviceConfig.List()
+	devices := global.DeviceConfig.List()
 
 	for u := 0; u < len(devices); u++ {
 
@@ -47,7 +47,7 @@ func HTMLSelectDevice(name string, appname string, uid string) template.HTML {
 	c.Title = template.HTML(title)
 	c.Select = template.HTML(sel)
 
-	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"selectdevice.html", c)
+	p, err := functions.PageToString(global.UiConfig.AppFileRoot+"selectdevice.html", c)
 	if err != nil {
 		console.Log(err, "")
 		p = err.Error()

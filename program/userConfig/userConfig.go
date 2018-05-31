@@ -70,8 +70,7 @@ func (c *UserConfig) SaveConfig() error {
 		console.Log(err, "userConfig.SaveConfig()")
 	}
 
-	f := new(file.File)
-	err = f.WriteFile(configFilePath, b)
+	err = file.WriteFile(configFilePath, b)
 
 	return err
 }
@@ -86,8 +85,7 @@ func (c *UserConfig) LoadConfig() error {
 	c.Mut.Lock()
 	defer c.Mut.Unlock()
 
-	f := new(file.File)
-	b, err := f.ReadFile(configFilePath)
+	b, err := file.ReadFile(configFilePath)
 	if err != nil {
 		console.Log(err, "userConfig.LoadConfig()")
 	}

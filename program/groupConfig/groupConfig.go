@@ -59,8 +59,7 @@ func (c *GroupConfig) SaveConfig() error {
 		console.Log(err, "groupConfig.SaveConfig()")
 	}
 
-	f := new(file.File)
-	err = f.WriteFile(configFilePath, b)
+	err = file.WriteFile(configFilePath, b)
 
 	return err
 }
@@ -75,8 +74,7 @@ func (c *GroupConfig) LoadConfig() error {
 	c.Mut.Lock()
 	defer c.Mut.Unlock()
 
-	f := new(file.File)
-	b, err := f.ReadFile(configFilePath)
+	b, err := file.ReadFile(configFilePath)
 	if err != nil {
 		console.Log(err, "groupConfig.LoadConfig()")
 	}

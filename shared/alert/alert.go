@@ -8,7 +8,7 @@ import (
 )
 
 // SSE writes Server-Sent Events to an HTTP client.
-type SSE struct{}
+type sSE struct{}
 
 type alertType int
 
@@ -31,7 +31,7 @@ var (
 	clients  int
 )
 
-func (s *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *sSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "cannot stream", http.StatusInternalServerError)
@@ -131,5 +131,5 @@ func Start() {
 
 	clients = 0
 
-	http.Handle("/alert/", &SSE{})
+	http.Handle("/alert/", &sSE{})
 }

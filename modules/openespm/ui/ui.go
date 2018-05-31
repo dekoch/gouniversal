@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/dekoch/gouniversal/modules/openespm/app"
-	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/global"
 	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
 	"github.com/dekoch/gouniversal/modules/openespm/ui/settings"
 	"github.com/dekoch/gouniversal/shared/navigation"
@@ -15,12 +15,12 @@ import (
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	appPage := new(typesOESPM.Page)
-	globalOESPM.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
+	global.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
 	settings.RegisterPage(appPage, nav)
 
 	// register apps
-	apps := globalOESPM.AppConfig.List()
+	apps := global.AppConfig.List()
 	for i := 0; i < len(apps); i++ {
 
 		a := apps[i]
@@ -36,7 +36,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	appPage := new(typesOESPM.Page)
 	appPage.Content = page.Content
-	globalOESPM.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
+	global.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
 	if nav.IsNext("Settings") {
 
@@ -50,10 +50,10 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 			app.Render(appPage, nav, r)
 
 			// save config to ram
-			globalOESPM.AppConfig.Edit(appPage.App.UUID, appPage.App)
+			global.AppConfig.Edit(appPage.App.UUID, appPage.App)
 
 			// save config to file
-			globalOESPM.AppConfig.SaveConfig()
+			global.AppConfig.SaveConfig()
 		}
 	} else {
 		nav.RedirectPath("404", true)
@@ -73,7 +73,7 @@ func loadAppConfig(page *typesOESPM.Page, nav *navigation.Navigation) error {
 	}
 
 	var err error
-	page.App, err = globalOESPM.AppConfig.Get(uid)
+	page.App, err = global.AppConfig.Get(uid)
 
 	return err
 }

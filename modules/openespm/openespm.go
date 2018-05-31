@@ -3,8 +3,8 @@ package openespm
 import (
 	"net/http"
 
-	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
-	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/global"
+	"github.com/dekoch/gouniversal/modules/openespm/lang"
 	"github.com/dekoch/gouniversal/modules/openespm/request"
 	"github.com/dekoch/gouniversal/modules/openespm/ui"
 	"github.com/dekoch/gouniversal/shared/language"
@@ -14,13 +14,13 @@ import (
 
 func LoadConfig() {
 
-	globalOESPM.UiConfig.AppFileRoot = "data/ui/openespm/1.0/"
+	global.UiConfig.AppFileRoot = "data/ui/openespm/1.0/"
 
-	globalOESPM.AppConfig.LoadConfig()
-	globalOESPM.DeviceConfig.LoadConfig()
+	global.AppConfig.LoadConfig()
+	global.DeviceConfig.LoadConfig()
 
-	en := langOESPM.DefaultEn()
-	globalOESPM.Lang = language.New("data/lang/openespm/", en, "en")
+	en := lang.DefaultEn()
+	global.Lang = language.New("data/lang/openespm/", en, "en")
 
 	request.LoadConfig()
 }

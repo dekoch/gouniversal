@@ -7,8 +7,8 @@ import (
 	"github.com/dekoch/gouniversal/modules/openespm/app/TempHumV1x0"
 	"github.com/dekoch/gouniversal/modules/openespm/deviceConfig"
 	"github.com/dekoch/gouniversal/modules/openespm/deviceManagement"
-	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
-	"github.com/dekoch/gouniversal/modules/openespm/langOESPM"
+	"github.com/dekoch/gouniversal/modules/openespm/global"
+	"github.com/dekoch/gouniversal/modules/openespm/lang"
 	"github.com/dekoch/gouniversal/modules/openespm/typesOESPM"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
@@ -24,7 +24,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 	var device deviceConfig.Device
 
 	type content struct {
-		Lang      langOESPM.TempHumV1x0
+		Lang      lang.TempHumV1x0
 		SelectDev template.HTML
 		Switch    template.HTML
 	}
@@ -60,7 +60,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 			case 3:
 				// load device config
 				if app.DeviceUUID != "" {
-					device, err = globalOESPM.DeviceConfig.Get(app.DeviceUUID)
+					device, err = global.DeviceConfig.Get(app.DeviceUUID)
 				}
 				// init new device
 				if functions.IsEmpty(device.Config) {
@@ -95,12 +95,12 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 			case 8:
 				// save device to ram
-				err = globalOESPM.DeviceConfig.Edit(app.DeviceUUID, device)
+				err = global.DeviceConfig.Edit(app.DeviceUUID, device)
 
 			case 9:
 				// save device to file
 				if edit == "apply" {
-					err = globalOESPM.DeviceConfig.SaveConfig()
+					err = global.DeviceConfig.SaveConfig()
 				}
 			}
 		}
@@ -114,7 +114,7 @@ func Render(page *typesOESPM.Page, nav *navigation.Navigation, r *http.Request) 
 
 	c.SelectDev = deviceManagement.HTMLSelectDevice("device", page.App.App, app.DeviceUUID)
 
-	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"TempHumV1x0/app.html", c)
+	p, err := functions.PageToString(global.UiConfig.AppFileRoot+"TempHumV1x0/app.html", c)
 	if err == nil {
 		page.Content += p
 	} else {
