@@ -53,3 +53,6 @@ Demo: [https://dekoch.net](https://dekoch.net)
 
 ## Console
 Live Console output with HTML5 SSE.
+
+## LogViewer
+View gouniversal log files.

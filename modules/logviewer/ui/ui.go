@@ -3,16 +3,16 @@ package ui
 import (
 	"net/http"
 
-	"github.com/dekoch/gouniversal/modules/fileshare/global"
-	"github.com/dekoch/gouniversal/modules/fileshare/typesFileshare"
-	"github.com/dekoch/gouniversal/modules/fileshare/ui/pageHome"
+	"github.com/dekoch/gouniversal/modules/logviewer/global"
+	"github.com/dekoch/gouniversal/modules/logviewer/typesLogViewer"
+	"github.com/dekoch/gouniversal/modules/logviewer/ui/pageHome"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
-	appPage := new(typesFileshare.Page)
+	appPage := new(typesLogViewer.Page)
 	global.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
 	pageHome.RegisterPage(appPage, nav)
@@ -20,7 +20,7 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	appPage := new(typesFileshare.Page)
+	appPage := new(typesLogViewer.Page)
 	appPage.Content = page.Content
 	global.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
@@ -32,9 +32,4 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 
 	page.Content += appPage.Content
-}
-
-func LoadConfig() {
-
-	pageHome.LoadConfig()
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/dekoch/gouniversal/modules/console"
 	"github.com/dekoch/gouniversal/modules/fileshare"
 	"github.com/dekoch/gouniversal/modules/homepage"
+	"github.com/dekoch/gouniversal/modules/logviewer"
 	"github.com/dekoch/gouniversal/modules/modbustest"
 	"github.com/dekoch/gouniversal/modules/openespm"
 	"github.com/dekoch/gouniversal/shared/navigation"
@@ -17,6 +18,7 @@ import (
 // Modules provide a interface to nest apps and modules
 
 const modConsole = true
+const modLogViewer = true
 const modOpenESPM = true
 const modFileshare = true
 const modHomepage = false
@@ -28,6 +30,11 @@ func LoadConfig() {
 	if modConsole {
 		sharedConsole.Log("Console enabled", "Module")
 		console.LoadConfig()
+	}
+
+	if modLogViewer {
+		sharedConsole.Log("LogViewer enabled", "Module")
+		logviewer.LoadConfig()
 	}
 
 	if modOpenESPM {
@@ -64,6 +71,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 		console.RegisterPage(page, nav)
 	}
 
+	if modLogViewer {
+		logviewer.RegisterPage(page, nav)
+	}
+
 	if modOpenESPM {
 		openespm.RegisterPage(page, nav)
 	}
@@ -84,6 +95,13 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		if nav.IsNext("Console") {
 
 			console.Render(page, nav, r)
+		}
+	}
+
+	if modLogViewer {
+		if nav.IsNext("LogViewer") {
+
+			logviewer.Render(page, nav, r)
 		}
 	}
 
@@ -112,8 +130,8 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 // Exit is called before program exit
 func Exit() {
 
-	if modConsole {
-		console.Exit()
+	if modLogViewer {
+		logviewer.Exit()
 	}
 
 	if modOpenESPM {
@@ -126,5 +144,9 @@ func Exit() {
 
 	if modHomepage {
 		homepage.Exit()
+	}
+
+	if modConsole {
+		console.Exit()
 	}
 }

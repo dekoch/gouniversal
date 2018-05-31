@@ -10,6 +10,11 @@ import (
 
 func ReadFile(path string) ([]byte, error) {
 
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		b := make([]byte, 0)
+		return b, err
+	}
+
 	file, err := os.Open(path)
 	if err != nil {
 		console.Log(err, "ReadFile()")
@@ -24,7 +29,6 @@ func ReadFile(path string) ([]byte, error) {
 	defer file.Close()
 
 	b := make([]byte, 0)
-
 	return b, err
 }
 

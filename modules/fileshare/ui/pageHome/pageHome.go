@@ -1,4 +1,4 @@
-package home
+package pageHome
 
 import (
 	"html/template"
@@ -10,49 +10,16 @@ import (
 	"github.com/dekoch/gouniversal/modules/fileshare/lang"
 	"github.com/dekoch/gouniversal/modules/fileshare/typesFileshare"
 	"github.com/dekoch/gouniversal/shared/alert"
-	"github.com/dekoch/gouniversal/shared/datasize"
 	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/io/fileInfo"
 	"github.com/dekoch/gouniversal/shared/navigation"
 
 	"github.com/google/uuid"
 )
 
-type fileInfo struct {
-	Name string
-	Size string
-}
-
 func RegisterPage(page *typesFileshare.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Fileshare", "App:Fileshare:Home", page.Lang.Home.Title)
-}
-
-func searchContent(path string) ([]fileInfo, []fileInfo) {
-
-	list, _ := functions.ReadDir(path, 0)
-
-	folders := []fileInfo{}
-	files := []fileInfo{}
-
-	var fi fileInfo
-
-	for _, l := range list {
-
-		fi.Name = l.Name()
-
-		if l.IsDir() {
-
-			fi.Size = ""
-			folders = append(folders, fi)
-		} else {
-
-			s := datasize.ByteSize(l.Size()).HumanReadable()
-			fi.Size = s
-			files = append(files, fi)
-		}
-	}
-
-	return folders, files
 }
 
 func parentDir(path string) string {
@@ -138,14 +105,14 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 	}
 
 	// scan directory
-	folders, files := searchContent(fileRoot + path)
+	folders, files := fileInfo.Get(fileRoot + path)
 
 	htmlFolders := ""
 
 	if path != "" {
 		// fileshare root
 		htmlFolders += "<tr>"
-		htmlFolders += "<td>"
+		htmlFolders += "<td></td>"
 		htmlFolders += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Home$Folder=/\">..</button></td>"
 		htmlFolders += "<td></td>"
 		htmlFolders += "<td></td>"
@@ -153,7 +120,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 
 		// parent directory
 		htmlFolders += "<tr>"
-		htmlFolders += "<td>"
+		htmlFolders += "<td></td>"
 		htmlFolders += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Home$Folder=" + parentDir(path) + "\">.</button></td>"
 		htmlFolders += "<td></td>"
 		htmlFolders += "<td></td>"
@@ -163,7 +130,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 	for _, f := range folders {
 
 		htmlFolders += "<tr>"
-		htmlFolders += "<td><i class=\"fa fa-folder\" aria-hidden=\"true\">"
+		htmlFolders += "<td><i class=\"fa fa-folder\" aria-hidden=\"true\"></td>"
 		htmlFolders += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Home$Folder=" + path + f.Name + "/" + "\">" + f.Name + "</button></td>"
 		htmlFolders += "<td>" + f.Size + "</td>"
 		htmlFolders += "<td><button class=\"btn btn-danger fa fa-trash\" type=\"submit\" name=\"edit\" value=\"deletefolder" + f.Name + "\" title=\"" + c.Lang.Delete + "\"></button></td>"
@@ -175,7 +142,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 	for _, f := range files {
 
 		htmlFiles += "<tr>"
-		htmlFiles += "<td><i class=\"fa fa-file\" aria-hidden=\"true\">"
+		htmlFiles += "<td><i class=\"fa fa-file\" aria-hidden=\"true\"></td>"
 		htmlFiles += "<td><a href=\"/fileshare/req/?file=" + nav.User.UUID + "/" + path + f.Name + "\" download=\"" + f.Name + "\">" + f.Name + "</a></td>"
 		htmlFiles += "<td>" + f.Size + "</td>"
 		htmlFiles += "<td><button class=\"btn btn-danger fa fa-trash\" type=\"submit\" name=\"edit\" value=\"deletefile" + f.Name + "\" title=\"" + c.Lang.Delete + "\"></button></td>"
@@ -183,10 +150,10 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 	}
 
 	c.List = template.HTML(htmlFolders + htmlFiles)
-	c.Path = template.HTML(nav.User.UUID + "/" + path)
 
 	c.UUID = template.HTML(nav.User.UUID)
 	c.Token = template.HTML(global.Tokens.New(nav.User.UUID))
+	c.Path = template.HTML(nav.User.UUID + "/" + path)
 
 	content, err := functions.PageToString(global.Config.File.UIFileRoot+"home.html", c)
 	if err == nil {

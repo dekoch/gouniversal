@@ -1,0 +1,26 @@
+<form method="post">
+    <table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th scope="col"></th>
+                <th scope="col">{{.Lang.Name}}</th>
+                <th scope="col">{{.Lang.Size}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{.List}}
+        </tbody>
+    </table>
+    <div class="card" {{.FileHidden}}>
+        <div class="card-header">
+            {{.FileName}}
+        </div>
+        <div class="card-body text-left">
+            <table class="table table-sm">
+                <tbody>
+                    {{.FileContent}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>
