@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"html/template"
 	"net"
 	"net/http"
@@ -20,6 +19,7 @@ import (
 	"github.com/dekoch/gouniversal/program/ui/uifunc"
 	"github.com/dekoch/gouniversal/program/userManagement"
 	"github.com/dekoch/gouniversal/shared/alert"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/sitemap"
@@ -45,7 +45,7 @@ var (
 )
 
 func setCookie(parameter string, value string, w http.ResponseWriter, r *http.Request) {
-	//fmt.Println("set cookie " + parameter + " to " + value)
+	//console.Log("set cookie " + parameter + " to " + value)
 
 	session, _ := store.Get(r, cookieName)
 	session.Values[parameter] = value
@@ -53,7 +53,7 @@ func setCookie(parameter string, value string, w http.ResponseWriter, r *http.Re
 }
 
 func getCookie(parameter string, w http.ResponseWriter, r *http.Request) (string, error) {
-	//fmt.Println("get cookie " + parameter)
+	//console.Log("get cookie " + parameter)
 
 	session, err := store.Get(r, cookieName)
 
@@ -275,7 +275,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"program.html", c)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "ui.go")
 		p = err.Error()
 	}
 
@@ -308,7 +308,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	fmt.Println(r.URL.Path)
+	console.Output(r.URL.Path, "")
 }
 
 func handleApp(w http.ResponseWriter, r *http.Request) {
@@ -333,7 +333,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	if newPath != "" {
 		nav.NavigatePath(newPath)
 
-		fmt.Println(newPath)
+		console.Output(newPath, "")
 	}
 
 	nav.Redirect = "init"
@@ -433,7 +433,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 		page.Content = "goodbye"
 
-		global.Console.Input("exit")
+		console.Input("exit")
 	} else {
 
 		setSession(nav, w, r)
@@ -447,18 +447,18 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	// show allowed pages
 	/*var sm []string
 	sm = nav.Sitemap.PageList()
-	fmt.Println("####")
+	console.Output("####")
 	for i := 0; i < len(sm); i++ {
 		if userManagement.IsPageAllowed(sm[i], nav.User) {
-			fmt.Println(sm[i])
+			console.Output(sm[i])
 		}
 	}
-	fmt.Println("####")*/
+	console.Output("####")*/
 
 	t := time.Now()
 	elapsed := t.Sub(start)
 	f := elapsed.Seconds() * 1000.0
-	fmt.Println(nav.Path + " " + strconv.FormatFloat(f, 'f', 1, 64) + "ms")
+	console.Output(nav.Path+" "+strconv.FormatFloat(f, 'f', 1, 64)+"ms", "")
 }
 
 func handleRecovery(w http.ResponseWriter, r *http.Request) {
@@ -485,7 +485,7 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 			setCookie("isgod", "true", w, r)
 
 		} else {
-			fmt.Println(button)
+			console.Log(button, "ui.go")
 		}
 
 		type recovery struct {
@@ -497,7 +497,7 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
 		templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "recovery.html")
 		if err != nil {
-			fmt.Println(err)
+			console.Log(err, "")
 		}
 		templ.Execute(w, re)
 	} else {
@@ -506,19 +506,19 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ui *UI) StartServer() {
-	fmt.Println("starting webserver...")
+	console.Log("starting webserver...", " ")
 
-	fmt.Println("ProgramFileRoot: " + global.UiConfig.File.ProgramFileRoot)
-	fmt.Println("StaticFileRoot: " + global.UiConfig.File.StaticFileRoot)
+	console.Log("ProgramFileRoot: "+global.UiConfig.File.ProgramFileRoot, " ")
+	console.Log("StaticFileRoot: "+global.UiConfig.File.StaticFileRoot, " ")
 
 	if _, err := os.Stat(global.UiConfig.File.ProgramFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
-		fmt.Println("error: ProgramFileRoot not found")
+		console.Log("error: ProgramFileRoot not found", "ui.go")
 	}
 
 	if _, err := os.Stat(global.UiConfig.File.StaticFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
-		fmt.Println("error: StaticFileRoot not found")
+		console.Log("error: StaticFileRoot not found", "ui.go")
 	}
 
 	addrs, err := net.InterfaceAddrs()
@@ -542,12 +542,12 @@ func (ui *UI) StartServer() {
 		if global.UiConfig.File.HTTPS.Enabled {
 			if _, err = os.Stat(global.UiConfig.File.HTTPS.CertFile); os.IsNotExist(err) {
 				global.UiConfig.File.HTTPS.Enabled = false
-				fmt.Println("missing CertFile \"" + global.UiConfig.File.HTTPS.CertFile + "\"")
+				console.Log("missing CertFile \""+global.UiConfig.File.HTTPS.CertFile+"\"", " ")
 			}
 
 			if _, err = os.Stat(global.UiConfig.File.HTTPS.KeyFile); os.IsNotExist(err) {
 				global.UiConfig.File.HTTPS.Enabled = false
-				fmt.Println("missing KeyFile \"" + global.UiConfig.File.HTTPS.KeyFile + "\"")
+				console.Log("missing KeyFile \""+global.UiConfig.File.HTTPS.KeyFile+"\"", " ")
 			}
 		}
 
@@ -576,18 +576,18 @@ func (ui *UI) StartServer() {
 
 					if global.UiConfig.File.HTTP.Enabled {
 
-						fmt.Println("http://" + ipnet.IP.String() + ":" + strconv.Itoa(global.UiConfig.File.HTTP.Port))
+						console.Log("http://"+ipnet.IP.String()+":"+strconv.Itoa(global.UiConfig.File.HTTP.Port), " ")
 					}
 
 					if global.UiConfig.File.HTTPS.Enabled {
 
-						fmt.Println("https://" + ipnet.IP.String() + ":" + strconv.Itoa(global.UiConfig.File.HTTPS.Port))
+						console.Log("https://"+ipnet.IP.String()+":"+strconv.Itoa(global.UiConfig.File.HTTPS.Port), " ")
 					}
 				}
 			}
 		}
 	} else {
-		fmt.Println("no interface found")
+		console.Log("no interface found", " ")
 	}
 }
 

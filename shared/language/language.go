@@ -2,11 +2,11 @@ package language
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"sync"
 
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
@@ -32,7 +32,7 @@ func New(dir string, def interface{}, defname string) Language {
 
 	err := functions.CreateDir(lf.LangDir)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 	} else {
 
 		if _, err = os.Stat(lf.LangDir + defname); os.IsNotExist(err) {
@@ -54,7 +54,7 @@ func (l *Language) SaveLang(lf interface{}, n string) error {
 
 	b, err := json.Marshal(lf)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 	}
 
 	f := new(file.File)
@@ -73,7 +73,7 @@ func (l *Language) loadLang(n string) (Lang, error) {
 	f := new(file.File)
 	lf.File, err = f.ReadFile(l.LangDir + lf.Name)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 	}
 
 	return lf, err
@@ -83,7 +83,7 @@ func (l *Language) loadLangFiles() {
 
 	files, err := ioutil.ReadDir(l.LangDir)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 		return
 	}
 
@@ -113,7 +113,7 @@ func fileToStruct(lf Lang, s interface{}) {
 
 	err := json.Unmarshal(lf.File, &s)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 	}
 }
 

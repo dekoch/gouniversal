@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -11,15 +10,16 @@ import (
 	"github.com/dekoch/gouniversal/program/global"
 	"github.com/dekoch/gouniversal/program/lang"
 	"github.com/dekoch/gouniversal/program/ui"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/language"
 )
 
 func main() {
-	fmt.Println("App starting...")
+	console.Log("App starting...", " ")
 
 	web := new(ui.UI)
 
-	global.Console.Input("")
+	console.Input("")
 
 	global.UiConfig.LoadConfig()
 
@@ -29,7 +29,7 @@ func main() {
 	if global.UiConfig.File.UIEnabled {
 		go web.StartServer()
 	} else {
-		fmt.Println("UI is disabled")
+		console.Log("UI is disabled", " ")
 
 		modules.LoadConfig()
 	}
@@ -40,21 +40,20 @@ func main() {
 
 	for exitApp == false {
 
-		if global.Console.Get() != "" {
+		s := console.GetInput()
 
-			s := global.Console.Get()
+		if s != "" {
 
 			if s == "help" {
 				printHelp()
 			} else if s == "exit" {
 				exitApp = true
 			} else {
-				fmt.Println("")
-				fmt.Println("unrecognized command \"" + s + "\"")
-				fmt.Println("Type 'help' for a list of available commands.")
+				console.Output("unrecognized command \""+s+"\"", " ")
+				console.Output("Type 'help' for a list of available commands.", " ")
 			}
 
-			global.Console.Input("")
+			console.Input("")
 		}
 
 		time.Sleep(100 * time.Millisecond)
@@ -66,16 +65,16 @@ func main() {
 
 	modules.Exit()
 
-	fmt.Println("App ended")
+	console.Log("App ended", " ")
 	os.Exit(1)
 }
 
 func printHelp() {
-	fmt.Println("")
-	fmt.Println("Command\t\tMeaning")
-	fmt.Println("")
-	fmt.Println("help\t\tShow this help text")
-	fmt.Println("exit\t\tExit this program")
+	console.Output("", " ")
+	console.Output("Command\t\tMeaning", " ")
+	console.Output("", " ")
+	console.Output("help\t\tShow this help text", " ")
+	console.Output("exit\t\tExit this program", " ")
 }
 
 func consoleInput() {
@@ -91,7 +90,7 @@ func consoleInput() {
 				input = strings.Replace(input, "\n", "", -1)
 				input = strings.Replace(input, "\r", "", -1)
 
-				global.Console.Input(input)
+				console.Input(input)
 			}
 		}
 

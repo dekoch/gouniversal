@@ -1,3 +1,4 @@
+
 # gouniversal
 Start writing your **new Go Application** with gouniversal
 and use a prepared user/group administration, navigation and alarm system.
@@ -42,3 +43,13 @@ open-source Manager for IoT Devices
  - SimpleSwitch v1.0
 
 Device Firmware: [https://github.com/dekoch/GOopenESPM](https://github.com/dekoch/GOopenESPM)
+
+## Fileshare
+Up/Download, Manage and Share your Files.
+
+## Homepage
+Auto generate Menu entries for your html Files.
+Demo: [https://dekoch.net](https://dekoch.net)
+
+## Console
+Live Console output with HTML5 SSE.

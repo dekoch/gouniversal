@@ -75,7 +75,9 @@ func (s *SSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Message(t alertType, title string, message string, sender string, clientuuid string) {
+func Message(t alertType, title string, message interface{}, sender string, clientuuid string) {
+
+	m := fmt.Sprintf("%v", message)
 
 	if t == NONE {
 		return
@@ -90,22 +92,22 @@ func Message(t alertType, title string, message string, sender string, clientuui
 		if t == SUCCESS {
 			alert += "<div class=\"alert alert-success alert-dismissible\">"
 			alert += "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>"
-			alert += "<strong>" + title + "</strong> " + message
+			alert += "<strong>" + title + "</strong> " + m
 			alert += "</div>"
 		} else if t == INFO {
 			alert += "<div class=\"alert alert-info alert-dismissible\">"
 			alert += "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>"
-			alert += "<strong>" + title + "</strong> " + message
+			alert += "<strong>" + title + "</strong> " + m
 			alert += "</div>"
 		} else if t == WARNING {
 			alert += "<div class=\"alert alert-warning alert-dismissible\">"
 			alert += "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>"
-			alert += "<strong>" + title + "</strong> " + message
+			alert += "<strong>" + title + "</strong> " + m
 			alert += "</div>"
 		} else {
 			alert += "<div class=\"alert alert-danger alert-dismissible\">"
 			alert += "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>"
-			alert += "<strong>" + title + "</strong> " + message
+			alert += "<strong>" + title + "</strong> " + m
 			alert += "</div>"
 		}
 

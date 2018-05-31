@@ -1,10 +1,10 @@
 package deviceManagement
 
 import (
-	"fmt"
 	"html/template"
 
 	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 )
 
@@ -49,7 +49,7 @@ func HTMLSelectDevice(name string, appname string, uid string) template.HTML {
 
 	p, err := functions.PageToString(globalOESPM.UiConfig.AppFileRoot+"selectdevice.html", c)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 		p = err.Error()
 	}
 

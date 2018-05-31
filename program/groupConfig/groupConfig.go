@@ -3,11 +3,11 @@ package groupConfig
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"os"
 	"sync"
 
 	"github.com/dekoch/gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
@@ -56,7 +56,7 @@ func (c *GroupConfig) SaveConfig() error {
 
 	b, err := json.Marshal(c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "groupConfig.SaveConfig()")
 	}
 
 	f := new(file.File)
@@ -78,16 +78,16 @@ func (c *GroupConfig) LoadConfig() error {
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "groupConfig.LoadConfig()")
 	}
 
 	err = json.Unmarshal(b, &c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "groupConfig.LoadConfig()")
 	}
 
 	if config.CheckHeader(c.File.Header, "groups") == false {
-		log.Fatal("wrong config \"" + configFilePath + "\"")
+		console.Log("wrong config \""+configFilePath+"\"", "groupConfig.LoadConfig()")
 	}
 
 	return err

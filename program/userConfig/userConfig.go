@@ -3,12 +3,12 @@ package userConfig
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"os"
 	"strconv"
 	"sync"
 
 	"github.com/dekoch/gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
 
 	"github.com/google/uuid"
@@ -67,7 +67,7 @@ func (c *UserConfig) SaveConfig() error {
 
 	b, err := json.Marshal(c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "userConfig.SaveConfig()")
 	}
 
 	f := new(file.File)
@@ -89,16 +89,16 @@ func (c *UserConfig) LoadConfig() error {
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "userConfig.LoadConfig()")
 	}
 
 	err = json.Unmarshal(b, &c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "userConfig.LoadConfig()")
 	}
 
 	if config.CheckHeader(c.File.Header, "users") == false {
-		log.Fatal("wrong config \"" + configFilePath + "\"")
+		console.Log("wrong config \""+configFilePath+"\"", "userConfig.LoadConfig()")
 	}
 
 	return err

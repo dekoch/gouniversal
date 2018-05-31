@@ -2,11 +2,11 @@ package uiConfig
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"sync"
 
 	"github.com/dekoch/gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
@@ -71,7 +71,7 @@ func (c *UiConfig) SaveUiConfig() error {
 
 	b, err := json.Marshal(c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "uiConfig.SaveConfig()")
 	}
 
 	f := new(file.File)
@@ -93,15 +93,15 @@ func (c *UiConfig) LoadConfig() {
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "ui.LoadConfig()")
 	}
 
 	err = json.Unmarshal(b, &c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "ui.LoadConfig()")
 	}
 
 	if config.CheckHeader(c.File.Header, "ui") == false {
-		log.Fatal("wrong config \"" + configFilePath + "\"")
+		console.Log("wrong config \""+configFilePath+"\"", "ui.LoadConfig()")
 	}
 }

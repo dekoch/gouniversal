@@ -72,7 +72,7 @@ func (nav *Navigation) IsNext(page string) bool {
 				nav.CurrentPath = nav.CurrentPath[1:]
 			}
 
-			//fmt.Println(nav.CurrentPath)
+			//console.Output(nav.CurrentPath, "navigation.IsNext()")
 
 			return true
 		}

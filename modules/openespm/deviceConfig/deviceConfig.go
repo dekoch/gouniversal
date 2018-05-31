@@ -3,12 +3,11 @@ package deviceConfig
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
 	"os"
 	"sync"
 
 	"github.com/dekoch/gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
@@ -34,7 +33,7 @@ func (d *Device) Marshal(v interface{}) error {
 	if err == nil {
 		d.Config = string(b[:])
 	} else {
-		fmt.Println(err)
+		console.Log(err, "")
 	}
 
 	return err
@@ -74,7 +73,7 @@ func (c *DeviceConfig) SaveConfig() error {
 
 	b, err := json.Marshal(c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "openESPM/deviceConfig.SaveConfig()")
 	}
 
 	f := new(file.File)
@@ -96,16 +95,16 @@ func (c *DeviceConfig) LoadConfig() error {
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "openESPM/deviceConfig.LoadConfig()")
 	}
 
 	err = json.Unmarshal(b, &c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "openESPM/deviceConfig.LoadConfig()")
 	}
 
 	if config.CheckHeader(c.File.Header, "devices") == false {
-		log.Fatal("wrong config")
+		console.Log("wrong config \""+configFilePath+"\"", "openESPM/deviceConfig.LoadConfig()")
 	}
 
 	return err

@@ -3,6 +3,7 @@ package modules
 import (
 	"net/http"
 
+	"github.com/dekoch/gouniversal/modules/console"
 	"github.com/dekoch/gouniversal/modules/fileshare"
 	"github.com/dekoch/gouniversal/modules/homepage"
 	"github.com/dekoch/gouniversal/modules/modbustest"
@@ -13,6 +14,7 @@ import (
 
 // Modules provide a interface to nest apps and modules
 
+const modConsole = true
 const modOpenESPM = true
 const modFileshare = true
 const modHomepage = false
@@ -20,6 +22,10 @@ const modModbusTest = false
 
 // LoadConfig is called before UI starts
 func LoadConfig() {
+
+	if modConsole {
+		console.LoadConfig()
+	}
 
 	if modOpenESPM {
 		openespm.LoadConfig()
@@ -47,6 +53,10 @@ func LoadConfig() {
 // to nest your app or module inside menus
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
+	if modConsole {
+		console.RegisterPage(page, nav)
+	}
+
 	if modOpenESPM {
 		openespm.RegisterPage(page, nav)
 	}
@@ -62,6 +72,13 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 // Render UI page
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
+
+	if modConsole {
+		if nav.IsNext("Console") {
+
+			console.Render(page, nav, r)
+		}
+	}
 
 	if modOpenESPM {
 		if nav.IsNext("openESPM") {
@@ -87,6 +104,10 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 // Exit is called before program exit
 func Exit() {
+
+	if modConsole {
+		console.Exit()
+	}
 
 	if modOpenESPM {
 		openespm.Exit()

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/dekoch/gouniversal/modules/modbustest/modbusConfig"
+	"github.com/dekoch/gouniversal/shared/console"
 
 	"github.com/goburrow/modbus"
 )
@@ -94,7 +95,7 @@ func readModbus(c modbusConfig.Station, client modbus.Client) (modInput, error) 
 	// Read input register
 	results, err := client.ReadInputRegisters(c.ReadOffset, 1)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 		return in, err
 	}
 
@@ -139,7 +140,7 @@ func writeModbus(c modbusConfig.Station, o modOutput, client modbus.Client) erro
 	results, err := client.WriteSingleRegister(c.WriteOffset, value)
 
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 		return err
 	}
 

@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"github.com/asaskevich/govalidator"
 
 	"github.com/dekoch/gouniversal/modules/homepage/global"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
@@ -43,7 +43,7 @@ func getNameAndOrder(s string) (string, int) {
 	if no != "" && govalidator.IsNumeric(no) {
 		newOrder, err := strconv.Atoi(no)
 		if err != nil {
-			fmt.Println(err)
+			console.Log(err, "homepage/ui.go")
 		} else {
 			order = newOrder
 		}

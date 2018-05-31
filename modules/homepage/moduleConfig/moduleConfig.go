@@ -2,11 +2,11 @@ package moduleConfig
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"sync"
 
 	"github.com/dekoch/gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
@@ -34,7 +34,7 @@ func (hc ModuleConfig) SaveConfig() error {
 
 	b, err := json.Marshal(hc.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "homepage/moduleConfig.SaveConfig()")
 	}
 
 	f := new(file.File)
@@ -53,16 +53,16 @@ func (hc *ModuleConfig) LoadConfig() error {
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "homepage/moduleConfig.LoadConfig()")
 	}
 
 	err = json.Unmarshal(b, &hc.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "homepage/moduleConfig.LoadConfig()")
 	}
 
 	if config.CheckHeader(hc.File.Header, "homepage") == false {
-		log.Fatal("wrong config")
+		console.Log("wrong config \""+configFilePath+"\"", "homepage/moduleConfig.LoadConfig()")
 	}
 
 	return err

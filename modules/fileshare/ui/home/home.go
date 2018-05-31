@@ -1,7 +1,6 @@
 package home
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"github.com/dekoch/gouniversal/modules/fileshare/global"
 	"github.com/dekoch/gouniversal/modules/fileshare/lang"
 	"github.com/dekoch/gouniversal/modules/fileshare/typesFileshare"
+	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/datasize"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
@@ -117,7 +117,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 
 		err := functions.CreateDir(fileRoot + path + u.String() + "/")
 		if err != nil {
-			fmt.Println(err)
+			alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "home.go", nav.User.UUID)
 		}
 
 	} else if strings.HasPrefix(edit, "deletefolder") {
@@ -125,7 +125,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 		folder := strings.Replace(edit, "deletefolder", "", 1)
 		err := os.RemoveAll(fileRoot + path + folder)
 		if err != nil {
-			fmt.Println(err)
+			alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "home.go", nav.User.UUID)
 		}
 
 	} else if strings.HasPrefix(edit, "deletefile") {
@@ -133,7 +133,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 		file := strings.Replace(edit, "deletefile", "", 1)
 		err := os.Remove(fileRoot + path + file)
 		if err != nil {
-			fmt.Println(err)
+			alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "home.go", nav.User.UUID)
 		}
 	}
 

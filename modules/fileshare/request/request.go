@@ -1,7 +1,6 @@
 package request
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/dekoch/gouniversal/modules/fileshare/global"
 	"github.com/dekoch/gouniversal/modules/fileshare/typesFileshare"
+	"github.com/dekoch/gouniversal/shared/console"
 )
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
@@ -18,7 +18,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	req := new(typesFileshare.Request)
 
 	req.Values = r.URL.Query()
-	fmt.Println("GET params:", req.Values)
+	console.Output("GET params:", "")
+	console.Output(req.Values, "")
 
 	req.ID = req.Values.Get("id")
 	req.Key = req.Values.Get("key")
@@ -57,7 +58,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		http.Error(w, resp.Err.Error(), resp.Status)
-		fmt.Println(req.ID + "\t" + resp.Err.Error())
+		console.Output(req.ID+"\t"+resp.Err.Error(), "")
 	} else {
 
 		if _, err := os.Stat(resp.FilePath); os.IsNotExist(err) == false {
@@ -68,7 +69,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	t := time.Now()
 	elapsed := t.Sub(startTime)
 	f := elapsed.Seconds() * 1000.0
-	fmt.Println(strconv.FormatFloat(f, 'f', 1, 64) + "ms")
+	console.Output(strconv.FormatFloat(f, 'f', 1, 64)+"ms", "")
 }
 
 func LoadConfig() {

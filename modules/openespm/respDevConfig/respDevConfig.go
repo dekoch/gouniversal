@@ -1,7 +1,6 @@
 package respDevConfig
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/dekoch/gouniversal/shared/functions"
@@ -35,7 +34,7 @@ func (c *RespDevConfig) Interval() float64 {
 	c.Lastseen = time.Now()
 	dif := sec.Seconds()
 
-	fmt.Println(dif)
+	//console.Output(dif, "")
 
 	if dif < c.SetIntvl {
 

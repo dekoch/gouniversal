@@ -3,12 +3,11 @@ package appConfig
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
 	"os"
 	"sync"
 
 	"github.com/dekoch/gouniversal/shared/config"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
 
 	"github.com/google/uuid"
@@ -34,7 +33,7 @@ func (a *App) Marshal(v interface{}) error {
 	if err == nil {
 		a.Config = string(b[:])
 	} else {
-		fmt.Println(err)
+		console.Log(err, "")
 	}
 
 	return err
@@ -74,7 +73,7 @@ func (c *AppConfig) SaveConfig() error {
 
 	b, err := json.Marshal(c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "openESPM/appConfig.SaveConfig()")
 	}
 
 	f := new(file.File)
@@ -96,16 +95,16 @@ func (c *AppConfig) LoadConfig() error {
 	f := new(file.File)
 	b, err := f.ReadFile(configFilePath)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "openESPM/appConfig.LoadConfig()")
 	}
 
 	err = json.Unmarshal(b, &c.File)
 	if err != nil {
-		log.Fatal(err)
+		console.Log(err, "openESPM/appConfig.LoadConfig()")
 	}
 
 	if config.CheckHeader(c.File.Header, "apps") == false {
-		log.Fatal("wrong config")
+		console.Log("wrong config \""+configFilePath+"\"", "openESPM/appConfig.LoadConfig()")
 	}
 
 	return err

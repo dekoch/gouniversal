@@ -1,11 +1,11 @@
 package file
 
 import (
-	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/dekoch/gouniversal/shared/console"
 )
 
 type File struct {
@@ -17,11 +17,11 @@ func (f File) ReadFile(path string) ([]byte, error) {
 
 	file, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "ReadFile()")
 	} else {
 		content, err := ioutil.ReadFile(path)
 		if err != nil {
-			log.Fatal(err)
+			console.Log(err, "ReadFile()")
 		}
 
 		return content, nil
@@ -45,7 +45,7 @@ func (f File) WriteFile(path string, content []byte) error {
 
 	file, err := os.Create(path)
 	if err != nil {
-		fmt.Println("Cannot create file " + path)
+		console.Log(err, "WriteFile()")
 	}
 	defer file.Close()
 

@@ -2,10 +2,11 @@ package request
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/dekoch/gouniversal/shared/console"
 
 	"github.com/dekoch/gouniversal/modules/openespm/app"
 	"github.com/dekoch/gouniversal/modules/openespm/globalOESPM"
@@ -20,7 +21,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	req := new(typesOESPM.Request)
 
 	req.Values = r.URL.Query()
-	fmt.Println("GET params:", req.Values)
+	console.Output("GET params:", "")
+	console.Output(req.Values, "")
 
 	req.ID = req.Values.Get("id")
 	req.Key = req.Values.Get("key")
@@ -80,7 +82,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		http.Error(w, resp.Err.Error(), resp.Status)
-		fmt.Println(req.ID + "\t" + resp.Err.Error())
+		console.Log(req.ID, "openESPM request.go")
+		console.Log(resp.Err.Error(), "openESPM request.go")
 	} else {
 
 		switch resp.Type {
@@ -97,7 +100,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	t := time.Now()
 	elapsed := t.Sub(startTime)
 	f := elapsed.Seconds() * 1000.0
-	fmt.Println(strconv.FormatFloat(f, 'f', 1, 64) + "ms")
+	console.Output(strconv.FormatFloat(f, 'f', 1, 64)+"ms", "")
 }
 
 func LoadConfig() {

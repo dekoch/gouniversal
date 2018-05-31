@@ -1,11 +1,11 @@
 package guestManagement
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/dekoch/gouniversal/program/global"
 	"github.com/dekoch/gouniversal/program/userConfig"
+	"github.com/dekoch/gouniversal/shared/console"
 
 	"github.com/google/uuid"
 )
@@ -28,7 +28,7 @@ func (c *GuestManagement) NewGuest() userConfig.User {
 	var err error
 	newGuest[0].User, err = global.UserConfig.GetWithState(0)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 	}
 
 	newGuest[0].LoginAttempts = 0
@@ -44,7 +44,7 @@ func (c *GuestManagement) NewGuest() userConfig.User {
 	guests := len(c.User)
 	// if number of guests exceeds maximum, remove the oldest
 	if guests > global.UiConfig.File.MaxGuests {
-		c.User = c.User[0 : guests-1]
+		c.User = c.User[1:guests]
 	}
 
 	c.User = append(c.User, newGuest...)

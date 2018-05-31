@@ -2,7 +2,8 @@ package SimpleSwitchV1x0
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/dekoch/gouniversal/shared/console"
 )
 
 type DeviceConfig struct {
@@ -15,7 +16,7 @@ func InitDeviceConfig() string {
 
 	b, err := json.Marshal(c)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 	}
 
 	return string(b[:])
@@ -30,7 +31,7 @@ func InitAppConfig() string {
 
 	b, err := json.Marshal(c)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "")
 	}
 
 	return string(b[:])

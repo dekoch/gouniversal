@@ -3,7 +3,6 @@ package functions
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"math"
@@ -13,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/dekoch/gouniversal/shared/console"
 )
 
 // PageToString converts a page and struct to string
@@ -20,21 +20,21 @@ func PageToString(path string, data interface{}) (string, error) {
 
 	// check file exist
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		fmt.Println(err)
+		console.Log(err, "PageToString()")
 		return "", err
 	}
 
 	// read template
 	templ, err := template.ParseFiles(path)
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "PageToString()")
 		return "", err
 	}
 
 	// template to buffer
 	var tpl bytes.Buffer
 	if err := templ.Execute(&tpl, data); err != nil {
-		fmt.Println(err)
+		console.Log(err, "PageToString()")
 		return "", err
 	}
 

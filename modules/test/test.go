@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 )
@@ -51,7 +50,7 @@ func (s *SSE) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	for {
 		select {
 		case <-cn.CloseNotify():
-			log.Println("done: closed connection")
+			fmt.Println("done: closed connection")
 			return
 		case msg := <-messages:
 			fmt.Fprintf(rw, "data: %s\n\n", msg)
@@ -71,7 +70,7 @@ func Start() {
 			messages <- fmt.Sprintf("%d - the time is %v", i, time.Now())
 
 			// Print a nice log message and sleep for 5s.
-			log.Printf("Sent message %d ", i)
+			fmt.Printf("Sent message %d ", i)
 			time.Sleep(5 * 1e9)
 
 		}
