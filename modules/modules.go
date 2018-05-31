@@ -10,6 +10,8 @@ import (
 	"github.com/dekoch/gouniversal/modules/openespm"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
+
+	sharedConsole "github.com/dekoch/gouniversal/shared/console"
 )
 
 // Modules provide a interface to nest apps and modules
@@ -24,22 +26,27 @@ const modModbusTest = false
 func LoadConfig() {
 
 	if modConsole {
+		sharedConsole.Log("Console enabled", "Module")
 		console.LoadConfig()
 	}
 
 	if modOpenESPM {
+		sharedConsole.Log("openESPM enabled", "Module")
 		openespm.LoadConfig()
 	}
 
 	if modFileshare {
+		sharedConsole.Log("Fileshare enabled", "Module")
 		fileshare.LoadConfig()
 	}
 
 	if modHomepage {
+		sharedConsole.Log("Homepage enabled", "Module")
 		homepage.LoadConfig()
 	}
 
 	if modModbusTest {
+		sharedConsole.Log("ModbusTest enabled", "Module")
 		modbustest.LoadConfig()
 	}
 }

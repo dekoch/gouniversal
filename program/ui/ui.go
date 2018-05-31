@@ -19,6 +19,7 @@ import (
 	"github.com/dekoch/gouniversal/program/ui/uifunc"
 	"github.com/dekoch/gouniversal/program/userManagement"
 	"github.com/dekoch/gouniversal/shared/alert"
+	"github.com/dekoch/gouniversal/shared/clientInfo"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
@@ -301,14 +302,14 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else if r.URL.Path == "/favicon.ico" {
-		f := global.UiConfig.File.StaticFileRoot + "favicon.ico"
+		icon := global.UiConfig.File.StaticFileRoot + "favicon.ico"
 
-		if _, err := os.Stat(f); os.IsNotExist(err) == false {
-			http.ServeFile(w, r, f)
+		if _, err := os.Stat(icon); os.IsNotExist(err) == false {
+			http.ServeFile(w, r, icon)
 		}
+	} else {
+		console.Log(r.URL.Path+" ("+clientInfo.String(r)+")", "handleRoot()")
 	}
-
-	console.Output(r.URL.Path, "")
 }
 
 func handleApp(w http.ResponseWriter, r *http.Request) {
@@ -333,7 +334,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	if newPath != "" {
 		nav.NavigatePath(newPath)
 
-		console.Output(newPath, "")
+		console.Output(newPath, "handleApp()")
 	}
 
 	nav.Redirect = "init"
@@ -376,24 +377,58 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 			if nav.IsNext("Login") {
 
-				name := r.FormValue("name")
-				pwd := r.FormValue("pwd")
-				maxAttempts := guest.MaxLoginAttempts(nav.User.UUID)
+				var err error
+				name := ""
+				valid := true
 
-				if uifunc.CheckLogin(name, pwd) && maxAttempts == false {
+				for i := 0; i <= 3; i++ {
+					if valid == true {
+						switch i {
+						case 0:
+							name, err = functions.CheckFormInput("name", r)
+							if err != nil {
+								valid = false
+							}
 
-					var err error
-					nav.User, err = global.UserConfig.Get(uifunc.LoginNameToUUID(name))
-					if err != nil {
-						pageLogin.Render(page, nav, r)
-					} else {
-						nav.RedirectPath("Program:Home", false)
+						case 1:
+							pwd := r.FormValue("pwd")
+
+							if uifunc.CheckLogin(name, pwd) == false {
+								valid = false
+							}
+
+						case 2:
+							if guest.MaxLoginAttempts(nav.User.UUID) {
+								valid = false
+							}
+
+						case 3:
+							// load user
+							nav.User, err = global.UserConfig.Get(uifunc.LoginNameToUUID(name))
+							if err != nil {
+								valid = false
+							}
+						}
 					}
+				}
+
+				if valid {
+
+					console.Log("\""+name+"\" logged in", "Login")
+
+					nav.RedirectPath("Program:Home", false)
 				} else {
+
+					if functions.IsEmpty(name) == false {
+						console.Log("failed login with user \""+name+"\" ("+clientInfo.String(r)+")", "Login")
+					}
+
 					pageLogin.Render(page, nav, r)
 				}
 
 			} else if nav.IsNext("Logout") {
+
+				console.Log("\""+nav.User.LoginName+"\" logged out", "Logout")
 
 				nav.User = guest.NewGuest()
 				nav.RedirectPath("Account:Login", false)
@@ -458,7 +493,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	t := time.Now()
 	elapsed := t.Sub(start)
 	f := elapsed.Seconds() * 1000.0
-	console.Output(nav.Path+" "+strconv.FormatFloat(f, 'f', 1, 64)+"ms", "")
+	console.Output(nav.Path+" "+strconv.FormatFloat(f, 'f', 1, 64)+"ms", "handleApp()")
 }
 
 func handleRecovery(w http.ResponseWriter, r *http.Request) {
@@ -585,6 +620,10 @@ func (ui *UI) StartServer() {
 					}
 				}
 			}
+		}
+
+		if global.UiConfig.File.Recovery {
+			console.Log("WARNING! Recovery Mode ist enabled", " ")
 		}
 	} else {
 		console.Log("no interface found", " ")

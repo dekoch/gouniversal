@@ -43,6 +43,8 @@ func init() {
 
 	logFile, _ = os.Create(logFilePath + fileName)
 	logLogger = log.New(logFile, "", 0)
+
+	Log(logFilePath+fileName, " ")
 }
 
 func Input(s string) {
