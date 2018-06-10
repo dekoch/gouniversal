@@ -11,6 +11,7 @@ import (
 type Navigation struct {
 	Path           string
 	CurrentPath    string
+	LastPath       string
 	Redirect       string
 	PathAfterLogin string
 	Home           string
@@ -97,6 +98,8 @@ func (nav *Navigation) NavigatePath(path string) {
 }
 
 func (nav *Navigation) RedirectPath(path string, overwrite bool) {
+
+	nav.LastPath = nav.Path
 
 	if overwrite {
 

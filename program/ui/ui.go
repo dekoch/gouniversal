@@ -308,7 +308,10 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, icon)
 		}
 	} else {
-		console.Log(r.URL.Path+" ("+clientInfo.String(r)+")", "handleRoot()")
+		console.Log("Error 404 \""+r.URL.Path+"\" ("+clientInfo.String(r)+")", "handleRoot()")
+
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
@@ -437,9 +440,11 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 			}
 
 		} else if nav.Path == "404" {
+			console.Log("404 \""+nav.LastPath+"\"", "")
 			page.Content = "<h1>404</h1><br>"
 			page.Content += page.Lang.Error.NotFound404
 		} else if nav.Path == "508" {
+			console.Log("508 \""+nav.Path+"\" ("+nav.LastPath+")", "")
 			page.Content = "<h1>508</h1><br>"
 			page.Content += page.Lang.Error.LoopDetected508
 		} else {
