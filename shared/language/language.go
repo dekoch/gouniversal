@@ -17,7 +17,7 @@ type lang struct {
 }
 
 type Language struct {
-	mut     sync.Mutex
+	mut     sync.RWMutex
 	langDir string
 	defLang string
 	files   []lang
@@ -117,8 +117,7 @@ func fileToStruct(lf lang, s interface{}) {
 
 func (l *Language) SelectLang(n string, s interface{}) {
 
-	l.mut.Lock()
-	defer l.mut.Unlock()
+	l.mut.RLock()
 
 	// search lang
 	for i := 0; i < len(l.files); i++ {
@@ -126,9 +125,16 @@ func (l *Language) SelectLang(n string, s interface{}) {
 		if n == l.files[i].name {
 
 			fileToStruct(l.files[i], s)
+
+			l.mut.RUnlock()
 			return
 		}
 	}
+
+	l.mut.RUnlock()
+
+	l.mut.Lock()
+	defer l.mut.Unlock()
 
 	// if nothing found
 	// refresh list
@@ -157,8 +163,8 @@ func (l *Language) SelectLang(n string, s interface{}) {
 
 func (l *Language) ListNames() []string {
 
-	l.mut.Lock()
-	defer l.mut.Unlock()
+	l.mut.RLock()
+	defer l.mut.RUnlock()
 
 	fl := make([]string, 0)
 	newName := make([]string, 1)

@@ -34,14 +34,14 @@ type UserConfigFile struct {
 }
 
 type UserConfig struct {
-	Mut  sync.Mutex
+	Mut  sync.RWMutex
 	File UserConfigFile
 }
 
 func (c *UserConfig) SaveConfig() error {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	c.File.Header = config.BuildHeader("user", "users", 1.0, "user config file")
 
@@ -133,8 +133,8 @@ func (c *UserConfig) Edit(u User) error {
 
 func (c *UserConfig) Get(uid string) (User, error) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	for i := 0; i < len(c.File.User); i++ {
 
@@ -151,8 +151,8 @@ func (c *UserConfig) Get(uid string) (User, error) {
 
 func (c *UserConfig) GetWithName(name string) (User, error) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	for i := 0; i < len(c.File.User); i++ {
 
@@ -169,8 +169,8 @@ func (c *UserConfig) GetWithName(name string) (User, error) {
 
 func (c *UserConfig) GetWithState(state int) (User, error) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	for i := 0; i < len(c.File.User); i++ {
 
@@ -188,8 +188,8 @@ func (c *UserConfig) GetWithState(state int) (User, error) {
 
 func (c *UserConfig) List() []User {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	return c.File.User
 }

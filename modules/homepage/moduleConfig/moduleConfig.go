@@ -24,6 +24,9 @@ type ModuleConfig struct {
 
 func (hc ModuleConfig) SaveConfig() error {
 
+	hc.Mut.Lock()
+	defer hc.Mut.Unlock()
+
 	hc.File.Header = config.BuildHeader("homepage", "homepage", 1.0, "homepage config file")
 
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
@@ -48,6 +51,9 @@ func (hc *ModuleConfig) LoadConfig() error {
 		// if not found, create default file
 		hc.SaveConfig()
 	}
+
+	hc.Mut.Lock()
+	defer hc.Mut.Unlock()
 
 	b, err := file.ReadFile(configFilePath)
 	if err != nil {

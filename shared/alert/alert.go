@@ -27,7 +27,7 @@ type alertMessage struct {
 
 var (
 	messages = make(chan alertMessage)
-	mut      sync.Mutex
+	mut      sync.RWMutex
 	clients  int
 )
 
@@ -115,9 +115,9 @@ func Message(t alertType, title string, message interface{}, sender string, clie
 		am.ClientUUID = clientuuid
 		am.Content = alert
 
-		mut.Lock()
+		mut.RLock()
 		c := clients
-		mut.Unlock()
+		mut.RUnlock()
 
 		// send alert to all waiting clients
 		for i := 0; i < c; i++ {

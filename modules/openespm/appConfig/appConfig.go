@@ -45,14 +45,14 @@ type AppConfigFile struct {
 }
 
 type AppConfig struct {
-	Mut  sync.Mutex
+	Mut  sync.RWMutex
 	File AppConfigFile
 }
 
 func (c *AppConfig) SaveConfig() error {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	c.File.Header = config.BuildHeader("apps", "apps", 1.0, "app config file")
 
@@ -139,8 +139,8 @@ func (c *AppConfig) Edit(uid string, a App) error {
 
 func (c *AppConfig) Get(uid string) (App, error) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	for i := 0; i < len(c.File.Apps); i++ {
 
@@ -157,8 +157,8 @@ func (c *AppConfig) Get(uid string) (App, error) {
 
 func (c *AppConfig) List() []App {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	return c.File.Apps
 }

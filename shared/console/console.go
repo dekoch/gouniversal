@@ -17,7 +17,7 @@ const logOutputBuffer = 50
 var (
 	logFile   *os.File
 	logLogger *log.Logger
-	mut       sync.Mutex
+	mut       sync.RWMutex
 	input     string
 	output    []string
 )
@@ -57,8 +57,8 @@ func Input(s string) {
 
 func GetInput() string {
 
-	mut.Lock()
-	defer mut.Unlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	return input
 }
@@ -143,8 +143,8 @@ func Log(message interface{}, sender string) {
 
 func GetOutput() []string {
 
-	mut.Lock()
-	defer mut.Unlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	return output
 }

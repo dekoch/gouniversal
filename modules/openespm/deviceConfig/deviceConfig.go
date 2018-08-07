@@ -45,14 +45,14 @@ type DeviceConfigFile struct {
 }
 
 type DeviceConfig struct {
-	Mut  sync.Mutex
+	Mut  sync.RWMutex
 	File DeviceConfigFile
 }
 
 func (c *DeviceConfig) SaveConfig() error {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	c.File.Header = config.BuildHeader("devices", "devices", 1.0, "device config file")
 
@@ -139,8 +139,8 @@ func (c *DeviceConfig) Edit(uid string, d Device) error {
 
 func (c *DeviceConfig) Get(uid string) (Device, error) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	for i := 0; i < len(c.File.Devices); i++ {
 
@@ -157,8 +157,8 @@ func (c *DeviceConfig) Get(uid string) (Device, error) {
 
 func (c *DeviceConfig) GetWithReqID(rid string) (Device, error) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	for i := 0; i < len(c.File.Devices); i++ {
 
@@ -175,8 +175,8 @@ func (c *DeviceConfig) GetWithReqID(rid string) (Device, error) {
 
 func (c *DeviceConfig) List() []Device {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	return c.File.Devices
 }

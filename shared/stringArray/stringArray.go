@@ -3,7 +3,7 @@ package stringArray
 import "sync"
 
 type StringArray struct {
-	mut sync.Mutex
+	mut sync.RWMutex
 	str []string
 }
 
@@ -20,16 +20,16 @@ func (s *StringArray) Add(str string) {
 
 func (s *StringArray) List() []string {
 
-	s.mut.Lock()
-	defer s.mut.Unlock()
+	s.mut.RLock()
+	defer s.mut.RUnlock()
 
 	return s.str
 }
 
 func (s *StringArray) Count() int {
 
-	s.mut.Lock()
-	defer s.mut.Unlock()
+	s.mut.RLock()
+	defer s.mut.RUnlock()
 
 	return len(s.str)
 }

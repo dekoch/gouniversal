@@ -16,7 +16,7 @@ type guestUser struct {
 }
 
 type GuestManagement struct {
-	Mut  sync.Mutex
+	Mut  sync.RWMutex
 	User []guestUser
 }
 
@@ -54,8 +54,8 @@ func (c *GuestManagement) NewGuest() userConfig.User {
 
 func (c *GuestManagement) SelectGuest(uid string) userConfig.User {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	for u := 0; u < len(c.User); u++ {
 

@@ -12,7 +12,7 @@ type uToken struct {
 }
 
 type UserToken struct {
-	mut    sync.Mutex
+	mut    sync.RWMutex
 	tokens []uToken
 }
 
@@ -45,8 +45,8 @@ func (t *UserToken) New(uid string) string {
 // Check returns true, if the UUID and token match with items inside list
 func (t *UserToken) Check(uid string, ut string) bool {
 
-	t.mut.Lock()
-	defer t.mut.Unlock()
+	t.mut.RLock()
+	defer t.mut.RUnlock()
 
 	for i := 0; i < len(t.tokens); i++ {
 

@@ -28,14 +28,14 @@ type GroupConfigFile struct {
 }
 
 type GroupConfig struct {
-	Mut  sync.Mutex
+	Mut  sync.RWMutex
 	File GroupConfigFile
 }
 
 func (c *GroupConfig) SaveConfig() error {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	c.File.Header = config.BuildHeader("group", "groups", 1.0, "group config file")
 
@@ -122,8 +122,8 @@ func (c *GroupConfig) Edit(g Group) error {
 
 func (c *GroupConfig) Get(uid string) (Group, error) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	for i := 0; i < len(c.File.Group); i++ {
 
@@ -140,8 +140,8 @@ func (c *GroupConfig) Get(uid string) (Group, error) {
 
 func (c *GroupConfig) List() []Group {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	c.Mut.RLock()
+	defer c.Mut.RUnlock()
 
 	return c.File.Group
 }
