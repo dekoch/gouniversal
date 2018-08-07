@@ -10,8 +10,15 @@ type Home struct {
 	Name      string
 	Size      string
 	Options   string
+	Edit      string
 	Delete    string
 	Upload    string
+}
+
+type Edit struct {
+	Title string
+	Name  string
+	Apply string
 }
 
 type Alert struct {
@@ -24,6 +31,7 @@ type Alert struct {
 type LangFile struct {
 	Header config.FileHeader
 	Home   Home
+	Edit   Edit
 	Alert  Alert
 }
 
@@ -38,8 +46,13 @@ func DefaultEn() LangFile {
 	l.Home.Name = "Name"
 	l.Home.Size = "Size"
 	l.Home.Options = "Options"
+	l.Home.Edit = "Edit"
 	l.Home.Delete = "Delete"
 	l.Home.Upload = "Upload"
+
+	l.Edit.Title = "Edit"
+	l.Edit.Name = "Name"
+	l.Edit.Apply = "Apply"
 
 	l.Alert.Success = "Success"
 	l.Alert.Info = "Info"

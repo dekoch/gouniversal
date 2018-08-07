@@ -140,11 +140,19 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	c.MenuBrand = nav.Sitemap.PageTitle(nav.Path)
 
+	if c.MenuBrand == "" {
+		c.MenuBrand = nav.Path
+	}
+
 	// title
 	if global.UiConfig.File.Title != "" {
 		c.Title = global.UiConfig.File.Title + " - " + c.MenuBrand
 	} else {
 		c.Title = c.MenuBrand
+	}
+
+	if c.Title == "" {
+		c.Title = nav.Path
 	}
 
 	pages := nav.Sitemap.Pages
@@ -417,7 +425,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 				if valid {
 
-					console.Log("\""+name+"\" logged in", "Login")
+					console.Log("\""+name+"\" logged in ("+clientInfo.String(r)+")", "Login")
 
 					nav.RedirectPath("Program:Home", false)
 				} else {
@@ -439,14 +447,21 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 				nav.RedirectPath("404", true)
 			}
 
+		} else if nav.Path == "400" {
+			// Bad Request
+			console.Log("400 \""+nav.LastPath+"\"", "")
+			page.Content = "<h1>400</h1><br>"
+			page.Content += page.Lang.Error.CE400BadRequest
 		} else if nav.Path == "404" {
+			// NotFound404
 			console.Log("404 \""+nav.LastPath+"\"", "")
 			page.Content = "<h1>404</h1><br>"
-			page.Content += page.Lang.Error.NotFound404
+			page.Content += page.Lang.Error.CE404NotFound
 		} else if nav.Path == "508" {
+			// LoopDetected508
 			console.Log("508 \""+nav.Path+"\" ("+nav.LastPath+")", "")
 			page.Content = "<h1>508</h1><br>"
-			page.Content += page.Lang.Error.LoopDetected508
+			page.Content += page.Lang.Error.SE508LoopDetected
 		} else {
 			nav.RedirectPath("404", true)
 		}
@@ -459,7 +474,8 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 		if nav.Redirect != "" {
 
-			if nav.Redirect == "404" ||
+			if nav.Redirect == "400" ||
+				nav.Redirect == "404" ||
 				nav.Redirect == "508" {
 
 				nav.Path = nav.Redirect

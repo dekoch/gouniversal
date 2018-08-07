@@ -91,5 +91,6 @@ func (c *GuestManagement) MaxLoginAttempts(uid string) bool {
 		}
 	}
 
-	return true
+	// if another user is already logged in (no guest)
+	return false
 }

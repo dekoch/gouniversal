@@ -1,6 +1,6 @@
 
 # gouniversal
-Start writing your **new Go Application** with gouniversal
+Start writing your **new [Go](https://golang.org) Application** with gouniversal
 and use a prepared user/group administration, navigation and alarm system.
 
 HTML front end based on **Bootstrap v4**.

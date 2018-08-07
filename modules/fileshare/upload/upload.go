@@ -10,6 +10,11 @@ import (
 	"github.com/dekoch/gouniversal/shared/functions"
 )
 
+func LoadConfig() {
+
+	http.HandleFunc("/fileshare/upload/", handleRequest)
+}
+
 func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	uid := r.FormValue("uuid")
@@ -55,9 +60,4 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	global.Tokens.Remove(uid)
 
 	fmt.Fprintf(w, "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/app\" /></head></html>")
-}
-
-func LoadConfig() {
-
-	http.HandleFunc("/fileshare/upload/", handleRequest)
 }

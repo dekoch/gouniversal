@@ -11,6 +11,11 @@ import (
 	"github.com/dekoch/gouniversal/shared/console"
 )
 
+func LoadConfig() {
+
+	http.HandleFunc("/fileshare/req/", handleRequest)
+}
+
 func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	startTime := time.Now()
@@ -70,9 +75,4 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	elapsed := t.Sub(startTime)
 	f := elapsed.Seconds() * 1000.0
 	console.Output(strconv.FormatFloat(f, 'f', 1, 64)+"ms", "")
-}
-
-func LoadConfig() {
-
-	http.HandleFunc("/fileshare/req/", handleRequest)
 }

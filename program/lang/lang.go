@@ -135,8 +135,9 @@ type Alert struct {
 }
 
 type Error struct {
-	NotFound404     string
-	LoopDetected508 string
+	CE400BadRequest   string
+	CE404NotFound     string
+	SE508LoopDetected string
 }
 
 type LangFile struct {
@@ -227,8 +228,9 @@ func DefaultEn() LangFile {
 	l.Alert.Warning = "Warning"
 	l.Alert.Error = "Error"
 
-	l.Error.NotFound404 = "Not Found"
-	l.Error.LoopDetected508 = "Loop Detected"
+	l.Error.CE400BadRequest = "Bad Request"
+	l.Error.CE404NotFound = "Not Found"
+	l.Error.SE508LoopDetected = "Loop Detected"
 
 	return l
 }

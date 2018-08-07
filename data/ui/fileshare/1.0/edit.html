@@ -1,0 +1,14 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>{{.Lang.Name}}:</th>
+                <td>
+                    <input type="text" class="form-control" name="name" value="{{.Name}}">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+</form>
