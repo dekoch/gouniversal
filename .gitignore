@@ -13,4 +13,11 @@
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
 debug
+amd64
+arm5
+i386
+data/log/*
 data/homepage/dekoch.net/static/
+data/config/mesh/mesh
+data/config/mesh/network
+data/config/mesh/network.key

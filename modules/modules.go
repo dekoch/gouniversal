@@ -7,6 +7,8 @@ import (
 	"github.com/dekoch/gouniversal/modules/fileshare"
 	"github.com/dekoch/gouniversal/modules/homepage"
 	"github.com/dekoch/gouniversal/modules/logviewer"
+	"github.com/dekoch/gouniversal/modules/mesh"
+	"github.com/dekoch/gouniversal/modules/messenger"
 	"github.com/dekoch/gouniversal/modules/modbustest"
 	"github.com/dekoch/gouniversal/modules/openespm"
 	"github.com/dekoch/gouniversal/shared/navigation"
@@ -21,7 +23,9 @@ const modConsole = true
 const modLogViewer = true
 const modOpenESPM = true
 const modFileshare = true
-const modHomepage = false
+const modHomepage = true
+const modMesh = true
+const modMessenger = true
 const modModbusTest = false
 
 // LoadConfig is called before UI starts
@@ -50,6 +54,16 @@ func LoadConfig() {
 	if modHomepage {
 		sharedConsole.Log("Homepage enabled", "Module")
 		homepage.LoadConfig()
+	}
+
+	if modMesh || modMessenger {
+		sharedConsole.Log("Mesh enabled", "Module")
+		mesh.LoadConfig()
+	}
+
+	if modMessenger {
+		sharedConsole.Log("Messenger enabled", "Module")
+		messenger.LoadConfig()
 	}
 
 	if modModbusTest {
@@ -144,6 +158,14 @@ func Exit() {
 
 	if modHomepage {
 		homepage.Exit()
+	}
+
+	if modMessenger {
+		messenger.Exit()
+	}
+
+	if modMesh || modMessenger {
+		mesh.Exit()
 	}
 
 	if modConsole {
