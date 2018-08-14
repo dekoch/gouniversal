@@ -1,8 +1,11 @@
 package network
 
 import (
+	"fmt"
 	"sync"
 	"time"
+
+	"github.com/dekoch/gouniversal/shared/functions"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -10,10 +13,9 @@ import (
 type Network struct {
 	TimeStamp        time.Time
 	ID               string
-	Port             int
-	AnnounceInterval int
-	HelloInterval    int
-	MaxClientAge     float64
+	AnnounceInterval int     // seconds
+	HelloInterval    int     // seconds (0=disabled)
+	MaxClientAge     float64 // days
 	Hash             string
 }
 
@@ -35,23 +37,7 @@ func (sn *Network) SetKey(key []byte) {
 	}
 }
 
-func (sn *Network) SetPort(port int) {
-
-	mut.Lock()
-	defer mut.Unlock()
-
-	sn.Port = port
-}
-
-func (sn Network) GetPort() int {
-
-	mut.RLock()
-	defer mut.RUnlock()
-
-	return sn.Port
-}
-
-func (sn Network) CheckID(id string) bool {
+func (sn *Network) CheckID(id string) bool {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -63,7 +49,7 @@ func (sn Network) CheckID(id string) bool {
 	return false
 }
 
-func (sn Network) CheckHashWithLocalKey(hash string) bool {
+func (sn *Network) CheckHashWithLocalKey(hash string) bool {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -72,7 +58,7 @@ func (sn Network) CheckHashWithLocalKey(hash string) bool {
 	return err == nil
 }
 
-func (sn Network) CheckKey(key []byte) bool {
+func (sn *Network) CheckKey(key []byte) bool {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -81,14 +67,17 @@ func (sn Network) CheckKey(key []byte) bool {
 	return err == nil
 }
 
-func (sn *Network) Update(newN Network) {
+func (sn *Network) Update(net Network) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	if newN.TimeStamp.After(sn.TimeStamp) {
+	if net.TimeStamp.After(sn.TimeStamp) &&
+		net.CheckConfig() {
 
-		*sn = newN
+		fmt.Println("update network")
+
+		*sn = net
 	}
 }
 
@@ -100,7 +89,7 @@ func (sn Network) Get() Network {
 	return sn
 }
 
-func (sn Network) GetAnnounceInterval() time.Duration {
+func (sn *Network) GetAnnounceInterval() time.Duration {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -108,7 +97,7 @@ func (sn Network) GetAnnounceInterval() time.Duration {
 	return time.Duration(sn.AnnounceInterval) * time.Second
 }
 
-func (sn Network) GetHelloInterval() time.Duration {
+func (sn *Network) GetHelloInterval() time.Duration {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -116,10 +105,26 @@ func (sn Network) GetHelloInterval() time.Duration {
 	return time.Duration(sn.HelloInterval) * time.Second
 }
 
-func (sn Network) GetMaxClientAge() float64 {
+func (sn *Network) GetMaxClientAge() float64 {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
 	return sn.MaxClientAge
+}
+
+func (sn *Network) CheckConfig() bool {
+
+	if functions.IsEmpty(sn.ID) == false &&
+		sn.AnnounceInterval >= 1 &&
+		sn.AnnounceInterval <= 900 &&
+		sn.HelloInterval >= 0 &&
+		sn.HelloInterval <= 900 &&
+		sn.MaxClientAge >= 1.0 &&
+		sn.MaxClientAge <= 365.0 {
+
+		return true
+	}
+
+	return false
 }

@@ -11,6 +11,7 @@ import (
 type ServerInfo struct {
 	TimeStamp time.Time
 	ID        string
+	Port      int
 	Address   []string
 }
 
@@ -21,6 +22,14 @@ var (
 	publicAddress    string
 )
 
+func (si *ServerInfo) SetTimeStamp(t time.Time) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	si.TimeStamp = t
+}
+
 func (si *ServerInfo) SetID(id string) {
 
 	mut.Lock()
@@ -29,6 +38,32 @@ func (si *ServerInfo) SetID(id string) {
 	si.TimeStamp = time.Now()
 
 	si.ID = id
+}
+
+func (si *ServerInfo) SetPort(port int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	si.TimeStamp = time.Now()
+
+	si.Port = port
+}
+
+func (si *ServerInfo) GetPort() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return si.Port
+}
+
+func (si *ServerInfo) SetPubAddrUpdInterv(interval int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	pubAddrUpdInterv = time.Duration(interval)
 }
 
 func (si *ServerInfo) Update() {
@@ -46,14 +81,6 @@ func (si *ServerInfo) Update() {
 	}
 
 	si.localAddresses()
-}
-
-func (si *ServerInfo) PubAddrUpdInterv(interval int) {
-
-	mut.Lock()
-	defer mut.Unlock()
-
-	pubAddrUpdInterv = time.Duration(interval)
 }
 
 func (si *ServerInfo) publicAddress() {

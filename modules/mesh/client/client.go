@@ -10,11 +10,10 @@ import (
 
 	"github.com/dekoch/gouniversal/modules/mesh/global"
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
+	"github.com/dekoch/gouniversal/modules/mesh/settings"
 	"github.com/dekoch/gouniversal/modules/mesh/typesMesh"
 	"github.com/dekoch/gouniversal/shared/aes"
 )
-
-const localConnection = true
 
 var (
 	chanAnnounceStart  = make(chan bool)
@@ -31,6 +30,8 @@ func LoadConfig() {
 }
 
 func job() {
+
+	global.Config.Server.Update()
 
 	timerAnnounce := time.NewTimer(global.NetworkConfig.Network.GetAnnounceInterval())
 	timerHello := time.NewTimer(global.NetworkConfig.Network.GetHelloInterval())
@@ -69,24 +70,24 @@ func announce() {
 		message.Message.Type = typesMesh.MessAnnounce
 		message.Message.Version = 1.0
 
-		// announce to every server in list
-		for _, server := range serverList {
+		b, err := json.Marshal(serverList)
+		if err != nil {
+			fmt.Println(err)
+		} else {
 
-			if localConnection == false {
-				// only to other systems
-				if server.ID == client.ID {
-					continue
+			message.Message.Content = b
+
+			// announce to every server in list
+			for _, server := range serverList {
+
+				if settings.LocalConnection == false {
+					// only to other systems
+					if server.ID == client.ID {
+						continue
+					}
 				}
-			}
 
-			message.Receiver = server
-
-			b, err := json.Marshal(serverList)
-			if err != nil {
-				fmt.Println(err)
-			} else {
-
-				message.Message.Content = b
+				message.Receiver = server
 
 				input := SendMessage(message)
 				if input.Error == typesMesh.ErrNil {
@@ -126,7 +127,7 @@ func hello() {
 		// hello to every server in list
 		for _, server := range serverList {
 
-			if localConnection == false {
+			if settings.LocalConnection == false {
 				// only to other systems
 				if server.ID == client.ID {
 					continue
@@ -161,6 +162,9 @@ func SendMessage(output typesMesh.ServerMessage) typesMesh.ServerMessage {
 
 	output.Message.Content = []byte(b)
 
+	senderPort := strconv.Itoa(output.Sender.Port)
+	receiverPort := strconv.Itoa(output.Receiver.Port)
+
 	serverOK := true
 
 	// try all addresses from server
@@ -171,10 +175,10 @@ func SendMessage(output typesMesh.ServerMessage) typesMesh.ServerMessage {
 			addressOK := true
 			address := ""
 
-			if localConnection == false {
+			if settings.LocalConnection == false {
 				// send only to addresses from other systems
 				for _, senderAddr := range output.Sender.Address {
-					if senderAddr == addr {
+					if senderAddr+senderPort == addr+receiverPort {
 						addressOK = false
 					}
 				}
@@ -198,7 +202,7 @@ func SendMessage(output typesMesh.ServerMessage) typesMesh.ServerMessage {
 
 			if addressOK {
 				// add port
-				address += ":" + strconv.Itoa(global.NetworkConfig.Network.GetPort())
+				address += ":" + receiverPort
 
 				switch output.Message.Type {
 				case typesMesh.MessAnnounce:

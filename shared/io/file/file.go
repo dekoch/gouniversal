@@ -16,17 +16,17 @@ func ReadFile(path string) ([]byte, error) {
 	}
 
 	file, err := os.Open(path)
+	defer file.Close()
 	if err != nil {
 		console.Log(err, "ReadFile()")
 	} else {
 		content, err := ioutil.ReadFile(path)
 		if err != nil {
 			console.Log(err, "ReadFile()")
+		} else {
+			return content, err
 		}
-
-		return content, nil
 	}
-	defer file.Close()
 
 	b := make([]byte, 0)
 	return b, err
@@ -39,17 +39,24 @@ func WriteFile(path string, content []byte) error {
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		// if not found, create dir
-		os.MkdirAll(dir, os.ModePerm)
+		err = os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			console.Log(err, "WriteFile()")
+			return err
+		}
 	}
 
 	file, err := os.Create(path)
+	defer file.Close()
+	if err != nil {
+		console.Log(err, "WriteFile()")
+		return err
+	}
+
+	_, err = file.Write(content)
 	if err != nil {
 		console.Log(err, "WriteFile()")
 	}
-	defer file.Close()
-
-	file.Write(content)
-	file.Close()
 
 	return err
 }

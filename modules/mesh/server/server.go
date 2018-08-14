@@ -9,13 +9,12 @@ import (
 
 	"github.com/dekoch/gouniversal/modules/mesh/global"
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
+	"github.com/dekoch/gouniversal/modules/mesh/settings"
 	"github.com/dekoch/gouniversal/modules/mesh/typesMesh"
 	"github.com/dekoch/gouniversal/shared/aes"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/google/uuid"
 )
-
-const localConnection = true
 
 type Server struct{}
 
@@ -26,11 +25,11 @@ func LoadConfig() {
 
 func start() {
 
-	console.Log("mesh network listening on port "+strconv.Itoa(global.NetworkConfig.Network.GetPort()), " ")
+	console.Log("mesh network listening on port "+strconv.Itoa(global.Config.Server.GetPort()), " ")
 
 	rpc.Register(new(Server))
 
-	ln, err := net.Listen("tcp", ":"+strconv.Itoa(global.NetworkConfig.Network.GetPort()))
+	ln, err := net.Listen("tcp", ":"+strconv.Itoa(global.Config.Server.GetPort()))
 	if err != nil {
 		console.Log(err, " ")
 		return
@@ -57,7 +56,7 @@ func (this *Server) Message(input typesMesh.ServerMessage, output *typesMesh.Ser
 	out.Error = typesMesh.ErrNil
 	out.Message.Type = typesMesh.MessNil
 
-	if localConnection == false {
+	if settings.LocalConnection == false {
 		// check IDs, if we have the same inside a network, change
 		if input.Sender.ID == out.Sender.ID {
 			fmt.Println("change ID")

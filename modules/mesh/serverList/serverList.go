@@ -1,6 +1,7 @@
 package serverList
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -32,6 +33,8 @@ func (sl *ServerList) Add(server serverInfo.ServerInfo) {
 		}
 	}
 
+	fmt.Println("add \"" + server.ID + "\"")
+
 	// add new server to list
 	newServer := make([]serverInfo.ServerInfo, 1)
 	newServer[0] = server
@@ -58,6 +61,8 @@ func (sl *ServerList) Delete(id string) {
 
 	mut.Lock()
 	defer mut.Unlock()
+
+	fmt.Println("delete \"" + id + "\"")
 
 	var l []serverInfo.ServerInfo
 	n := make([]serverInfo.ServerInfo, 1)

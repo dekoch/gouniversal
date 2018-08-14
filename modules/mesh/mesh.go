@@ -20,8 +20,7 @@ func LoadConfig() {
 	}
 
 	global.NetworkConfig.Network.SetKey(global.Keyfile.GetKey())
-
-	global.Config.Server.PubAddrUpdInterv(global.Config.PubAddrUpdInterv)
+	global.NetworkConfig.Add(global.Config.Server)
 
 	if global.Config.ServerEnabled {
 		server.LoadConfig()

@@ -47,10 +47,14 @@ func (hc Keyfile) GetKey() []byte {
 	return stringToKey(hc.Key)
 }
 
-func (hc *Keyfile) LoadDefaults() {
+func (hc *Keyfile) loadDefaults() {
 
 	mut.Lock()
 	defer mut.Unlock()
+
+	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
+
+	hc.Header = config.BuildHeaderWithStruct(header)
 
 	key, err := aes.NewKey(32)
 	if err != nil {
@@ -85,7 +89,7 @@ func (hc *Keyfile) LoadConfig() error {
 
 	if _, err := os.Stat(configFilePath + header.FileName); os.IsNotExist(err) {
 		// if not found, create default file
-		hc.LoadDefaults()
+		hc.loadDefaults()
 		hc.SaveConfig()
 	}
 
@@ -95,16 +99,19 @@ func (hc *Keyfile) LoadConfig() error {
 	b, err := file.ReadFile(configFilePath + header.FileName)
 	if err != nil {
 		console.Log(err, "")
-	}
-
-	err = json.Unmarshal(b, &hc)
-	if err != nil {
-		console.Log(err, "")
+		hc.loadDefaults()
+	} else {
+		err = json.Unmarshal(b, &hc)
+		if err != nil {
+			console.Log(err, "")
+			hc.loadDefaults()
+		}
 	}
 
 	if config.CheckHeader(hc.Header, header.ContentName) == false {
 		err = errors.New("wrong config \"" + configFilePath + header.FileName + "\"")
 		console.Log(err, "")
+		hc.loadDefaults()
 	}
 
 	return err

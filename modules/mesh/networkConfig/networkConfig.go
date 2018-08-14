@@ -31,12 +31,15 @@ func init() {
 	header = config.FileHeader{HeaderVersion: 0.0, FileName: "network", ContentName: "network", ContentVersion: 1.0, Comment: ""}
 }
 
-func (hc *NetworkConfig) LoadDefaults() {
+func (hc *NetworkConfig) loadDefaults() {
+
+	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
+
+	hc.Header = config.BuildHeaderWithStruct(header)
 
 	hc.Network.TimeStamp = time.Now()
 	u := uuid.Must(uuid.NewRandom())
-	hc.Network.ID = u.String() // UUID
-	hc.Network.Port = 9999
+	hc.Network.ID = u.String()       // UUID
 	hc.Network.AnnounceInterval = 30 // seconds
 	hc.Network.HelloInterval = 10    // seconds
 	hc.Network.MaxClientAge = 30.0   // days
@@ -63,23 +66,32 @@ func (hc *NetworkConfig) LoadConfig() error {
 
 	if _, err := os.Stat(configFilePath + header.FileName); os.IsNotExist(err) {
 		// if not found, create default file
-		hc.LoadDefaults()
+		hc.loadDefaults()
 		hc.SaveConfig()
 	}
 
 	b, err := file.ReadFile(configFilePath + header.FileName)
 	if err != nil {
 		console.Log(err, "")
-	}
-
-	err = json.Unmarshal(b, &hc)
-	if err != nil {
-		console.Log(err, "")
+		hc.loadDefaults()
+	} else {
+		err = json.Unmarshal(b, &hc)
+		if err != nil {
+			console.Log(err, "")
+			hc.loadDefaults()
+		}
 	}
 
 	if config.CheckHeader(hc.Header, header.ContentName) == false {
 		err = errors.New("wrong config \"" + configFilePath + header.FileName + "\"")
 		console.Log(err, "")
+		hc.loadDefaults()
+	}
+
+	// check input
+	if hc.Network.CheckConfig() == false {
+
+		hc.loadDefaults()
 	}
 
 	return err
