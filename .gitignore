@@ -21,3 +21,5 @@ data/homepage/dekoch.net/static/
 data/config/mesh/mesh
 data/config/mesh/network
 data/config/mesh/network.key
+data/config/meshfilesync/meshfilesync
+data/meshfilesync/

@@ -51,8 +51,15 @@ Up/Download, Manage and Share your Files.
 Auto generate Menu entries for your html Files.
 Demo: [https://dekoch.net](https://dekoch.net)
 
+## MeshFileSync
+Sync files over a mesh network
+
 ## Console
 Live Console output with HTML5 SSE.
 
 ## LogViewer
 View gouniversal log files.
+
+# Modules
+## Mesh
+decentralised connectivity control

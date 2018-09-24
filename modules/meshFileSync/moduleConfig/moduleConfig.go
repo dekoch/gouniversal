@@ -4,25 +4,22 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-	"time"
 
-	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
+	"github.com/dekoch/gouniversal/modules/meshFileSync/syncFile"
 	"github.com/dekoch/gouniversal/shared/config"
 	"github.com/dekoch/gouniversal/shared/console"
-	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/io/file"
-	"github.com/google/uuid"
 )
 
-const configFilePath = "data/config/mesh/"
+const configFilePath = "data/config/meshfilesync/"
 
 type ModuleConfig struct {
-	Header           config.FileHeader
-	UIFileRoot       string
-	ServerEnabled    bool
-	ClientEnabled    bool
-	PubAddrUpdInterv int // minutes (0=disabled)
-	Server           serverInfo.ServerInfo
+	Header      config.FileHeader
+	UIFileRoot  string
+	FileRoot    string
+	TempRoot    string
+	MaxFileSize float64 // Megabytes
+	LocalFiles  []syncFile.SyncFile
 }
 
 var (
@@ -30,26 +27,17 @@ var (
 )
 
 func init() {
-	header = config.FileHeader{HeaderVersion: 0.0, FileName: "mesh", ContentName: "mesh", ContentVersion: 1.0, Comment: ""}
+	header = config.FileHeader{HeaderVersion: 0.0, FileName: "meshfilesync", ContentName: "meshfilesync", ContentVersion: 1.0, Comment: ""}
 }
 
 func (hc *ModuleConfig) loadDefaults() {
 
 	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
 
-	hc.Header = config.BuildHeaderWithStruct(header)
-
-	hc.UIFileRoot = "data/ui/mesh/1.0/"
-
-	hc.ServerEnabled = true
-	hc.ClientEnabled = true
-	hc.PubAddrUpdInterv = 30 // minutes
-
-	// server defaults
-	hc.Server.TimeStamp = time.Now()
-	u := uuid.Must(uuid.NewRandom())
-	hc.Server.ID = u.String() // UUID
-	hc.Server.SetPort(9999)
+	hc.UIFileRoot = "data/ui/meshfilesync/1.0/"
+	hc.FileRoot = "data/meshfilesync/sync/"
+	hc.TempRoot = "data/meshfilesync/temp/"
+	hc.MaxFileSize = 100.0
 }
 
 func (hc ModuleConfig) SaveConfig() error {
@@ -95,19 +83,6 @@ func (hc *ModuleConfig) LoadConfig() error {
 		console.Log(err, "")
 		hc.loadDefaults()
 	}
-
-	// check input
-	if functions.IsEmpty(hc.UIFileRoot) ||
-		hc.PubAddrUpdInterv < 0 ||
-		hc.PubAddrUpdInterv > 1440 ||
-		functions.IsEmpty(hc.Server.ID) ||
-		hc.Server.Port < 1 ||
-		hc.Server.Port > 65535 {
-
-		hc.loadDefaults()
-	}
-
-	hc.Server.SetPubAddrUpdInterv(hc.PubAddrUpdInterv)
 
 	return err
 }

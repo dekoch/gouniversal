@@ -2,10 +2,12 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/rpc"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/dekoch/gouniversal/modules/mesh/global"
@@ -14,6 +16,8 @@ import (
 	"github.com/dekoch/gouniversal/modules/mesh/typesMesh"
 	"github.com/dekoch/gouniversal/shared/aes"
 )
+
+const debug = false
 
 var (
 	chanAnnounceStart  = make(chan bool)
@@ -30,8 +34,6 @@ func LoadConfig() {
 }
 
 func job() {
-
-	global.Config.Server.Update()
 
 	timerAnnounce := time.NewTimer(global.NetworkConfig.Network.GetAnnounceInterval())
 	timerHello := time.NewTimer(global.NetworkConfig.Network.GetHelloInterval())
@@ -62,10 +64,8 @@ func announce() {
 
 		global.Config.Server.Update()
 		global.NetworkConfig.ServerList.Add(global.Config.Server.Get())
-		global.NetworkConfig.ServerList.Clean(global.NetworkConfig.Network.GetMaxClientAge())
 
 		serverList := global.NetworkConfig.ServerList.Get()
-		client := global.Config.Server.Get()
 		var message typesMesh.ServerMessage
 		message.Message.Type = typesMesh.MessAnnounce
 		message.Message.Version = 1.0
@@ -77,36 +77,37 @@ func announce() {
 
 			message.Message.Content = b
 
+			if debug {
+				fmt.Println("announce to:")
+			}
+
+			var wg sync.WaitGroup
+
 			// announce to every server in list
 			for _, server := range serverList {
 
-				if settings.LocalConnection == false {
-					// only to other systems
-					if server.ID == client.ID {
-						continue
-					}
+				// only to other systems
+				if IsLoop(server) {
+					continue
 				}
+
+				if debug {
+					fmt.Println(server.ID)
+				}
+
+				wg.Add(1)
 
 				message.Receiver = server
 
-				input := SendMessage(message)
-				if input.Error == typesMesh.ErrNil {
+				go func(msg typesMesh.ServerMessage) {
 
-					global.NetworkConfig.Network.Update(input.Network)
+					SendMessage(msg)
 
-					if input.Message.Type == typesMesh.MessAnnounce {
-
-						var newList []serverInfo.ServerInfo
-
-						err := json.Unmarshal(input.Message.Content, &newList)
-						if err != nil {
-							fmt.Println(err)
-						} else {
-							global.NetworkConfig.ServerList.AddList(newList)
-						}
-					}
-				}
+					wg.Done()
+				}(message)
 			}
+
+			wg.Wait()
 		}
 
 		chanAnnounceFinish <- true
@@ -118,51 +119,69 @@ func hello() {
 	for {
 		<-chanHelloStart
 
+		global.Config.Server.Update()
+
 		var message typesMesh.ServerMessage
 		message.Message.Type = typesMesh.MessHello
 
 		serverList := global.NetworkConfig.ServerList.Get()
-		client := global.Config.Server.Get()
+
+		if debug {
+			fmt.Println("hello to:")
+		}
+
+		var wg sync.WaitGroup
 
 		// hello to every server in list
 		for _, server := range serverList {
 
-			if settings.LocalConnection == false {
-				// only to other systems
-				if server.ID == client.ID {
-					continue
-				}
+			// only to other systems
+			if IsLoop(server) {
+				continue
 			}
+
+			if debug {
+				fmt.Println(server.ID)
+			}
+
+			wg.Add(1)
 
 			message.Receiver = server
 
-			SendMessage(message)
+			go func(msg typesMesh.ServerMessage) {
+
+				SendMessage(msg)
+
+				wg.Done()
+			}(message)
 		}
+
+		wg.Wait()
 
 		chanHelloFinish <- true
 	}
 }
 
-func SendMessage(output typesMesh.ServerMessage) typesMesh.ServerMessage {
+func SendMessage(output typesMesh.ServerMessage) error {
+
+	// send only to addresses from other systems
+	if IsLoop(output.Receiver) {
+		return errors.New("IsLoopback")
+	}
 
 	output.Sender = global.Config.Server.Get()
 	output.Network = global.NetworkConfig.Network.Get()
-	output.Error = typesMesh.ErrNil
 
-	var input typesMesh.ServerMessage
-	input.Error = typesMesh.ErrNoConnection
+	var err error
 
 	// encrypt message content
 	b, err := aes.Encrypt(global.Keyfile.GetKey(), string(output.Message.Content))
 	if err != nil {
-		fmt.Println(err)
-		input.Error = typesMesh.ErrClientEncryption
-		return input
+		return err
 	}
 
 	output.Message.Content = []byte(b)
 
-	senderPort := strconv.Itoa(output.Sender.Port)
 	receiverPort := strconv.Itoa(output.Receiver.Port)
 
 	serverOK := true
@@ -174,15 +193,6 @@ func SendMessage(output typesMesh.ServerMessage) typesMesh.ServerMessage {
 
 			addressOK := true
 			address := ""
-
-			if settings.LocalConnection == false {
-				// send only to addresses from other systems
-				for _, senderAddr := range output.Sender.Address {
-					if senderAddr+senderPort == addr+receiverPort {
-						addressOK = false
-					}
-				}
-			}
 
 			// check for v4 or v6 addresses
 			ip := net.ParseIP(addr)
@@ -201,68 +211,15 @@ func SendMessage(output typesMesh.ServerMessage) typesMesh.ServerMessage {
 			}
 
 			if addressOK {
-				// add port
-				address += ":" + receiverPort
 
-				switch output.Message.Type {
-				case typesMesh.MessAnnounce:
-					fmt.Print("announce")
+				conn, err := net.DialTimeout("tcp", address+":"+receiverPort, 5*time.Second)
+				if err == nil {
 
-				case typesMesh.MessHello:
-					fmt.Print("hello")
+					c := rpc.NewClient(conn)
 
-				case typesMesh.MessRAW:
-					fmt.Print("raw")
-				}
-
-				fmt.Print(" to \"" + output.Receiver.ID + "\" @" + address + "...")
-
-				c, err := rpc.Dial("tcp", address)
-				if err != nil {
-					fmt.Println(err)
-				} else {
-
-					err = c.Call("Server.Message", output, &input)
-					if err != nil {
-						fmt.Println(err)
-					} else {
-						// error response from server
-						switch input.Error {
-						case typesMesh.ErrNil:
-
-							// validate server response
-							if global.NetworkConfig.Network.CheckID(input.Network.ID) == false {
-								input.Error = typesMesh.ErrClientDifferentMeshID
-							} else if global.NetworkConfig.Network.CheckHashWithLocalKey(input.Network.Hash) == false {
-								input.Error = typesMesh.ErrClientWrongMeshKey
-							} else if output.Receiver.ID != input.Sender.ID {
-								input.Error = typesMesh.ErrClientWrongSender
-							}
-
-							switch input.Error {
-							case typesMesh.ErrNil:
-								// decrypt message content
-								b, err := aes.Decrypt(global.Keyfile.GetKey(), string(input.Message.Content))
-								if err != nil {
-									fmt.Println(err)
-									input.Error = typesMesh.ErrClientDecryption
-								} else {
-									input.Message.Content = []byte(b)
-
-									fmt.Println("OK")
-								}
-
-							default:
-								writeError(input.Error)
-
-								global.NetworkConfig.ServerList.Delete(output.Receiver.ID)
-							}
-
-						default:
-							writeError(input.Error)
-
-							global.NetworkConfig.ServerList.Delete(output.Receiver.ID)
-						}
+					var inputErr string
+					err = c.Call("Server.Message", output, &inputErr)
+					if err == nil {
 
 						c.Close()
 
@@ -274,28 +231,31 @@ func SendMessage(output typesMesh.ServerMessage) typesMesh.ServerMessage {
 		}
 	}
 
-	return input
+	return err
 }
 
-func writeError(serr typesMesh.MessageType) {
+func IsLoop(in serverInfo.ServerInfo) bool {
 
-	switch serr {
-	case typesMesh.ErrServerDifferentMeshID:
-		fmt.Println("server: different mesh ID")
-
-	case typesMesh.ErrServerWrongMeshKey:
-		fmt.Println("server: wrong mesh key")
-
-	case typesMesh.ErrServerWrongReceiver:
-		fmt.Println("server: wrong receiver")
-
-	case typesMesh.ErrClientDifferentMeshID:
-		fmt.Println("different mesh ID from server")
-
-	case typesMesh.ErrClientWrongMeshKey:
-		fmt.Println("wrong mesh key from server")
-
-	case typesMesh.ErrClientWrongSender:
-		fmt.Println("different server ID from server")
+	if settings.LocalConnection {
+		return false
 	}
+
+	this := global.Config.Server.Get()
+
+	if this.ID == in.ID {
+		return true
+	}
+
+	for _, thisAddr := range this.Address {
+
+		for _, inAddr := range in.Address {
+
+			if thisAddr+strconv.Itoa(this.Port) == inAddr+strconv.Itoa(in.Port) {
+
+				return true
+			}
+		}
+	}
+
+	return false
 }

@@ -70,9 +70,10 @@ func Render(page *typesLogViewer.Page, nav *navigation.Navigation, r *http.Reque
 	}
 
 	// scan directory
-	folders, files := fileInfo.Get(fileRoot + path)
+	list, err := fileInfo.Get(fileRoot + path)
 
 	htmlFolders := ""
+	htmlFiles := ""
 
 	if path != "" {
 		// fileshare root
@@ -90,24 +91,21 @@ func Render(page *typesLogViewer.Page, nav *navigation.Navigation, r *http.Reque
 		htmlFolders += "</tr>"
 	}
 
-	for _, f := range folders {
+	for _, l := range list {
 
-		htmlFolders += "<tr>"
-		htmlFolders += "<td><i class=\"fa fa-folder\" aria-hidden=\"true\"></td>"
-		htmlFolders += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"navigation\" value=\"App:LogViewer:Home$Folder=" + path + f.Name + "/" + "\">" + f.Name + "</button></td>"
-		htmlFolders += "<td></td>"
-		htmlFolders += "</tr>"
-	}
-
-	htmlFiles := ""
-
-	for _, f := range files {
-
-		htmlFiles += "<tr>"
-		htmlFiles += "<td><i class=\"fa fa-file\" aria-hidden=\"true\"></td>"
-		htmlFiles += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"view\" value=\"" + f.Name + "\">" + f.Name + "</button></td>"
-		htmlFiles += "<td>" + f.Size + "</td>"
-		htmlFiles += "</tr>"
+		if l.IsDir {
+			htmlFolders += "<tr>"
+			htmlFolders += "<td><i class=\"fa fa-folder\" aria-hidden=\"true\"></td>"
+			htmlFolders += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"navigation\" value=\"App:LogViewer:Home$Folder=" + path + l.Name + "/" + "\">" + l.Name + "</button></td>"
+			htmlFolders += "<td></td>"
+			htmlFolders += "</tr>"
+		} else {
+			htmlFiles += "<tr>"
+			htmlFiles += "<td><i class=\"fa fa-file\" aria-hidden=\"true\"></td>"
+			htmlFiles += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"view\" value=\"" + l.Name + "\">" + l.Name + "</button></td>"
+			htmlFiles += "<td>" + l.Size + "</td>"
+			htmlFiles += "</tr>"
+		}
 	}
 
 	c.List = template.HTML(htmlFolders + htmlFiles)
@@ -121,9 +119,16 @@ func Render(page *typesLogViewer.Page, nav *navigation.Navigation, r *http.Reque
 		fileName = view
 	} else {
 		// if no file is selected, load last file from list
-		fileCnt := len(files)
-		if fileCnt > 0 {
-			fileName = files[fileCnt-1].Name
+		for i := len(list) - 1; i >= 0; i-- {
+
+			if fileName != "" {
+				continue
+			}
+
+			if list[i].IsDir == false {
+
+				fileName = list[i].Name
+			}
 		}
 	}
 

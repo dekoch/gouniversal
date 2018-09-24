@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dekoch/gouniversal/build"
 	"github.com/dekoch/gouniversal/modules"
 	"github.com/dekoch/gouniversal/program/global"
 	"github.com/dekoch/gouniversal/program/lang"
@@ -26,7 +27,7 @@ func main() {
 	en := lang.DefaultEn()
 	global.Lang = language.New("data/lang/program/", en, "en")
 
-	if global.UiConfig.File.UIEnabled {
+	if build.UIEnabled && global.UiConfig.File.UIEnabled {
 		go web.StartServer()
 	} else {
 		console.Log("UI is disabled", " ")
@@ -59,7 +60,7 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	if global.UiConfig.File.UIEnabled {
+	if build.UIEnabled && global.UiConfig.File.UIEnabled {
 		web.Exit()
 	}
 

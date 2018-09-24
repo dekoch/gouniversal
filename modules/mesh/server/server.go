@@ -2,11 +2,13 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/rpc"
 	"strconv"
 
+	"github.com/dekoch/gouniversal/build"
 	"github.com/dekoch/gouniversal/modules/mesh/global"
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
 	"github.com/dekoch/gouniversal/modules/mesh/settings"
@@ -14,7 +16,11 @@ import (
 	"github.com/dekoch/gouniversal/shared/aes"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/google/uuid"
+
+	meshFSServer "github.com/dekoch/gouniversal/modules/meshFileSync/server"
 )
+
+const debug = false
 
 type Server struct{}
 
@@ -25,7 +31,8 @@ func LoadConfig() {
 
 func start() {
 
-	console.Log("mesh network listening on port "+strconv.Itoa(global.Config.Server.GetPort()), " ")
+	console.Log("mesh network listening on port: "+strconv.Itoa(global.Config.Server.GetPort()), " ")
+	console.Log("mesh ID: "+global.Config.Server.ID, " ")
 
 	rpc.Register(new(Server))
 
@@ -44,113 +51,83 @@ func start() {
 	}
 }
 
-func (this *Server) Message(input typesMesh.ServerMessage, output *typesMesh.ServerMessage) error {
+func (this *Server) Message(input typesMesh.ServerMessage, output *string) error {
 
-	// update server info
-	global.Config.Server.Update()
+	var err error
 
-	var out typesMesh.ServerMessage
-	out.Sender = global.Config.Server.Get()
-	out.Receiver = input.Sender
-	out.Network = global.NetworkConfig.Network.Get()
-	out.Error = typesMesh.ErrNil
-	out.Message.Type = typesMesh.MessNil
-
-	if settings.LocalConnection == false {
-		// check IDs, if we have the same inside a network, change
-		if input.Sender.ID == out.Sender.ID {
-			fmt.Println("change ID")
-
-			global.NetworkConfig.ServerList.Delete(out.Sender.ID)
-
-			u := uuid.Must(uuid.NewRandom())
-			global.Config.Server.SetID(u.String())
-			out.Sender = global.Config.Server.Get()
-		}
-	}
+	server := global.Config.Server.Get()
 
 	if global.NetworkConfig.Network.CheckID(input.Network.ID) == false {
-		out.Error = typesMesh.ErrServerDifferentMeshID
+		err = errors.New("ServerDifferentMeshID")
 	} else if global.NetworkConfig.Network.CheckHashWithLocalKey(input.Network.Hash) == false {
-		out.Error = typesMesh.ErrServerWrongMeshKey
-	} else if input.Receiver.ID != out.Sender.ID {
-		out.Error = typesMesh.ErrServerWrongReceiver
+		err = errors.New("ServerWrongMeshKey")
+	} else if input.Receiver.ID != server.ID {
+		err = errors.New("ServerWrongReceiver")
 	}
 
-	switch out.Error {
-	case typesMesh.ErrNil:
+	if err == nil {
+		if settings.LocalConnection == false {
+			// check IDs, if we have the same inside a network, change own
+			if input.Sender.ID == server.ID {
+
+				global.NetworkConfig.ServerList.Delete(server.ID)
+
+				u := uuid.Must(uuid.NewRandom())
+				fmt.Println("change ID to " + u.String())
+				global.Config.Server.SetID(u.String())
+			}
+		}
+
 		// decrypt message content
 		b, err := aes.Decrypt(global.Keyfile.GetKey(), string(input.Message.Content))
 		if err != nil {
 			fmt.Println(err)
-			out.Error = typesMesh.ErrServerDecryption
 		} else {
 			input.Message.Content = []byte(b)
 
-			switch input.Message.Type {
-			case typesMesh.MessAnnounce:
-				fmt.Print("announce")
-
-			case typesMesh.MessHello:
-				fmt.Print("hello")
-
-			case typesMesh.MessRAW:
-				fmt.Print("raw")
-
-			case typesMesh.MessMessenger:
-				fmt.Print("messenger")
-
-			default:
-				fmt.Print("unknown")
+			if debug {
+				writeDebug(input.Message.Type, input.Sender.ID)
 			}
-
-			fmt.Println(" from \"" + input.Sender.ID + "\"")
 
 			switch input.Message.Type {
 			case typesMesh.MessAnnounce:
 
 				if input.Message.Version == 1.0 {
-					announce(input, &out)
+					announce(input)
 				}
 
 			case typesMesh.MessHello:
 
 				global.NetworkConfig.ServerList.Add(input.Sender)
 
-			case typesMesh.MessMessenger:
+			case typesMesh.MessFileSync:
 
-				if input.Message.Version == 1.0 {
-					global.ChanMessenger <- input
+				if build.ModuleMeshFS {
+					if input.Message.Version == 1.0 {
+
+						err = meshFSServer.Server(input)
+					}
+				} else {
+					err = errors.New("ServerModuleDisabled")
 				}
 			}
-
-			// encrypt message content
-			b, err := aes.Encrypt(global.Keyfile.GetKey(), string(out.Message.Content))
-			if err != nil {
-				fmt.Println(err)
-				out.Error = typesMesh.ErrServerEncryption
-			} else {
-				out.Message.Content = []byte(b)
-			}
 		}
-
-	default:
-		global.NetworkConfig.ServerList.Delete(input.Receiver.ID)
 	}
 
-	*output = out
+	if err == nil {
+		err = errors.New("nil")
+	}
+
+	*output = err.Error()
 
 	return nil
 }
 
-func announce(input typesMesh.ServerMessage, output *typesMesh.ServerMessage) {
+func announce(input typesMesh.ServerMessage) {
 
 	// update network
 	global.NetworkConfig.Network.Update(input.Network)
 
-	global.NetworkConfig.ServerList.Clean(global.NetworkConfig.Network.GetMaxClientAge())
-
-	// input
 	// update server list
 	var newList []serverInfo.ServerInfo
 
@@ -158,18 +135,32 @@ func announce(input typesMesh.ServerMessage, output *typesMesh.ServerMessage) {
 	if err != nil {
 		fmt.Println(err)
 	} else {
+		global.NetworkConfig.ServerList.SetMaxAge(global.NetworkConfig.Network.GetMaxClientAge())
 		global.NetworkConfig.ServerList.AddList(newList)
 	}
+}
 
-	// output
-	// server list
-	global.NetworkConfig.ServerList.Add(global.Config.Server.Get())
+func writeDebug(t typesMesh.MessageType, id string) {
 
-	b, err := json.Marshal(global.NetworkConfig.ServerList.Get())
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		output.Message.Type = typesMesh.MessAnnounce
-		output.Message.Content = b
+	switch t {
+	case typesMesh.MessAnnounce:
+		fmt.Print("announce")
+
+	case typesMesh.MessHello:
+		fmt.Print("hello")
+
+	case typesMesh.MessRAW:
+		fmt.Print("raw")
+
+	case typesMesh.MessMessenger:
+		fmt.Print("messenger")
+
+	case typesMesh.MessFileSync:
+		fmt.Print("meshFileSync")
+
+	default:
+		fmt.Print("unknown")
 	}
+
+	fmt.Println(" from \"" + id + "\"")
 }

@@ -75,21 +75,21 @@ func CheckFormInput(key string, r *http.Request) (string, error) {
 func readDir(dir string, maxdepth int, currdepth int) ([]os.FileInfo, error) {
 
 	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return files, err
+	}
 
 	for _, fl := range files {
 
-		if err == nil {
+		if fl.IsDir() {
 
-			if fl.IsDir() {
+			if currdepth < maxdepth {
 
-				if currdepth < maxdepth {
+				var sub []os.FileInfo
+				sub, err = readDir(dir+fl.Name()+"/", maxdepth, currdepth+1)
 
-					var sub []os.FileInfo
-					sub, err = readDir(dir+fl.Name()+"/", maxdepth, currdepth+1)
-
-					if err == nil {
-						files = append(files, sub...)
-					}
+				if err == nil {
+					files = append(files, sub...)
 				}
 			}
 		}

@@ -1,6 +1,8 @@
 package file
 
 import (
+	"crypto/sha256"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -59,4 +61,22 @@ func WriteFile(path string, content []byte) error {
 	}
 
 	return err
+}
+
+func Checksum(path string) ([]byte, error) {
+
+	f, err := os.Open(path)
+	if err != nil {
+		var e []byte
+		return e, err
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		var e []byte
+		return e, err
+	}
+
+	return h.Sum(nil), nil
 }

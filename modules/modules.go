@@ -3,11 +3,13 @@ package modules
 import (
 	"net/http"
 
+	"github.com/dekoch/gouniversal/build"
 	"github.com/dekoch/gouniversal/modules/console"
 	"github.com/dekoch/gouniversal/modules/fileshare"
 	"github.com/dekoch/gouniversal/modules/homepage"
 	"github.com/dekoch/gouniversal/modules/logviewer"
 	"github.com/dekoch/gouniversal/modules/mesh"
+	"github.com/dekoch/gouniversal/modules/meshFileSync"
 	"github.com/dekoch/gouniversal/modules/messenger"
 	"github.com/dekoch/gouniversal/modules/modbustest"
 	"github.com/dekoch/gouniversal/modules/openespm"
@@ -19,54 +21,50 @@ import (
 
 // Modules provide a interface to nest apps and modules
 
-const modConsole = true
-const modLogViewer = true
-const modOpenESPM = true
-const modFileshare = true
-const modHomepage = true
-const modMesh = true
-const modMessenger = true
-const modModbusTest = false
-
 // LoadConfig is called before UI starts
 func LoadConfig() {
 
-	if modConsole {
+	if build.ModuleConsole {
 		sharedConsole.Log("Console enabled", "Module")
 		console.LoadConfig()
 	}
 
-	if modLogViewer {
+	if build.ModuleLogViewer {
 		sharedConsole.Log("LogViewer enabled", "Module")
 		logviewer.LoadConfig()
 	}
 
-	if modOpenESPM {
+	if build.ModuleOpenESPM {
 		sharedConsole.Log("openESPM enabled", "Module")
 		openespm.LoadConfig()
 	}
 
-	if modFileshare {
+	if build.ModuleFileshare {
 		sharedConsole.Log("Fileshare enabled", "Module")
 		fileshare.LoadConfig()
 	}
 
-	if modHomepage {
+	if build.ModuleHomepage {
 		sharedConsole.Log("Homepage enabled", "Module")
 		homepage.LoadConfig()
 	}
 
-	if modMesh || modMessenger {
+	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
 		sharedConsole.Log("Mesh enabled", "Module")
 		mesh.LoadConfig()
 	}
 
-	if modMessenger {
+	if build.ModuleMessenger {
 		sharedConsole.Log("Messenger enabled", "Module")
 		messenger.LoadConfig()
 	}
 
-	if modModbusTest {
+	if build.ModuleMeshFS {
+		sharedConsole.Log("MeshFileSync enabled", "Module")
+		meshFileSync.LoadConfig()
+	}
+
+	if build.ModuleModbusTest {
 		sharedConsole.Log("ModbusTest enabled", "Module")
 		modbustest.LoadConfig()
 	}
@@ -81,23 +79,23 @@ func LoadConfig() {
 // to nest your app or module inside menus
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
-	if modConsole {
+	if build.ModuleConsole {
 		console.RegisterPage(page, nav)
 	}
 
-	if modLogViewer {
+	if build.ModuleLogViewer {
 		logviewer.RegisterPage(page, nav)
 	}
 
-	if modOpenESPM {
+	if build.ModuleOpenESPM {
 		openespm.RegisterPage(page, nav)
 	}
 
-	if modFileshare {
+	if build.ModuleFileshare {
 		fileshare.RegisterPage(page, nav)
 	}
 
-	if modHomepage {
+	if build.ModuleHomepage {
 		homepage.RegisterPage(page, nav)
 	}
 }
@@ -105,35 +103,35 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 // Render UI page
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	if modConsole {
+	if build.ModuleConsole {
 		if nav.IsNext("Console") {
 
 			console.Render(page, nav, r)
 		}
 	}
 
-	if modLogViewer {
+	if build.ModuleLogViewer {
 		if nav.IsNext("LogViewer") {
 
 			logviewer.Render(page, nav, r)
 		}
 	}
 
-	if modOpenESPM {
+	if build.ModuleOpenESPM {
 		if nav.IsNext("openESPM") {
 
 			openespm.Render(page, nav, r)
 		}
 	}
 
-	if modFileshare {
+	if build.ModuleFileshare {
 		if nav.IsNext("Fileshare") {
 
 			fileshare.Render(page, nav, r)
 		}
 	}
 
-	if modHomepage {
+	if build.ModuleHomepage {
 		if nav.IsNext("Homepage") {
 
 			homepage.Render(page, nav, r)
@@ -144,31 +142,35 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 // Exit is called before program exit
 func Exit() {
 
-	if modLogViewer {
+	if build.ModuleLogViewer {
 		logviewer.Exit()
 	}
 
-	if modOpenESPM {
+	if build.ModuleOpenESPM {
 		openespm.Exit()
 	}
 
-	if modFileshare {
+	if build.ModuleFileshare {
 		fileshare.Exit()
 	}
 
-	if modHomepage {
+	if build.ModuleHomepage {
 		homepage.Exit()
 	}
 
-	if modMessenger {
+	if build.ModuleMessenger {
 		messenger.Exit()
 	}
 
-	if modMesh || modMessenger {
+	if build.ModuleMeshFS {
+		meshFileSync.Exit()
+	}
+
+	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
 		mesh.Exit()
 	}
 
-	if modConsole {
+	if build.ModuleConsole {
 		console.Exit()
 	}
 }

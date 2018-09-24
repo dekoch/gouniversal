@@ -75,6 +75,7 @@ func (hc Keyfile) SaveConfig() error {
 	b, err := json.Marshal(hc)
 	if err != nil {
 		console.Log(err, "")
+		return err
 	}
 
 	err = file.WriteFile(configFilePath+header.FileName, b)

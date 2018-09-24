@@ -105,9 +105,13 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 	}
 
 	// scan directory
-	folders, files := fileInfo.Get(fileRoot + path)
+	list, err := fileInfo.Get(fileRoot + path)
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "home.go", nav.User.UUID)
+	}
 
 	htmlFolders := ""
+	htmlFiles := ""
 
 	if path != "" {
 		// fileshare root
@@ -127,28 +131,25 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 		htmlFolders += "</tr>"
 	}
 
-	for _, f := range folders {
+	for _, l := range list {
 
-		htmlFolders += "<tr>"
-		htmlFolders += "<td><i class=\"fa fa-folder\" aria-hidden=\"true\"></td>"
-		htmlFolders += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Home$Folder=" + path + f.Name + "/" + "\">" + f.Name + "</button></td>"
-		htmlFolders += "<td>" + f.Size + "</td>"
-		htmlFolders += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Edit$Folder=" + path + f.Name + "/" + "\" title=\"" + c.Lang.Edit + "\"></button> "
-		htmlFolders += "<button class=\"btn btn-danger fa fa-trash\" type=\"submit\" name=\"edit\" value=\"deletefolder" + f.Name + "\" title=\"" + c.Lang.Delete + "\"></button></td>"
-		htmlFolders += "</tr>"
-	}
-
-	htmlFiles := ""
-
-	for _, f := range files {
-
-		htmlFiles += "<tr>"
-		htmlFiles += "<td><i class=\"fa fa-file\" aria-hidden=\"true\"></td>"
-		htmlFiles += "<td><a href=\"/fileshare/req/?file=" + nav.User.UUID + "/" + path + f.Name + "\" download=\"" + f.Name + "\">" + f.Name + "</a></td>"
-		htmlFiles += "<td>" + f.Size + "</td>"
-		htmlFiles += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Edit$File=" + path + f.Name + "\" title=\"" + c.Lang.Edit + "\"></button> "
-		htmlFiles += "<button class=\"btn btn-danger fa fa-trash\" type=\"submit\" name=\"edit\" value=\"deletefile" + f.Name + "\" title=\"" + c.Lang.Delete + "\"></button></td>"
-		htmlFiles += "</tr>"
+		if l.IsDir {
+			htmlFolders += "<tr>"
+			htmlFolders += "<td><i class=\"fa fa-folder\" aria-hidden=\"true\"></td>"
+			htmlFolders += "<td><button class=\"btn btn-link\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Home$Folder=" + path + l.Name + "/" + "\">" + l.Name + "</button></td>"
+			htmlFolders += "<td>" + l.Size + "</td>"
+			htmlFolders += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Edit$Folder=" + path + l.Name + "/" + "\" title=\"" + c.Lang.Edit + "\"></button> "
+			htmlFolders += "<button class=\"btn btn-danger fa fa-trash\" type=\"submit\" name=\"edit\" value=\"deletefolder" + l.Name + "\" title=\"" + c.Lang.Delete + "\"></button></td>"
+			htmlFolders += "</tr>"
+		} else {
+			htmlFiles += "<tr>"
+			htmlFiles += "<td><i class=\"fa fa-file\" aria-hidden=\"true\"></td>"
+			htmlFiles += "<td><a href=\"/fileshare/req/?file=" + nav.User.UUID + "/" + path + l.Name + "\" download=\"" + l.Name + "\">" + l.Name + "</a></td>"
+			htmlFiles += "<td>" + l.Size + "</td>"
+			htmlFiles += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"App:Fileshare:Edit$File=" + path + l.Name + "\" title=\"" + c.Lang.Edit + "\"></button> "
+			htmlFiles += "<button class=\"btn btn-danger fa fa-trash\" type=\"submit\" name=\"edit\" value=\"deletefile" + l.Name + "\" title=\"" + c.Lang.Delete + "\"></button></td>"
+			htmlFiles += "</tr>"
+		}
 	}
 
 	c.List = template.HTML(htmlFolders + htmlFiles)

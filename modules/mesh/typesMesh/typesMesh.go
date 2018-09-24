@@ -5,23 +5,6 @@ import (
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
 )
 
-type MeshError int
-
-const (
-	ErrNil MessageType = 1 + iota
-	ErrNoConnection
-	ErrServerDifferentMeshID
-	ErrServerWrongMeshKey
-	ErrServerWrongReceiver
-	ErrServerEncryption
-	ErrServerDecryption
-	ErrClientDifferentMeshID
-	ErrClientWrongMeshKey
-	ErrClientWrongSender
-	ErrClientEncryption
-	ErrClientDecryption
-)
-
 type MessageType int
 
 const (
@@ -30,6 +13,7 @@ const (
 	MessHello
 	MessRAW
 	MessMessenger
+	MessFileSync
 )
 
 type ServerMessageContent struct {
@@ -43,5 +27,4 @@ type ServerMessage struct {
 	Receiver serverInfo.ServerInfo
 	Network  network.Network
 	Message  ServerMessageContent
-	Error    MessageType
 }

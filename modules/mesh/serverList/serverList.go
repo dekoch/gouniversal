@@ -1,25 +1,40 @@
 package serverList
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 	"time"
 
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
+	"github.com/dekoch/gouniversal/shared/console"
 )
 
 type ServerList struct {
 	ServerList []serverInfo.ServerInfo
+	maxAge     float64
 }
 
 var (
 	mut sync.RWMutex
 )
 
+func (sl *ServerList) SetMaxAge(maxage float64) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	sl.maxAge = maxage
+}
+
 func (sl *ServerList) Add(server serverInfo.ServerInfo) {
 
 	mut.Lock()
 	defer mut.Unlock()
+
+	if sl.checkAge(server) == false {
+		// server entry is too old
+		return
+	}
 
 	for i := 0; i < len(sl.ServerList); i++ {
 		// search server with ID
@@ -33,7 +48,7 @@ func (sl *ServerList) Add(server serverInfo.ServerInfo) {
 		}
 	}
 
-	fmt.Println("add \"" + server.ID + "\"")
+	console.Output("add \""+server.ID+"\"", "mesh")
 
 	// add new server to list
 	newServer := make([]serverInfo.ServerInfo, 1)
@@ -57,12 +72,29 @@ func (sl ServerList) Get() []serverInfo.ServerInfo {
 	return sl.ServerList
 }
 
+func (sl ServerList) GetWithID(id string) (serverInfo.ServerInfo, error) {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	for i := 0; i < len(sl.ServerList); i++ {
+
+		if id == sl.ServerList[i].ID {
+
+			return sl.ServerList[i], nil
+		}
+	}
+
+	var e serverInfo.ServerInfo
+	return e, errors.New("server not found")
+}
+
 func (sl *ServerList) Delete(id string) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	fmt.Println("delete \"" + id + "\"")
+	console.Output("delete \""+id+"\"", "mesh")
 
 	var l []serverInfo.ServerInfo
 	n := make([]serverInfo.ServerInfo, 1)
@@ -80,7 +112,7 @@ func (sl *ServerList) Delete(id string) {
 	sl.ServerList = l
 }
 
-func (sl *ServerList) Clean(maxage float64) {
+func (sl *ServerList) Clean() {
 
 	mut.RLock()
 
@@ -88,7 +120,7 @@ func (sl *ServerList) Clean(maxage float64) {
 
 	for i := 0; i < len(sl.ServerList); i++ {
 
-		if time.Since(sl.ServerList[i].TimeStamp).Hours() > maxage*24.0 {
+		if sl.checkAge(sl.ServerList[i]) == false {
 
 			deleteID = sl.ServerList[i].ID
 		}
@@ -104,4 +136,13 @@ func (sl *ServerList) Clean(maxage float64) {
 	}
 
 	mut.RUnlock()
+}
+
+func (sl *ServerList) checkAge(server serverInfo.ServerInfo) bool {
+
+	if time.Since(server.TimeStamp).Hours() > sl.maxAge*24.0 {
+		return false
+	}
+
+	return true
 }

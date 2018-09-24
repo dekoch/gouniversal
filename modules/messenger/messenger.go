@@ -7,8 +7,7 @@ import (
 	"github.com/dekoch/gouniversal/modules/mesh"
 	"github.com/dekoch/gouniversal/modules/mesh/typesMesh"
 	"github.com/dekoch/gouniversal/modules/messenger/global"
-
-	meshGlobal "github.com/dekoch/gouniversal/modules/mesh/global"
+	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
 var (
@@ -35,11 +34,7 @@ func job() {
 			cHelloStart <- true
 
 		case <-cHelloFinish:
-			timerHello.Reset(1 * time.Second)
-
-		case input := <-meshGlobal.ChanMessenger:
-			fmt.Println("from C")
-			fmt.Println(string(input.Message.Content))
+			//timerHello.Reset(1 * time.Second)
 		}
 	}
 }
@@ -49,13 +44,36 @@ func hello() {
 	for {
 		<-cHelloStart
 
-		var message typesMesh.ServerMessage
-		message.Receiver = mesh.GetServerInfo()
-		message.Message.Type = typesMesh.MessMessenger
-		message.Message.Version = 1.0
-		message.Message.Content = []byte("huhu vom messenger")
+		func() {
 
-		mesh.SendMessage(message)
+			var message typesMesh.ServerMessage
+			var err error
+
+			message.Receiver, err = mesh.GetServerWithID("9c3fc567-c4c7-43b9-a239-87de716d2d86")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			message.Message.Type = typesMesh.MessMessenger
+			message.Message.Version = 1.0
+
+			b, err := file.ReadFile("test.tar.gz")
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			message.Message.Content = b
+
+			t := time.Now()
+
+			mesh.SendMessage(message)
+
+			fmt.Print("sent ")
+			fmt.Println(time.Since(t).Seconds())
+
+		}()
 
 		cHelloFinish <- true
 	}
