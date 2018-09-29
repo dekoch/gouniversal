@@ -6,6 +6,7 @@ import (
 	"github.com/dekoch/gouniversal/build"
 	"github.com/dekoch/gouniversal/modules/console"
 	"github.com/dekoch/gouniversal/modules/fileshare"
+	"github.com/dekoch/gouniversal/modules/heatingMath"
 	"github.com/dekoch/gouniversal/modules/homepage"
 	"github.com/dekoch/gouniversal/modules/logviewer"
 	"github.com/dekoch/gouniversal/modules/mesh"
@@ -67,6 +68,11 @@ func LoadConfig() {
 	if build.ModuleModbusTest {
 		sharedConsole.Log("ModbusTest enabled", "Module")
 		modbustest.LoadConfig()
+	}
+
+	if build.ModuleHeatingMath {
+		sharedConsole.Log("HeatingMath enabled", "Module")
+		heatingMath.LoadConfig()
 	}
 }
 
@@ -142,10 +148,6 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 // Exit is called before program exit
 func Exit() {
 
-	if build.ModuleLogViewer {
-		logviewer.Exit()
-	}
-
 	if build.ModuleOpenESPM {
 		openespm.Exit()
 	}
@@ -168,6 +170,10 @@ func Exit() {
 
 	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
 		mesh.Exit()
+	}
+
+	if build.ModuleLogViewer {
+		logviewer.Exit()
 	}
 
 	if build.ModuleConsole {

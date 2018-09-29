@@ -13,3 +13,4 @@ const ModuleMesh = true
 const ModuleMessenger = false
 const ModuleMeshFS = true
 const ModuleModbusTest = false
+const ModuleHeatingMath = false
