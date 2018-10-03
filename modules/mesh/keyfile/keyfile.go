@@ -1,3 +1,5 @@
+// package to load/save the mesh key from/to file
+
 package keyfile
 
 import (

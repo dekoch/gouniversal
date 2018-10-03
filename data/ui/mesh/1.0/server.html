@@ -1,0 +1,24 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>{{.Lang.Port}}:</th>
+                <td><input type="text" class="form-control" name="Port" value="{{.Port}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.PubAddrUpdInterv}}:</th>
+                <td><input type="text" class="form-control" name="PubAddrUpdInterv" value="{{.PubAddrUpdInterv}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.ID}}:</th>
+                <td>{{.ID}}</td>
+            </tr>
+            <tr>
+                <th>{{.Lang.Addresses}}:</th>
+                <td>{{.Addresses}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+</form>

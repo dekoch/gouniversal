@@ -1,3 +1,5 @@
+// package to load/save the network config from/to file
+
 package networkConfig
 
 import (
@@ -8,7 +10,6 @@ import (
 
 	"github.com/dekoch/gouniversal/modules/mesh/network"
 	"github.com/dekoch/gouniversal/modules/mesh/serverList"
-
 	"github.com/dekoch/gouniversal/shared/config"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"

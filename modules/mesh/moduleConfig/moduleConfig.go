@@ -1,3 +1,5 @@
+// package to load/save the module config
+
 package moduleConfig
 
 import (
@@ -19,8 +21,7 @@ const configFilePath = "data/config/mesh/"
 type ModuleConfig struct {
 	Header           config.FileHeader
 	UIFileRoot       string
-	ServerEnabled    bool
-	ClientEnabled    bool
+	LangFileRoot     string
 	PubAddrUpdInterv int // minutes (0=disabled)
 	Server           serverInfo.ServerInfo
 }
@@ -40,9 +41,8 @@ func (hc *ModuleConfig) loadDefaults() {
 	hc.Header = config.BuildHeaderWithStruct(header)
 
 	hc.UIFileRoot = "data/ui/mesh/1.0/"
+	hc.LangFileRoot = "data/lang/mesh/"
 
-	hc.ServerEnabled = true
-	hc.ClientEnabled = true
 	hc.PubAddrUpdInterv = 30 // minutes
 
 	// server defaults
@@ -53,6 +53,11 @@ func (hc *ModuleConfig) loadDefaults() {
 }
 
 func (hc ModuleConfig) SaveConfig() error {
+
+	err := hc.CheckInput()
+	if err != nil {
+		return err
+	}
 
 	hc.Header = config.BuildHeaderWithStruct(header)
 
@@ -96,7 +101,17 @@ func (hc *ModuleConfig) LoadConfig() error {
 		hc.loadDefaults()
 	}
 
-	// check input
+	if hc.CheckInput() != nil {
+		hc.loadDefaults()
+	}
+
+	hc.Server.SetPubAddrUpdInterv(hc.PubAddrUpdInterv)
+
+	return err
+}
+
+func (hc *ModuleConfig) CheckInput() error {
+
 	if functions.IsEmpty(hc.UIFileRoot) ||
 		hc.PubAddrUpdInterv < 0 ||
 		hc.PubAddrUpdInterv > 1440 ||
@@ -104,10 +119,8 @@ func (hc *ModuleConfig) LoadConfig() error {
 		hc.Server.Port < 1 ||
 		hc.Server.Port > 65535 {
 
-		hc.loadDefaults()
+		return errors.New("bad input")
 	}
 
-	hc.Server.SetPubAddrUpdInterv(hc.PubAddrUpdInterv)
-
-	return err
+	return nil
 }

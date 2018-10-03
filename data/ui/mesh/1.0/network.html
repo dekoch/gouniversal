@@ -1,0 +1,39 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>{{.Lang.AnnounceInterval}}:</th>
+                <td><input type="text" class="form-control" name="AnnounceInterval" value="{{.AnnounceInterval}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.HelloInterval}}:</th>
+                <td><input type="text" class="form-control" name="HelloInterval" value="{{.HelloInterval}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.MaxClientAge}}:</th>
+                <td><input type="text" class="form-control" name="MaxClientAge" value="{{.MaxClientAge}}"></td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+    <br>
+    <br>
+    <div class="card">
+        <div class="card-header">
+            {{.Lang.Network}}<br>
+            ({{.ID}})
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th>{{.Lang.ID}}</th>
+                        <th>{{.Lang.LastSeen}}</th>
+                    </tr>
+                    {{.ServerList}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>

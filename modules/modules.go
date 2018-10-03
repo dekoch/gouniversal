@@ -104,6 +104,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 	if build.ModuleHomepage {
 		homepage.RegisterPage(page, nav)
 	}
+
+	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
+		mesh.RegisterPage(page, nav)
+	}
 }
 
 // Render UI page
@@ -141,6 +145,13 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		if nav.IsNext("Homepage") {
 
 			homepage.Render(page, nav, r)
+		}
+	}
+
+	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
+		if nav.IsNext("Mesh") {
+
+			mesh.Render(page, nav, r)
 		}
 	}
 }

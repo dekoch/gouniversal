@@ -1,10 +1,10 @@
 package network
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 
 	"golang.org/x/crypto/bcrypt"
@@ -24,6 +24,14 @@ var (
 	localKey []byte
 )
 
+func (sn *Network) SetTimeStamp(t time.Time) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	sn.TimeStamp = t
+}
+
 func (sn *Network) SetKey(key []byte) {
 
 	mut.Lock()
@@ -35,6 +43,14 @@ func (sn *Network) SetKey(key []byte) {
 		sn.Hash = string(bytes)
 		localKey = key
 	}
+}
+
+func (sn *Network) GetID() string {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return sn.ID
 }
 
 func (sn *Network) CheckID(id string) bool {
@@ -72,10 +88,11 @@ func (sn *Network) Update(net Network) {
 	mut.Lock()
 	defer mut.Unlock()
 
-	if net.TimeStamp.After(sn.TimeStamp) &&
+	if time.Now().After(net.TimeStamp) &&
+		net.TimeStamp.After(sn.TimeStamp) &&
 		net.CheckConfig() {
 
-		fmt.Println("update network")
+		console.Log("update network", "mesh")
 
 		*sn = net
 	}
@@ -89,6 +106,14 @@ func (sn Network) Get() Network {
 	return sn
 }
 
+func (sn *Network) SetAnnounceInterval(sec int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	sn.AnnounceInterval = sec
+}
+
 func (sn *Network) GetAnnounceInterval() time.Duration {
 
 	mut.RLock()
@@ -97,12 +122,44 @@ func (sn *Network) GetAnnounceInterval() time.Duration {
 	return time.Duration(sn.AnnounceInterval) * time.Second
 }
 
+func (sn *Network) GetAnnounceIntervalInt() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return sn.AnnounceInterval
+}
+
+func (sn *Network) SetHelloInterval(sec int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	sn.HelloInterval = sec
+}
+
 func (sn *Network) GetHelloInterval() time.Duration {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
 	return time.Duration(sn.HelloInterval) * time.Second
+}
+
+func (sn *Network) GetHelloIntervalInt() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return sn.HelloInterval
+}
+
+func (sn *Network) SetMaxClientAge(maxage float64) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	sn.MaxClientAge = maxage
 }
 
 func (sn *Network) GetMaxClientAge() float64 {

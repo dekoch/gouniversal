@@ -15,6 +15,7 @@ import (
 	"github.com/dekoch/gouniversal/modules/mesh/settings"
 	"github.com/dekoch/gouniversal/modules/mesh/typesMesh"
 	"github.com/dekoch/gouniversal/shared/aes"
+	"github.com/dekoch/gouniversal/shared/console"
 )
 
 const debug = false
@@ -77,10 +78,6 @@ func announce() {
 
 			message.Message.Content = b
 
-			if debug {
-				fmt.Println("announce to:")
-			}
-
 			var wg sync.WaitGroup
 
 			// announce to every server in list
@@ -92,7 +89,7 @@ func announce() {
 				}
 
 				if debug {
-					fmt.Println(server.ID)
+					console.Output("announce to "+server.ID, "mesh")
 				}
 
 				wg.Add(1)
@@ -110,6 +107,8 @@ func announce() {
 			wg.Wait()
 		}
 
+		global.NetworkConfig.ServerList.Clean()
+
 		chanAnnounceFinish <- true
 	}
 }
@@ -126,10 +125,6 @@ func hello() {
 
 		serverList := global.NetworkConfig.ServerList.Get()
 
-		if debug {
-			fmt.Println("hello to:")
-		}
-
 		var wg sync.WaitGroup
 
 		// hello to every server in list
@@ -141,7 +136,7 @@ func hello() {
 			}
 
 			if debug {
-				fmt.Println(server.ID)
+				console.Output("hello to "+server.ID, "mesh")
 			}
 
 			wg.Add(1)

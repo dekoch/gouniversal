@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/rpc"
 	"strconv"
+	"time"
 
 	"github.com/dekoch/gouniversal/build"
 	"github.com/dekoch/gouniversal/modules/mesh/global"
@@ -16,6 +17,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/aes"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/google/uuid"
+	"github.com/tevino/abool"
 
 	meshFSServer "github.com/dekoch/gouniversal/modules/meshFileSync/server"
 )
@@ -24,31 +26,77 @@ const debug = false
 
 type Server struct{}
 
+var ln net.Listener
+var started *abool.AtomicBool
+var restart *abool.AtomicBool
+
 func LoadConfig() {
+
+	restart = abool.New()
+	restart.UnSet()
+
+	started = abool.New()
+	started.UnSet()
 
 	go start()
 }
 
 func start() {
 
+	defer started.UnSet()
+
 	console.Log("mesh network listening on port: "+strconv.Itoa(global.Config.Server.GetPort()), " ")
 	console.Log("mesh ID: "+global.Config.Server.ID, " ")
 
 	rpc.Register(new(Server))
 
-	ln, err := net.Listen("tcp", ":"+strconv.Itoa(global.Config.Server.GetPort()))
+	var err error
+
+	ln, err = net.Listen("tcp", ":"+strconv.Itoa(global.Config.Server.GetPort()))
 	if err != nil {
 		console.Log(err, " ")
 		return
 	}
 
-	for {
-		c, err := ln.Accept()
-		if err != nil {
-			continue
+	func() {
+
+		started.Set()
+
+		for {
+			if restart.IsSet() {
+				restart.UnSet()
+				return
+			}
+
+			c, err := ln.Accept()
+			if err != nil {
+				continue
+			}
+
+			go rpc.ServeConn(c)
 		}
-		go rpc.ServeConn(c)
+	}()
+
+	console.Log("mesh closed", " ")
+}
+
+func Restart() {
+
+	console.Log("mesh restart", " ")
+
+	if started.IsSet() {
+		ln.Close()
 	}
+
+	restart.Set()
+
+	for started.IsSet() {
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	restart.UnSet()
+
+	go start()
 }
 
 func (this *Server) Message(input typesMesh.ServerMessage, output *string) error {
@@ -61,8 +109,6 @@ func (this *Server) Message(input typesMesh.ServerMessage, output *string) error
 		err = errors.New("ServerDifferentMeshID")
 	} else if global.NetworkConfig.Network.CheckHashWithLocalKey(input.Network.Hash) == false {
 		err = errors.New("ServerWrongMeshKey")
-	} else if input.Receiver.ID != server.ID {
-		err = errors.New("ServerWrongReceiver")
 	}
 
 	if err == nil {
@@ -89,26 +135,31 @@ func (this *Server) Message(input typesMesh.ServerMessage, output *string) error
 				writeDebug(input.Message.Type, input.Sender.ID)
 			}
 
-			switch input.Message.Type {
-			case typesMesh.MessAnnounce:
-
+			if input.Message.Type == typesMesh.MessAnnounce {
 				if input.Message.Version == 1.0 {
 					announce(input)
 				}
+			}
 
-			case typesMesh.MessHello:
+			if input.Receiver.ID != server.ID {
+				err = errors.New("ServerWrongReceiver")
+			} else {
 
-				global.NetworkConfig.ServerList.Add(input.Sender)
+				switch input.Message.Type {
+				case typesMesh.MessHello:
 
-			case typesMesh.MessFileSync:
+					global.NetworkConfig.ServerList.Add(input.Sender)
 
-				if build.ModuleMeshFS {
-					if input.Message.Version == 1.0 {
+				case typesMesh.MessFileSync:
 
-						err = meshFSServer.Server(input)
+					if build.ModuleMeshFS {
+						if input.Message.Version == 1.0 {
+
+							err = meshFSServer.Server(input)
+						}
+					} else {
+						err = errors.New("ServerModuleDisabled")
 					}
-				} else {
-					err = errors.New("ServerModuleDisabled")
 				}
 			}
 		}
@@ -142,25 +193,29 @@ func announce(input typesMesh.ServerMessage) {
 
 func writeDebug(t typesMesh.MessageType, id string) {
 
+	var s string
+
 	switch t {
 	case typesMesh.MessAnnounce:
-		fmt.Print("announce")
+		s = "announce"
 
 	case typesMesh.MessHello:
-		fmt.Print("hello")
+		s = "hello"
 
 	case typesMesh.MessRAW:
-		fmt.Print("raw")
+		s = "raw"
 
 	case typesMesh.MessMessenger:
-		fmt.Print("messenger")
+		s = "messenger"
 
 	case typesMesh.MessFileSync:
-		fmt.Print("meshFileSync")
+		s = "meshFileSync"
 
 	default:
-		fmt.Print("unknown")
+		s = "unknown"
 	}
 
-	fmt.Println(" from \"" + id + "\"")
+	s += " from " + id
+
+	console.Output(s, "mesh")
 }

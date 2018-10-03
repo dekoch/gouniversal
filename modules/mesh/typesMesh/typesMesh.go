@@ -1,6 +1,7 @@
 package typesMesh
 
 import (
+	"github.com/dekoch/gouniversal/modules/mesh/lang"
 	"github.com/dekoch/gouniversal/modules/mesh/network"
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
 )
@@ -27,4 +28,9 @@ type ServerMessage struct {
 	Receiver serverInfo.ServerInfo
 	Network  network.Network
 	Message  ServerMessageContent
+}
+
+type Page struct {
+	Content string
+	Lang    lang.LangFile
 }

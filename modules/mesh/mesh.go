@@ -1,17 +1,28 @@
 package mesh
 
 import (
+	"net/http"
+
 	"github.com/dekoch/gouniversal/modules/mesh/client"
 	"github.com/dekoch/gouniversal/modules/mesh/global"
+	"github.com/dekoch/gouniversal/modules/mesh/lang"
 	"github.com/dekoch/gouniversal/modules/mesh/server"
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
 	"github.com/dekoch/gouniversal/modules/mesh/typesMesh"
+	"github.com/dekoch/gouniversal/modules/mesh/ui"
 	"github.com/dekoch/gouniversal/shared/console"
+	"github.com/dekoch/gouniversal/shared/language"
+	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func LoadConfig() {
 
 	global.Config.LoadConfig()
+
+	en := lang.DefaultEn()
+	global.Lang = language.New(global.Config.LangFileRoot, en, "en")
+
 	global.Keyfile.LoadConfig()
 	global.NetworkConfig.LoadConfig()
 
@@ -23,13 +34,18 @@ func LoadConfig() {
 	global.NetworkConfig.Add(global.Config.Server)
 	global.NetworkConfig.ServerList.SetMaxAge(global.NetworkConfig.Network.GetMaxClientAge())
 
-	if global.Config.ServerEnabled {
-		server.LoadConfig()
-	}
+	server.LoadConfig()
+	client.LoadConfig()
+}
 
-	if global.Config.ClientEnabled {
-		client.LoadConfig()
-	}
+func RegisterPage(page *types.Page, nav *navigation.Navigation) {
+
+	ui.RegisterPage(page, nav)
+}
+
+func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
+
+	ui.Render(page, nav, r)
 }
 
 func GetServerInfo() serverInfo.ServerInfo {
