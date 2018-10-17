@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/dekoch/gouniversal/modules/fileshare/global"
@@ -99,6 +100,17 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 
 		file := strings.Replace(edit, "deletefile", "", 1)
 		err := os.Remove(fileRoot + path + file)
+		if err != nil {
+			alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "home.go", nav.User.UUID)
+		}
+	}
+
+	// directory from path
+	dir := filepath.Dir(fileRoot + path)
+
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		// if not found, create dir
+		err = os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
 			alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "home.go", nav.User.UUID)
 		}

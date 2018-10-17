@@ -119,7 +119,7 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 
 func initCookies(w http.ResponseWriter, r *http.Request) {
 	nav := new(navigation.Navigation)
-	nav.Path = "Account:Login"
+	nav.Path = "init"
 	nav.User = guest.NewGuest()
 	nav.GodMode = false
 
@@ -346,6 +346,22 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 		nav.NavigatePath(newPath)
 
 		console.Output(newPath, "handleApp()")
+	}
+
+	// select first allowed page
+	if nav.Path == "init" {
+
+		for _, p := range nav.Sitemap.Pages {
+
+			if p.Menu != "" && nav.Path == "init" {
+
+				if userManagement.IsPageAllowed(p.Path, nav.User) ||
+					nav.GodMode {
+
+					nav.Path = p.Path
+				}
+			}
+		}
 	}
 
 	nav.Redirect = "init"

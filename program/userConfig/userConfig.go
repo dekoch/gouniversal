@@ -48,10 +48,10 @@ func (c *UserConfig) SaveConfig() error {
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		// if not found, create default file
 
-		newuser := make([]User, 1)
+		newuser := make([]User, 2)
 
+		// admin
 		u := uuid.Must(uuid.NewRandom())
-
 		newuser[0].UUID = u.String()
 		newuser[0].Lang = "en"
 		newuser[0].State = 1 // active
@@ -61,6 +61,18 @@ func (c *UserConfig) SaveConfig() error {
 
 		groups := []string{"admin"}
 		newuser[0].Groups = groups
+
+		// guest
+		u = uuid.Must(uuid.NewRandom())
+		newuser[1].UUID = u.String()
+		newuser[1].Lang = "en"
+		newuser[1].State = 0 // public
+		// guest
+		newuser[1].LoginName = "guest"
+		newuser[1].PWDHash = ""
+
+		groups = []string{"admin"}
+		newuser[1].Groups = groups
 
 		c.File.User = newuser
 	}
