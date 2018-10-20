@@ -9,6 +9,7 @@ import (
 	"github.com/dekoch/gouniversal/modules/heatingMath"
 	"github.com/dekoch/gouniversal/modules/homepage"
 	"github.com/dekoch/gouniversal/modules/logviewer"
+	"github.com/dekoch/gouniversal/modules/mediadownloader"
 	"github.com/dekoch/gouniversal/modules/mesh"
 	"github.com/dekoch/gouniversal/modules/meshFileSync"
 	"github.com/dekoch/gouniversal/modules/messenger"
@@ -65,6 +66,11 @@ func LoadConfig() {
 		meshFileSync.LoadConfig()
 	}
 
+	if build.ModuleMediaDownloader {
+		sharedConsole.Log("MediaDownloader enabled", "Module")
+		mediadownloader.LoadConfig()
+	}
+
 	if build.ModuleModbusTest {
 		sharedConsole.Log("ModbusTest enabled", "Module")
 		modbustest.LoadConfig()
@@ -107,6 +113,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
 		mesh.RegisterPage(page, nav)
+	}
+
+	if build.ModuleMediaDownloader {
+		mediadownloader.RegisterPage(page, nav)
 	}
 }
 
@@ -154,6 +164,13 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 			mesh.Render(page, nav, r)
 		}
 	}
+
+	if build.ModuleMediaDownloader {
+		if nav.IsNext("MediaDownloader") {
+
+			mediadownloader.Render(page, nav, r)
+		}
+	}
 }
 
 // Exit is called before program exit
@@ -181,6 +198,10 @@ func Exit() {
 
 	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
 		mesh.Exit()
+	}
+
+	if build.ModuleMediaDownloader {
+		mediadownloader.Exit()
 	}
 
 	if build.ModuleLogViewer {

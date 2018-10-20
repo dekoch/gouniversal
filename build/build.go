@@ -12,5 +12,6 @@ const ModuleHomepage = true
 const ModuleMesh = true
 const ModuleMessenger = false
 const ModuleMeshFS = true
+const ModuleMediaDownloader = true
 const ModuleModbusTest = false
 const ModuleHeatingMath = false

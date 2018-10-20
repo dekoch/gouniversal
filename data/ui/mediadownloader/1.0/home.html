@@ -1,0 +1,9 @@
+<form method="post">
+    {{.Lang.Url}}:
+    <input type="text" class="form-control" name="url" value="{{.Url}}" autofocus><br>
+    <button class="btn fa fa-search" type="submit" name="edit" value="find" title="{{.Lang.Find}}"></button>
+    <button class="btn fa fa-download" type="submit" name="edit" value="download" title="{{.Lang.Download}}" {{.DownloadHidden}}></button><br>
+    <br>
+    {{.Lang.Link}}:<br>
+    {{.Link}}
+</form>
