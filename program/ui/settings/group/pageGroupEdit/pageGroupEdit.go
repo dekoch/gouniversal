@@ -111,7 +111,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	c.Pages = template.HTML(pagelist)
 
 	// display group
-	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"settings/groupedit.html", c)
+	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"settings/groupedit.html", c)
 	if err == nil {
 		page.Content += p
 	} else {

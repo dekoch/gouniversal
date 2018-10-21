@@ -15,7 +15,7 @@ import (
 )
 
 // SSE writes Server-Sent Events to an HTTP client.
-type sSE struct{}
+type sse struct{}
 
 type consoleMessage struct {
 	ClientUUID string
@@ -32,7 +32,7 @@ func LoadConfig() {
 
 	clients.RemoveAll()
 
-	http.Handle("/console/", &sSE{})
+	http.Handle("/console/", &sse{})
 }
 
 func RegisterPage(page *typesConsole.Page, nav *navigation.Navigation) {
@@ -49,7 +49,7 @@ func Render(page *typesConsole.Page, nav *navigation.Navigation, r *http.Request
 
 	c.UUID = template.HTML(nav.User.UUID)
 
-	p, err := functions.PageToString(global.Config.File.UIFileRoot+"console.html", c)
+	p, err := functions.PageToString(global.Config.UIFileRoot+"console.html", c)
 	if err == nil {
 		page.Content += p
 	} else {
@@ -64,7 +64,7 @@ func Render(page *typesConsole.Page, nav *navigation.Navigation, r *http.Request
 	}
 }
 
-func (s *sSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *sse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "cannot stream", http.StatusInternalServerError)
@@ -108,7 +108,7 @@ func stream() {
 	go func() {
 
 		for {
-			time.Sleep(global.Config.File.RefreshInterval * time.Millisecond)
+			time.Sleep(global.Config.RefreshInterval * time.Millisecond)
 
 			c := clients.List()
 

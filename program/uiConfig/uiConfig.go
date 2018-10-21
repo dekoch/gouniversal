@@ -2,6 +2,7 @@ package uiConfig
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"sync"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
-const configFilePath = "data/config/ui"
+const configFilePath = "data/config/"
 
 type UiHTTP struct {
 	Enabled bool
@@ -24,7 +25,7 @@ type UiHTTPS struct {
 	KeyFile  string
 }
 
-type UiConfigFile struct {
+type UiConfig struct {
 	Header           config.FileHeader
 	UIEnabled        bool
 	Title            string
@@ -37,69 +38,86 @@ type UiConfigFile struct {
 	Recovery         bool
 }
 
-type UiConfig struct {
-	Mut  sync.Mutex
-	File UiConfigFile
+var (
+	header config.FileHeader
+	mut    sync.RWMutex
+)
+
+func init() {
+	header = config.FileHeader{HeaderVersion: 0.0, FileName: "ui", ContentName: "ui", ContentVersion: 1.0, Comment: "UI config file"}
 }
 
-func (c *UiConfig) SaveUiConfig() error {
+func (c *UiConfig) loadDefaults() {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
 
-	c.File.Header = config.BuildHeader("ui", "ui", 1.0, "UI config file")
+	c.UIEnabled = false
+	c.Title = ""
+	c.ProgramFileRoot = "data/ui/program/1.0/"
+	c.StaticFileRoot = "data/ui/static/1.0/"
 
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		// if not found, create default file
-		c.File.UIEnabled = false
-		c.File.Title = ""
-		c.File.ProgramFileRoot = "data/ui/program/1.0/"
-		c.File.StaticFileRoot = "data/ui/static/1.0/"
+	c.HTTP.Enabled = true
+	c.HTTP.Port = 8080
 
-		c.File.HTTP.Enabled = true
-		c.File.HTTP.Port = 8080
+	c.HTTPS.Enabled = false
+	c.HTTPS.Port = 443
+	c.HTTPS.CertFile = "server.crt"
+	c.HTTPS.KeyFile = "server.key"
 
-		c.File.HTTPS.Enabled = false
-		c.File.HTTPS.Port = 443
-		c.File.HTTPS.CertFile = "server.crt"
-		c.File.HTTPS.KeyFile = "server.key"
+	c.MaxGuests = 20
+	c.MaxLoginAttempts = 10
+	c.Recovery = false
+}
 
-		c.File.MaxGuests = 20
-		c.File.MaxLoginAttempts = 10
-		c.File.Recovery = false
-	}
+func (c UiConfig) SaveConfig() error {
 
-	b, err := json.Marshal(c.File)
+	mut.RLock()
+	defer mut.RUnlock()
+
+	c.Header = config.BuildHeaderWithStruct(header)
+
+	b, err := json.Marshal(c)
 	if err != nil {
-		console.Log(err, "uiConfig.SaveConfig()")
+		console.Log(err, "")
+		return err
 	}
 
-	err = file.WriteFile(configFilePath, b)
+	err = file.WriteFile(configFilePath+header.FileName, b)
+	if err != nil {
+		console.Log(err, "")
+	}
 
 	return err
 }
 
-func (c *UiConfig) LoadConfig() {
+func (c *UiConfig) LoadConfig() error {
 
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+	if _, err := os.Stat(configFilePath + header.FileName); os.IsNotExist(err) {
 		// if not found, create default file
-		c.SaveUiConfig()
+		c.loadDefaults()
+		c.SaveConfig()
 	}
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
-	b, err := file.ReadFile(configFilePath)
+	b, err := file.ReadFile(configFilePath + header.FileName)
 	if err != nil {
-		console.Log(err, "ui.LoadConfig()")
+		console.Log(err, "")
+		c.loadDefaults()
+	} else {
+		err = json.Unmarshal(b, &c)
+		if err != nil {
+			console.Log(err, "")
+			c.loadDefaults()
+		}
 	}
 
-	err = json.Unmarshal(b, &c.File)
-	if err != nil {
-		console.Log(err, "ui.LoadConfig()")
+	if config.CheckHeader(c.Header, header.ContentName) == false {
+		err = errors.New("wrong config \"" + configFilePath + header.FileName + "\"")
+		console.Log(err, "")
+		c.loadDefaults()
 	}
 
-	if config.CheckHeader(c.File.Header, "ui") == false {
-		console.Log("wrong config \""+configFilePath+"\"", "ui.LoadConfig()")
-	}
+	return err
 }

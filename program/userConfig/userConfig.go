@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const configFilePath = "data/config/user"
+const configFilePath = "data/config/"
 
 // User stores all information about a single user
 type User struct {
@@ -28,87 +28,101 @@ type User struct {
 	Comment   string
 }
 
-type UserConfigFile struct {
+type UserConfig struct {
 	Header config.FileHeader
 	User   []User
 }
 
-type UserConfig struct {
-	Mut  sync.RWMutex
-	File UserConfigFile
+var (
+	header config.FileHeader
+	mut    sync.RWMutex
+)
+
+func init() {
+	header = config.FileHeader{HeaderVersion: 0.0, FileName: "user", ContentName: "users", ContentVersion: 1.0, Comment: "user config file"}
 }
 
-func (c *UserConfig) SaveConfig() error {
+func (c *UserConfig) loadDefaults() {
 
-	c.Mut.RLock()
-	defer c.Mut.RUnlock()
+	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
 
-	c.File.Header = config.BuildHeader("user", "users", 1.0, "user config file")
+	newuser := make([]User, 2)
 
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		// if not found, create default file
+	// admin
+	u := uuid.Must(uuid.NewRandom())
+	newuser[0].UUID = u.String()
+	newuser[0].Lang = "en"
+	newuser[0].State = 1 // active
+	// admin/admin
+	newuser[0].LoginName = "admin"
+	newuser[0].PWDHash = "$2a$14$ueP7ISwguEjrGcHI0SKjO2Jn/A2CjFsWA7LEWgV0FcPNwI7tetde"
 
-		newuser := make([]User, 2)
+	groups := []string{"admin"}
+	newuser[0].Groups = groups
 
-		// admin
-		u := uuid.Must(uuid.NewRandom())
-		newuser[0].UUID = u.String()
-		newuser[0].Lang = "en"
-		newuser[0].State = 1 // active
-		// admin/admin
-		newuser[0].LoginName = "admin"
-		newuser[0].PWDHash = "$2a$14$ueP7ISwguEjrGHcHI0SKjO2Jn/A2CjFsWA7LEWgV0FcPNwI7tetde"
+	// guest
+	u = uuid.Must(uuid.NewRandom())
+	newuser[1].UUID = u.String()
+	newuser[1].Lang = "en"
+	newuser[1].State = 0 // public
+	// guest
+	newuser[1].LoginName = "guest"
+	newuser[1].PWDHash = ""
 
-		groups := []string{"admin"}
-		newuser[0].Groups = groups
+	groups = []string{"admin"}
+	newuser[1].Groups = groups
 
-		// guest
-		u = uuid.Must(uuid.NewRandom())
-		newuser[1].UUID = u.String()
-		newuser[1].Lang = "en"
-		newuser[1].State = 0 // public
-		// guest
-		newuser[1].LoginName = "guest"
-		newuser[1].PWDHash = ""
+	c.User = newuser
+}
 
-		groups = []string{"admin"}
-		newuser[1].Groups = groups
+func (c UserConfig) SaveConfig() error {
 
-		c.File.User = newuser
-	}
+	mut.RLock()
+	defer mut.RUnlock()
 
-	b, err := json.Marshal(c.File)
+	c.Header = config.BuildHeaderWithStruct(header)
+
+	b, err := json.Marshal(c)
 	if err != nil {
-		console.Log(err, "userConfig.SaveConfig()")
+		console.Log(err, "")
+		return err
 	}
 
-	err = file.WriteFile(configFilePath, b)
+	err = file.WriteFile(configFilePath+header.FileName, b)
+	if err != nil {
+		console.Log(err, "")
+	}
 
 	return err
 }
 
 func (c *UserConfig) LoadConfig() error {
 
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+	if _, err := os.Stat(configFilePath + header.FileName); os.IsNotExist(err) {
 		// if not found, create default file
+		c.loadDefaults()
 		c.SaveConfig()
 	}
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
-	b, err := file.ReadFile(configFilePath)
+	b, err := file.ReadFile(configFilePath + header.FileName)
 	if err != nil {
-		console.Log(err, "userConfig.LoadConfig()")
+		console.Log(err, "")
+		c.loadDefaults()
+	} else {
+		err = json.Unmarshal(b, &c)
+		if err != nil {
+			console.Log(err, "")
+			c.loadDefaults()
+		}
 	}
 
-	err = json.Unmarshal(b, &c.File)
-	if err != nil {
-		console.Log(err, "userConfig.LoadConfig()")
-	}
-
-	if config.CheckHeader(c.File.Header, "users") == false {
-		console.Log("wrong config \""+configFilePath+"\"", "userConfig.LoadConfig()")
+	if config.CheckHeader(c.Header, header.ContentName) == false {
+		err = errors.New("wrong config \"" + configFilePath + header.FileName + "\"")
+		console.Log(err, "")
+		c.loadDefaults()
 	}
 
 	return err
@@ -116,26 +130,26 @@ func (c *UserConfig) LoadConfig() error {
 
 func (c *UserConfig) Add(u User) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	newUser := make([]User, 1)
 
 	newUser[0] = u
 
-	c.File.User = append(c.File.User, newUser...)
+	c.User = append(c.User, newUser...)
 }
 
 func (c *UserConfig) Edit(u User) error {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
-	for i := 0; i < len(c.File.User); i++ {
+	for i := 0; i < len(c.User); i++ {
 
-		if u.UUID == c.File.User[i].UUID {
+		if u.UUID == c.User[i].UUID {
 
-			c.File.User[i] = u
+			c.User[i] = u
 			return nil
 		}
 	}
@@ -145,14 +159,14 @@ func (c *UserConfig) Edit(u User) error {
 
 func (c *UserConfig) Get(uid string) (User, error) {
 
-	c.Mut.RLock()
-	defer c.Mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
-	for i := 0; i < len(c.File.User); i++ {
+	for i := 0; i < len(c.User); i++ {
 
-		if uid == c.File.User[i].UUID {
+		if uid == c.User[i].UUID {
 
-			return c.File.User[i], nil
+			return c.User[i], nil
 		}
 	}
 
@@ -163,14 +177,14 @@ func (c *UserConfig) Get(uid string) (User, error) {
 
 func (c *UserConfig) GetWithName(name string) (User, error) {
 
-	c.Mut.RLock()
-	defer c.Mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
-	for i := 0; i < len(c.File.User); i++ {
+	for i := 0; i < len(c.User); i++ {
 
-		if name == c.File.User[i].LoginName {
+		if name == c.User[i].LoginName {
 
-			return c.File.User[i], nil
+			return c.User[i], nil
 		}
 	}
 
@@ -181,14 +195,14 @@ func (c *UserConfig) GetWithName(name string) (User, error) {
 
 func (c *UserConfig) GetWithState(state int) (User, error) {
 
-	c.Mut.RLock()
-	defer c.Mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
-	for i := 0; i < len(c.File.User); i++ {
+	for i := 0; i < len(c.User); i++ {
 
-		if state == c.File.User[i].State {
+		if state == c.User[i].State {
 
-			return c.File.User[i], nil
+			return c.User[i], nil
 		}
 	}
 
@@ -200,29 +214,29 @@ func (c *UserConfig) GetWithState(state int) (User, error) {
 
 func (c *UserConfig) List() []User {
 
-	c.Mut.RLock()
-	defer c.Mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
-	return c.File.User
+	return c.User
 }
 
 func (c *UserConfig) Delete(uid string) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	var l []User
 	n := make([]User, 1)
 
-	for i := 0; i < len(c.File.User); i++ {
+	for i := 0; i < len(c.User); i++ {
 
-		if uid != c.File.User[i].UUID {
+		if uid != c.User[i].UUID {
 
-			n[0] = c.File.User[i]
+			n[0] = c.User[i]
 
 			l = append(l, n...)
 		}
 	}
 
-	c.File.User = l
+	c.User = l
 }

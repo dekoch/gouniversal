@@ -18,7 +18,7 @@ import (
 
 func LoadConfig() {
 
-	path := global.Config.File.UIFileRoot + "static/"
+	path := global.Config.UIFileRoot + "static/"
 	// if exist handle static folder
 	if _, err := os.Stat(path); os.IsNotExist(err) == false {
 		fs := http.FileServer(http.Dir(path))
@@ -79,13 +79,13 @@ func registerMenuItems(menu string, filepath string, navpath string, nav *naviga
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	// autogenerate menu entries from folders and files in module UIFileRoot
-	menuFolders, _ := functions.ReadDir(global.Config.File.UIFileRoot, 0)
+	menuFolders, _ := functions.ReadDir(global.Config.UIFileRoot, 0)
 
 	for _, f := range menuFolders {
 
 		if f.IsDir() {
 
-			registerMenuItems(f.Name(), global.Config.File.UIFileRoot+f.Name()+"/", "App:Homepage:"+f.Name(), nav)
+			registerMenuItems(f.Name(), global.Config.UIFileRoot+f.Name()+"/", "App:Homepage:"+f.Name(), nav)
 		} else {
 
 			if strings.HasSuffix(f.Name(), ".html") {
@@ -109,7 +109,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	// use navigation path to get path to html
 	path := strings.Replace(nav.Path, "App:Homepage:", "", -1)
 	path = strings.Replace(path, ":", "/", -1)
-	path = global.Config.File.UIFileRoot + path
+	path = global.Config.UIFileRoot + path
 
 	p, err := functions.PageToString(path, c)
 	if err == nil {

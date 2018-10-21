@@ -21,7 +21,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 	var c content
 
-	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"home.html", c)
+	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"home.html", c)
 	if err == nil {
 		page.Content += p
 	} else {

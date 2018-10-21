@@ -10,11 +10,20 @@ import (
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
-const configFilePath = "data/config/homepage/"
+const configFilePath = "data/config/modbustest/"
+
+type Station struct {
+	Active      bool
+	ReadOffset  uint16
+	WriteOffset uint16
+}
 
 type ModuleConfig struct {
-	Header     config.FileHeader
-	UIFileRoot string
+	Header   config.FileHeader
+	IP       string
+	Port     string
+	Station1 Station
+	Station2 Station
 }
 
 var (
@@ -22,14 +31,23 @@ var (
 )
 
 func init() {
-	header = config.FileHeader{HeaderVersion: 0.0, FileName: "homepage", ContentName: "homepage", ContentVersion: 1.0, Comment: "homepage config file"}
+	header = config.FileHeader{HeaderVersion: 0.0, FileName: "modbus", ContentName: "modbus", ContentVersion: 1.0, Comment: "modbus config file"}
 }
 
 func (hc *ModuleConfig) loadDefaults() {
 
 	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
 
-	hc.UIFileRoot = "data/homepage/"
+	hc.IP = "127.0.0.1"
+	hc.Port = "502"
+
+	hc.Station1.Active = true
+	hc.Station1.ReadOffset = 0
+	hc.Station1.WriteOffset = 0
+
+	hc.Station2.Active = true
+	hc.Station2.ReadOffset = 64
+	hc.Station2.WriteOffset = 64
 }
 
 func (hc ModuleConfig) SaveConfig() error {

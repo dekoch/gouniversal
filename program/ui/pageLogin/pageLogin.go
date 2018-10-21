@@ -25,7 +25,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	c.Lang = page.Lang.Login
 
-	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"login.html", c)
+	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"login.html", c)
 	if err == nil {
 		page.Content += p
 	} else {

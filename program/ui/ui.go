@@ -145,8 +145,8 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	}
 
 	// title
-	if global.UiConfig.File.Title != "" {
-		c.Title = global.UiConfig.File.Title + " - " + c.MenuBrand
+	if global.UiConfig.Title != "" {
+		c.Title = global.UiConfig.Title + " - " + c.MenuBrand
 	} else {
 		c.Title = c.MenuBrand
 	}
@@ -282,7 +282,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	c.UUID = template.HTML(nav.User.UUID)
 	c.Content = template.HTML(page.Content)
 
-	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"program.html", c)
+	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"program.html", c)
 	if err != nil {
 		console.Log(err, "ui.go")
 		p = err.Error()
@@ -300,9 +300,9 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// redirect to HTTPS if enabled
-		if global.UiConfig.File.HTTPS.Enabled {
+		if global.UiConfig.HTTPS.Enabled {
 			host := strings.Split(r.Host, ":")
-			port := strconv.Itoa(global.UiConfig.File.HTTPS.Port)
+			port := strconv.Itoa(global.UiConfig.HTTPS.Port)
 
 			http.Redirect(w, r, "https://"+host[0]+":"+port+"/app/", http.StatusSeeOther)
 		} else {
@@ -310,7 +310,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else if r.URL.Path == "/favicon.ico" {
-		icon := global.UiConfig.File.StaticFileRoot + "favicon.ico"
+		icon := global.UiConfig.StaticFileRoot + "favicon.ico"
 
 		if _, err := os.Stat(icon); os.IsNotExist(err) == false {
 			http.ServeFile(w, r, icon)
@@ -535,7 +535,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
-	if global.UiConfig.File.Recovery {
+	if global.UiConfig.Recovery {
 
 		button := r.FormValue("recovery")
 
@@ -545,8 +545,8 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
 		} else if button == "disablerecovery" {
 
-			global.UiConfig.File.Recovery = false
-			global.UiConfig.SaveUiConfig()
+			global.UiConfig.Recovery = false
+			global.UiConfig.SaveConfig()
 
 		} else if button == "cookies" {
 
@@ -567,7 +567,7 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
 		re.Temp = ""
 
-		templ, err := template.ParseFiles(global.UiConfig.File.ProgramFileRoot + "recovery.html")
+		templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "recovery.html")
 		if err != nil {
 			console.Log(err, "")
 		}
@@ -580,15 +580,15 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 func (ui *UI) StartServer() {
 	console.Log("starting webserver...", " ")
 
-	console.Log("ProgramFileRoot: "+global.UiConfig.File.ProgramFileRoot, " ")
-	console.Log("StaticFileRoot: "+global.UiConfig.File.StaticFileRoot, " ")
+	console.Log("ProgramFileRoot: "+global.UiConfig.ProgramFileRoot, " ")
+	console.Log("StaticFileRoot: "+global.UiConfig.StaticFileRoot, " ")
 
-	if _, err := os.Stat(global.UiConfig.File.ProgramFileRoot); os.IsNotExist(err) {
+	if _, err := os.Stat(global.UiConfig.ProgramFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
 		console.Log("error: ProgramFileRoot not found", "ui.go")
 	}
 
-	if _, err := os.Stat(global.UiConfig.File.StaticFileRoot); os.IsNotExist(err) {
+	if _, err := os.Stat(global.UiConfig.StaticFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
 		console.Log("error: StaticFileRoot not found", "ui.go")
 	}
@@ -611,55 +611,55 @@ func (ui *UI) StartServer() {
 		modules.LoadConfig()
 
 		// if HTTPS is enabled, check cert and key file
-		if global.UiConfig.File.HTTPS.Enabled {
-			if _, err = os.Stat(global.UiConfig.File.HTTPS.CertFile); os.IsNotExist(err) {
-				global.UiConfig.File.HTTPS.Enabled = false
-				console.Log("missing CertFile \""+global.UiConfig.File.HTTPS.CertFile+"\"", " ")
+		if global.UiConfig.HTTPS.Enabled {
+			if _, err = os.Stat(global.UiConfig.HTTPS.CertFile); os.IsNotExist(err) {
+				global.UiConfig.HTTPS.Enabled = false
+				console.Log("missing CertFile \""+global.UiConfig.HTTPS.CertFile+"\"", " ")
 			}
 
-			if _, err = os.Stat(global.UiConfig.File.HTTPS.KeyFile); os.IsNotExist(err) {
-				global.UiConfig.File.HTTPS.Enabled = false
-				console.Log("missing KeyFile \""+global.UiConfig.File.HTTPS.KeyFile+"\"", " ")
+			if _, err = os.Stat(global.UiConfig.HTTPS.KeyFile); os.IsNotExist(err) {
+				global.UiConfig.HTTPS.Enabled = false
+				console.Log("missing KeyFile \""+global.UiConfig.HTTPS.KeyFile+"\"", " ")
 			}
 		}
 
 		// configure server
-		fs := http.FileServer(http.Dir(global.UiConfig.File.StaticFileRoot))
+		fs := http.FileServer(http.Dir(global.UiConfig.StaticFileRoot))
 		http.Handle("/static/", http.StripPrefix("/static/", fs))
 		http.HandleFunc("/", handleRoot)
 		http.HandleFunc("/app/", handleApp)
 		http.HandleFunc("/recovery/", handleRecovery)
 
 		// start HTTP server
-		if global.UiConfig.File.HTTP.Enabled {
+		if global.UiConfig.HTTP.Enabled {
 
-			go http.ListenAndServe(":"+strconv.Itoa(global.UiConfig.File.HTTP.Port), nil)
+			go http.ListenAndServe(":"+strconv.Itoa(global.UiConfig.HTTP.Port), nil)
 		}
 
 		// start HTTPS server
-		if global.UiConfig.File.HTTPS.Enabled {
+		if global.UiConfig.HTTPS.Enabled {
 
-			go http.ListenAndServeTLS(":"+strconv.Itoa(global.UiConfig.File.HTTPS.Port), global.UiConfig.File.HTTPS.CertFile, global.UiConfig.File.HTTPS.KeyFile, nil)
+			go http.ListenAndServeTLS(":"+strconv.Itoa(global.UiConfig.HTTPS.Port), global.UiConfig.HTTPS.CertFile, global.UiConfig.HTTPS.KeyFile, nil)
 		}
 
 		for _, a := range addrs {
 			if ipnet, ok := a.(*net.IPNet); ok {
 				if ipnet.IP.To4() != nil {
 
-					if global.UiConfig.File.HTTP.Enabled {
+					if global.UiConfig.HTTP.Enabled {
 
-						console.Log("http://"+ipnet.IP.String()+":"+strconv.Itoa(global.UiConfig.File.HTTP.Port), " ")
+						console.Log("http://"+ipnet.IP.String()+":"+strconv.Itoa(global.UiConfig.HTTP.Port), " ")
 					}
 
-					if global.UiConfig.File.HTTPS.Enabled {
+					if global.UiConfig.HTTPS.Enabled {
 
-						console.Log("https://"+ipnet.IP.String()+":"+strconv.Itoa(global.UiConfig.File.HTTPS.Port), " ")
+						console.Log("https://"+ipnet.IP.String()+":"+strconv.Itoa(global.UiConfig.HTTPS.Port), " ")
 					}
 				}
 			}
 		}
 
-		if global.UiConfig.File.Recovery {
+		if global.UiConfig.Recovery {
 			console.Log("WARNING! Recovery Mode ist enabled", " ")
 		}
 	} else {

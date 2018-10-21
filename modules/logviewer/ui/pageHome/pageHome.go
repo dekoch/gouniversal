@@ -56,7 +56,7 @@ func Render(page *typesLogViewer.Page, nav *navigation.Navigation, r *http.Reque
 
 	c.Lang = page.Lang.Home
 
-	fileRoot := global.Config.File.LogFileRoot
+	fileRoot := global.Config.LogFileRoot
 
 	selFolder := nav.Parameter("Folder")
 	path := ""
@@ -148,7 +148,7 @@ func Render(page *typesLogViewer.Page, nav *navigation.Navigation, r *http.Reque
 		}
 	}
 
-	p, err := functions.PageToString(global.Config.File.UIFileRoot+"home.html", c)
+	p, err := functions.PageToString(global.Config.UIFileRoot+"home.html", c)
 	if err == nil {
 		page.Content += p
 	} else {

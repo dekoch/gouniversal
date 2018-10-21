@@ -16,9 +16,10 @@ type guestUser struct {
 }
 
 type GuestManagement struct {
-	Mut  sync.RWMutex
 	User []guestUser
 }
+
+var mut sync.RWMutex
 
 func (c *GuestManagement) NewGuest() userConfig.User {
 
@@ -38,12 +39,12 @@ func (c *GuestManagement) NewGuest() userConfig.User {
 	newGuest[0].User.UUID = u.String()
 
 	// add new guest to list
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	guests := len(c.User)
 	// if number of guests exceeds maximum, remove the oldest
-	if guests > global.UiConfig.File.MaxGuests {
+	if guests > global.UiConfig.MaxGuests {
 		c.User = c.User[1:guests]
 	}
 
@@ -54,8 +55,8 @@ func (c *GuestManagement) NewGuest() userConfig.User {
 
 func (c *GuestManagement) SelectGuest(uid string) userConfig.User {
 
-	c.Mut.RLock()
-	defer c.Mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	for u := 0; u < len(c.User); u++ {
 
@@ -73,8 +74,8 @@ func (c *GuestManagement) SelectGuest(uid string) userConfig.User {
 
 func (c *GuestManagement) MaxLoginAttempts(uid string) bool {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	for u := 0; u < len(c.User); u++ {
 
@@ -83,7 +84,7 @@ func (c *GuestManagement) MaxLoginAttempts(uid string) bool {
 
 			c.User[u].LoginAttempts++
 
-			if c.User[u].LoginAttempts > global.UiConfig.File.MaxLoginAttempts {
+			if c.User[u].LoginAttempts > global.UiConfig.MaxLoginAttempts {
 				return true
 			}
 

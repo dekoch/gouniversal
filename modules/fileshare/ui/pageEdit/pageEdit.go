@@ -34,7 +34,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 
 	c.Lang = page.Lang.Edit
 
-	fileRoot := global.Config.File.FileRoot + nav.User.UUID + "/"
+	fileRoot := global.Config.FileRoot + nav.User.UUID + "/"
 
 	var (
 		err      error
@@ -89,7 +89,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 
 		c.Name = template.HTML(name)
 
-		cont, err := functions.PageToString(global.Config.File.UIFileRoot+"edit.html", c)
+		cont, err := functions.PageToString(global.Config.UIFileRoot+"edit.html", c)
 		if err == nil {
 			page.Content += cont
 		} else {

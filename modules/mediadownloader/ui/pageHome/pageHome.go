@@ -68,7 +68,7 @@ func Render(page *typesMD.Page, nav *navigation.Navigation, r *http.Request) {
 
 	for _, file := range files {
 
-		f += "<a href=\"" + file.Url + "\" download=\"" + file.Filename + "\" target=\"_blank\">" + file.Url + "</a><br>"
+		f += "<a href=\"" + file.Url + "\" download=\"" + file.Filename + "\" target=\"_blank\">" + file.Filename + "</a><br>"
 	}
 
 	c.Link = template.HTML(f)

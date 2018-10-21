@@ -11,7 +11,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
-const configFilePath = "data/config/group"
+const configFilePath = "data/config/"
 
 type Group struct {
 	UUID         string
@@ -22,70 +22,90 @@ type Group struct {
 	AllowedPages []string
 }
 
-type GroupConfigFile struct {
+type GroupConfig struct {
 	Header config.FileHeader
 	Group  []Group
 }
 
-type GroupConfig struct {
-	Mut  sync.RWMutex
-	File GroupConfigFile
+var (
+	header config.FileHeader
+	mut    sync.RWMutex
+)
+
+func init() {
+	header = config.FileHeader{HeaderVersion: 0.0, FileName: "group", ContentName: "groups", ContentVersion: 1.0, Comment: "group config file"}
 }
 
-func (c *GroupConfig) SaveConfig() error {
+func (c *GroupConfig) loadDefaults() {
 
-	c.Mut.RLock()
-	defer c.Mut.RUnlock()
+	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
 
-	c.File.Header = config.BuildHeader("group", "groups", 1.0, "group config file")
+	newgroup := make([]Group, 1)
 
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		// if not found, create default file
+	newgroup[0].UUID = "admin"
+	newgroup[0].Name = "admin"
+	newgroup[0].State = 1 // active
 
-		newgroup := make([]Group, 1)
+	pages := []string{"Program:Exit",
+		"Program:Settings:User",
+		"Program:Settings:User:List",
+		"Program:Settings:User:Edit",
+		"Program:Settings:Group",
+		"Program:Settings:Group:List",
+		"Program:Settings:Group:Edit"}
+	newgroup[0].AllowedPages = pages
 
-		newgroup[0].UUID = "admin"
-		newgroup[0].Name = "admin"
-		newgroup[0].State = 1 // active
+	c.Group = newgroup
+}
 
-		pages := []string{"Program:Settings:User", "Program:Settings:User:List", "Program:Settings:User:Edit", "Program:Settings:Group", "Program:Settings:Group:List", "Program:Settings:Group:Edit"}
-		newgroup[0].AllowedPages = pages
+func (c GroupConfig) SaveConfig() error {
 
-		c.File.Group = newgroup
-	}
+	mut.RLock()
+	defer mut.RUnlock()
 
-	b, err := json.Marshal(c.File)
+	c.Header = config.BuildHeaderWithStruct(header)
+
+	b, err := json.Marshal(c)
 	if err != nil {
-		console.Log(err, "groupConfig.SaveConfig()")
+		console.Log(err, "")
+		return err
 	}
 
-	err = file.WriteFile(configFilePath, b)
+	err = file.WriteFile(configFilePath+header.FileName, b)
+	if err != nil {
+		console.Log(err, "")
+	}
 
 	return err
 }
 
 func (c *GroupConfig) LoadConfig() error {
 
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+	if _, err := os.Stat(configFilePath + header.FileName); os.IsNotExist(err) {
 		// if not found, create default file
+		c.loadDefaults()
 		c.SaveConfig()
 	}
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
-	b, err := file.ReadFile(configFilePath)
+	b, err := file.ReadFile(configFilePath + header.FileName)
 	if err != nil {
-		console.Log(err, "groupConfig.LoadConfig()")
+		console.Log(err, "")
+		c.loadDefaults()
+	} else {
+		err = json.Unmarshal(b, &c)
+		if err != nil {
+			console.Log(err, "")
+			c.loadDefaults()
+		}
 	}
 
-	err = json.Unmarshal(b, &c.File)
-	if err != nil {
-		console.Log(err, "groupConfig.LoadConfig()")
-	}
-
-	if config.CheckHeader(c.File.Header, "groups") == false {
-		console.Log("wrong config \""+configFilePath+"\"", "groupConfig.LoadConfig()")
+	if config.CheckHeader(c.Header, header.ContentName) == false {
+		err = errors.New("wrong config \"" + configFilePath + header.FileName + "\"")
+		console.Log(err, "")
+		c.loadDefaults()
 	}
 
 	return err
@@ -93,26 +113,26 @@ func (c *GroupConfig) LoadConfig() error {
 
 func (c *GroupConfig) Add(g Group) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	newGroup := make([]Group, 1)
 
 	newGroup[0] = g
 
-	c.File.Group = append(c.File.Group, newGroup...)
+	c.Group = append(c.Group, newGroup...)
 }
 
 func (c *GroupConfig) Edit(g Group) error {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
-	for i := 0; i < len(c.File.Group); i++ {
+	for i := 0; i < len(c.Group); i++ {
 
-		if g.UUID == c.File.Group[i].UUID {
+		if g.UUID == c.Group[i].UUID {
 
-			c.File.Group[i] = g
+			c.Group[i] = g
 			return nil
 		}
 	}
@@ -122,14 +142,14 @@ func (c *GroupConfig) Edit(g Group) error {
 
 func (c *GroupConfig) Get(uid string) (Group, error) {
 
-	c.Mut.RLock()
-	defer c.Mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
-	for i := 0; i < len(c.File.Group); i++ {
+	for i := 0; i < len(c.Group); i++ {
 
-		if uid == c.File.Group[i].UUID {
+		if uid == c.Group[i].UUID {
 
-			return c.File.Group[i], nil
+			return c.Group[i], nil
 		}
 	}
 
@@ -140,29 +160,29 @@ func (c *GroupConfig) Get(uid string) (Group, error) {
 
 func (c *GroupConfig) List() []Group {
 
-	c.Mut.RLock()
-	defer c.Mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
-	return c.File.Group
+	return c.Group
 }
 
 func (c *GroupConfig) Delete(uid string) {
 
-	c.Mut.Lock()
-	defer c.Mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	var l []Group
 	n := make([]Group, 1)
 
-	for i := 0; i < len(c.File.Group); i++ {
+	for i := 0; i < len(c.Group); i++ {
 
-		if uid != c.File.Group[i].UUID {
+		if uid != c.Group[i].UUID {
 
-			n[0] = c.File.Group[i]
+			n[0] = c.Group[i]
 
 			l = append(l, n...)
 		}
 	}
 
-	c.File.Group = l
+	c.Group = l
 }

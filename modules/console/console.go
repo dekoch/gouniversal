@@ -16,7 +16,7 @@ func LoadConfig() {
 	global.Config.LoadConfig()
 
 	en := lang.DefaultEn()
-	global.Lang = language.New(global.Config.File.LangFileRoot, en, "en")
+	global.Lang = language.New(global.Config.LangFileRoot, en, "en")
 
 	ui.LoadConfig()
 }

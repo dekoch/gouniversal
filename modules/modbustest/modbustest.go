@@ -8,14 +8,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dekoch/gouniversal/modules/modbustest/modbusConfig"
+	"github.com/dekoch/gouniversal/modules/modbustest/moduleConfig"
 	"github.com/dekoch/gouniversal/shared/console"
 
 	"github.com/goburrow/modbus"
 )
 
 var (
-	mConfig       modbusConfig.ModbusConfig
+	mConfig       moduleConfig.ModuleConfig
 	mutConnection sync.Mutex
 )
 
@@ -76,7 +76,7 @@ func bitToValue(highbyte bool, bit int, val bool) uint16 {
 	return 0
 }
 
-func readModbus(c modbusConfig.Station, client modbus.Client) (modInput, error) {
+func readModbus(c moduleConfig.Station, client modbus.Client) (modInput, error) {
 
 	fmt.Print("r ")
 
@@ -118,7 +118,7 @@ func readModbus(c modbusConfig.Station, client modbus.Client) (modInput, error) 
 	return in, nil
 }
 
-func writeModbus(c modbusConfig.Station, o modOutput, client modbus.Client) error {
+func writeModbus(c moduleConfig.Station, o modOutput, client modbus.Client) error {
 
 	fmt.Print("w ")
 
@@ -149,7 +149,7 @@ func writeModbus(c modbusConfig.Station, o modOutput, client modbus.Client) erro
 	return nil
 }
 
-func station(no int, c modbusConfig.Station, client modbus.Client) {
+func station(no int, c moduleConfig.Station, client modbus.Client) {
 
 	fmt.Println(c.ReadOffset)
 	fmt.Println(c.WriteOffset)
@@ -274,18 +274,18 @@ func LoadConfig() {
 
 	mConfig.LoadConfig()
 
-	fmt.Println(mConfig.File.IP)
-	fmt.Println(mConfig.File.Port)
+	fmt.Println(mConfig.IP)
+	fmt.Println(mConfig.Port)
 
-	client := modbus.TCPClient(mConfig.File.IP + ":" + mConfig.File.Port)
+	client := modbus.TCPClient(mConfig.IP + ":" + mConfig.Port)
 
-	if mConfig.File.Station1.Active {
-		go station(1, mConfig.File.Station1, client)
+	if mConfig.Station1.Active {
+		go station(1, mConfig.Station1, client)
 	}
 
 	time.Sleep(1500 * time.Millisecond)
 
-	if mConfig.File.Station2.Active {
-		go station(2, mConfig.File.Station2, client)
+	if mConfig.Station2.Active {
+		go station(2, mConfig.Station2, client)
 	}
 }

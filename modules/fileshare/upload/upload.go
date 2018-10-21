@@ -26,7 +26,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := r.FormValue("path")
-	path = global.Config.File.FileRoot + path
+	path = global.Config.FileRoot + path
 
 	err := functions.CreateDir(path)
 	if err != nil {

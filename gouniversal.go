@@ -27,7 +27,7 @@ func main() {
 	en := lang.DefaultEn()
 	global.Lang = language.New("data/lang/program/", en, "en")
 
-	if build.UIEnabled && global.UiConfig.File.UIEnabled {
+	if build.UIEnabled && global.UiConfig.UIEnabled {
 		go web.StartServer()
 	} else {
 		console.Log("UI is disabled", " ")
@@ -60,7 +60,7 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	if build.UIEnabled && global.UiConfig.File.UIEnabled {
+	if build.UIEnabled && global.UiConfig.UIEnabled {
 		web.Exit()
 	}
 

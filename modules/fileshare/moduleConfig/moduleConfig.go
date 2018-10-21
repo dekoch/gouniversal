@@ -2,73 +2,80 @@ package moduleConfig
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
-	"sync"
 
 	"github.com/dekoch/gouniversal/shared/config"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
-const configFilePath = "data/config/fileshare/fileshare"
+const configFilePath = "data/config/fileshare/"
 
-type ModuleConfigFile struct {
+type ModuleConfig struct {
 	Header     config.FileHeader
 	UIFileRoot string
 	FileRoot   string
 }
 
-type ModuleConfig struct {
-	Mut  sync.Mutex
-	File ModuleConfigFile
+var (
+	header config.FileHeader
+)
+
+func init() {
+	header = config.FileHeader{HeaderVersion: 0.0, FileName: "fileshare", ContentName: "fileshare", ContentVersion: 1.0, Comment: "fileshare config file"}
+}
+
+func (hc *ModuleConfig) loadDefaults() {
+
+	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
+
+	hc.UIFileRoot = "data/ui/fileshare/1.0/"
+	hc.FileRoot = "data/fileshare/"
 }
 
 func (hc ModuleConfig) SaveConfig() error {
 
-	hc.Mut.Lock()
-	defer hc.Mut.Unlock()
+	hc.Header = config.BuildHeaderWithStruct(header)
 
-	hc.File.Header = config.BuildHeader("fileshare", "fileshare", 1.0, "fileshare config file")
-
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		// if not found, create default file
-
-		hc.File.UIFileRoot = "data/ui/fileshare/1.0/"
-		hc.File.FileRoot = "data/fileshare/"
-	}
-
-	b, err := json.Marshal(hc.File)
+	b, err := json.Marshal(hc)
 	if err != nil {
-		console.Log(err, "fileshare/moduleConfig.SaveConfig()")
+		console.Log(err, "")
+		return err
 	}
 
-	err = file.WriteFile(configFilePath, b)
+	err = file.WriteFile(configFilePath+header.FileName, b)
+	if err != nil {
+		console.Log(err, "")
+	}
 
 	return err
 }
 
 func (hc *ModuleConfig) LoadConfig() error {
 
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+	if _, err := os.Stat(configFilePath + header.FileName); os.IsNotExist(err) {
 		// if not found, create default file
+		hc.loadDefaults()
 		hc.SaveConfig()
 	}
 
-	hc.Mut.Lock()
-	defer hc.Mut.Unlock()
-
-	b, err := file.ReadFile(configFilePath)
+	b, err := file.ReadFile(configFilePath + header.FileName)
 	if err != nil {
-		console.Log(err, "fileshare/moduleConfig.LoadConfig()")
+		console.Log(err, "")
+		hc.loadDefaults()
+	} else {
+		err = json.Unmarshal(b, &hc)
+		if err != nil {
+			console.Log(err, "")
+			hc.loadDefaults()
+		}
 	}
 
-	err = json.Unmarshal(b, &hc.File)
-	if err != nil {
-		console.Log(err, "fileshare/moduleConfig.LoadConfig()")
-	}
-
-	if config.CheckHeader(hc.File.Header, "fileshare") == false {
-		console.Log("wrong config \""+configFilePath+"\"", "fileshare/moduleConfig.LoadConfig()")
+	if config.CheckHeader(hc.Header, header.ContentName) == false {
+		err = errors.New("wrong config \"" + configFilePath + header.FileName + "\"")
+		console.Log(err, "")
+		hc.loadDefaults()
 	}
 
 	return err

@@ -36,7 +36,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	resp.Content = ""
 	resp.FilePath = ""
 
-	resp.FilePath = global.Config.File.FileRoot + req.FilePath
+	resp.FilePath = global.Config.FileRoot + req.FilePath
 
 	/*for i := 0; i <= 6; i++ {
 		if resp.Err == nil {

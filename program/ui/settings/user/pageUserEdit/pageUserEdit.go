@@ -139,7 +139,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	c.Groups = template.HTML(grouplist)
 
 	// display user
-	p, err := functions.PageToString(global.UiConfig.File.ProgramFileRoot+"settings/useredit.html", c)
+	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"settings/useredit.html", c)
 	if err == nil {
 		page.Content += p
 	} else {

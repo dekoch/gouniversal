@@ -64,7 +64,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 
 	c.Lang = page.Lang.Home
 
-	fileRoot := global.Config.File.FileRoot + nav.User.UUID + "/"
+	fileRoot := global.Config.FileRoot + nav.User.UUID + "/"
 
 	selFolder := nav.Parameter("Folder")
 	path := ""
@@ -170,7 +170,7 @@ func Render(page *typesFileshare.Page, nav *navigation.Navigation, r *http.Reque
 	c.Token = template.HTML(global.Tokens.New(nav.User.UUID))
 	c.Path = template.HTML(nav.User.UUID + "/" + path)
 
-	cont, err := functions.PageToString(global.Config.File.UIFileRoot+"home.html", c)
+	cont, err := functions.PageToString(global.Config.UIFileRoot+"home.html", c)
 	if err == nil {
 		page.Content += cont
 	} else {
