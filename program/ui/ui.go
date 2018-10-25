@@ -31,8 +31,6 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-type UI struct{}
-
 type menuDropdown struct {
 	Order int
 	Title string
@@ -577,11 +575,8 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ui *UI) StartServer() {
+func StartServer() {
 	console.Log("starting webserver...", " ")
-
-	console.Log("ProgramFileRoot: "+global.UiConfig.ProgramFileRoot, " ")
-	console.Log("StaticFileRoot: "+global.UiConfig.StaticFileRoot, " ")
 
 	if _, err := os.Stat(global.UiConfig.ProgramFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
@@ -667,6 +662,6 @@ func (ui *UI) StartServer() {
 	}
 }
 
-func (ui *UI) Exit() {
+func Exit() {
 
 }

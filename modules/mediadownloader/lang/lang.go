@@ -5,12 +5,13 @@ import (
 )
 
 type Home struct {
-	Menu     string
-	Title    string
-	Url      string
-	Find     string
-	Link     string
-	Download string
+	Menu             string
+	Title            string
+	Url              string
+	Find             string
+	Link             string
+	Download         string
+	DownloadFinished string
 }
 
 type Alert struct {
@@ -39,6 +40,7 @@ func DefaultEn() LangFile {
 	l.Home.Find = "Find"
 	l.Home.Download = "Find+Download"
 	l.Home.Link = "Link"
+	l.Home.DownloadFinished = "Download Finished!"
 
 	l.Alert.Success = "Success"
 	l.Alert.Info = "Info"

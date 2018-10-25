@@ -22,7 +22,7 @@ var (
 	output    []string
 )
 
-func init() {
+func LoadConfig() {
 
 	t := time.Now()
 

@@ -17,11 +17,12 @@ type lang struct {
 }
 
 type Language struct {
-	mut     sync.RWMutex
 	langDir string
 	defLang string
 	files   []lang
 }
+
+var mut sync.RWMutex
 
 func New(dir string, def interface{}, defname string) Language {
 
@@ -49,8 +50,8 @@ func New(dir string, def interface{}, defname string) Language {
 
 func (l *Language) SaveLang(lf interface{}, n string) error {
 
-	l.mut.Lock()
-	defer l.mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	b, err := json.Marshal(lf)
 	if err != nil {
@@ -101,8 +102,8 @@ func (l *Language) loadLangFiles() {
 }
 
 func (l *Language) LoadLangFiles() {
-	l.mut.Lock()
-	defer l.mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	l.loadLangFiles()
 }
@@ -117,7 +118,7 @@ func fileToStruct(lf lang, s interface{}) {
 
 func (l *Language) SelectLang(n string, s interface{}) {
 
-	l.mut.RLock()
+	mut.RLock()
 
 	// search lang
 	for i := 0; i < len(l.files); i++ {
@@ -126,15 +127,15 @@ func (l *Language) SelectLang(n string, s interface{}) {
 
 			fileToStruct(l.files[i], s)
 
-			l.mut.RUnlock()
+			mut.RUnlock()
 			return
 		}
 	}
 
-	l.mut.RUnlock()
+	mut.RUnlock()
 
-	l.mut.Lock()
-	defer l.mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	// if nothing found
 	// refresh list
@@ -163,8 +164,8 @@ func (l *Language) SelectLang(n string, s interface{}) {
 
 func (l *Language) ListNames() []string {
 
-	l.mut.RLock()
-	defer l.mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	fl := make([]string, 0)
 	newName := make([]string, 1)

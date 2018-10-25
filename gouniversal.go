@@ -16,19 +16,22 @@ import (
 )
 
 func main() {
+	console.LoadConfig()
 	console.Log("App starting...", " ")
-
-	web := new(ui.UI)
-
 	console.Input("")
-
-	global.UiConfig.LoadConfig()
 
 	en := lang.DefaultEn()
 	global.Lang = language.New("data/lang/program/", en, "en")
 
+	if build.UIEnabled {
+
+		global.UiConfig.LoadConfig()
+	}
+
+	// UI or console mode
 	if build.UIEnabled && global.UiConfig.UIEnabled {
-		go web.StartServer()
+		// start UI
+		go ui.StartServer()
 	} else {
 		console.Log("UI is disabled", " ")
 
@@ -45,11 +48,14 @@ func main() {
 
 		if s != "" {
 
-			if s == "help" {
+			switch s {
+			case "help":
 				printHelp()
-			} else if s == "exit" {
+
+			case "exit":
 				exitApp = true
-			} else {
+
+			default:
 				console.Output("unrecognized command \""+s+"\"", " ")
 				console.Output("Type 'help' for a list of available commands.", " ")
 			}
@@ -61,7 +67,7 @@ func main() {
 	}
 
 	if build.UIEnabled && global.UiConfig.UIEnabled {
-		web.Exit()
+		ui.Exit()
 	}
 
 	modules.Exit()

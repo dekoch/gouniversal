@@ -52,13 +52,13 @@ func Render(page *typesMD.Page, nav *navigation.Navigation, r *http.Request) {
 
 	if button == "find" {
 
-		files, err = find(ur, false)
+		files, err = find(ur, false, page, nav)
 		if err != nil {
 			alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
 		}
 	} else if button == "download" && global.Config.DownloadEnabled {
 
-		files, err = find(ur, true)
+		files, err = find(ur, true, page, nav)
 		if err != nil {
 			alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
 		}
@@ -81,13 +81,13 @@ func Render(page *typesMD.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 }
 
-func find(ur string, download bool) ([]typesMD.DownloadFile, error) {
+func find(ur string, download bool, page *typesMD.Page, nav *navigation.Navigation) ([]typesMD.DownloadFile, error) {
 
 	var (
 		err  error
 		resp *http.Response
 		b    []byte
-		page string
+		p    string
 		ret  []typesMD.DownloadFile
 	)
 
@@ -114,10 +114,10 @@ func find(ur string, download bool) ([]typesMD.DownloadFile, error) {
 
 			case 3:
 				b, err = ioutil.ReadAll(resp.Body)
-				page = string(b)
+				p = string(b)
 
 			case 4:
-				ret, err = finder.Find(ur, page)
+				ret, err = finder.Find(ur, p)
 
 			case 5:
 				if download {
@@ -125,6 +125,8 @@ func find(ur string, download bool) ([]typesMD.DownloadFile, error) {
 						for _, file := range ret {
 							downloader.Download(file)
 						}
+
+						alert.Message(alert.INFO, page.Lang.Alert.Info, page.Lang.Home.DownloadFinished, "", nav.User.UUID)
 					}()
 				}
 			}

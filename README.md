@@ -8,11 +8,11 @@ HTML front end based on **Bootstrap v4**.
 ### Files and Folders
 ```
 gouniversal/
+├── build/ (build options and scripts)
 ├── data/ (Folder to ship with binary)
 │   ├── config/
-│   │   ├── group
 │   │   ├── openespm/
-│   │   ├── program
+│   │   ├── group
 │   │   ├── ui
 │   │   └── user
 │   ├── lang/
