@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/dekoch/gouniversal/modules/mediadownloader/downloader"
 	"github.com/dekoch/gouniversal/modules/mediadownloader/finder"
@@ -29,10 +30,12 @@ func Render(page *typesMD.Page, nav *navigation.Navigation, r *http.Request) {
 	ur := r.FormValue("url")
 
 	type Content struct {
-		Lang           lang.Home
-		Url            template.HTML
-		DownloadHidden template.HTML
-		Link           template.HTML
+		Lang                    lang.Home
+		Url                     template.HTML
+		DownloadHidden          template.HTML
+		Link                    template.HTML
+		SupportedFileExtensions template.HTML
+		Extensions              template.HTML
 	}
 	var c Content
 
@@ -64,6 +67,19 @@ func Render(page *typesMD.Page, nav *navigation.Navigation, r *http.Request) {
 		}
 	}
 
+	// extensions
+	c.SupportedFileExtensions = template.HTML(page.Lang.Home.SupportedFileExtensions)
+
+	e := ""
+
+	for _, ex := range global.Config.Extension {
+
+		e += ex + " "
+	}
+
+	c.Extensions = template.HTML(e)
+
+	// links
 	f := ""
 
 	for _, file := range files {
@@ -93,14 +109,13 @@ func find(ur string, download bool, page *typesMD.Page, nav *navigation.Navigati
 
 	func() {
 
-		for i := 0; i <= 5; i++ {
+		for i := 0; i <= 6; i++ {
 
 			switch i {
 			case 0:
 				// check input
 				if functions.IsEmpty(ur) {
-
-					err = errors.New("bad input")
+					err = errors.New(page.Lang.Home.PleaseEnterUrl)
 				}
 
 			case 1:
@@ -113,13 +128,21 @@ func find(ur string, download bool, page *typesMD.Page, nav *navigation.Navigati
 				}
 
 			case 3:
+				if strings.Contains(resp.Header.Get("Content-Type"), "text/html") == false {
+					err = errors.New(page.Lang.Home.NotSupportedContentType + ": " + resp.Header.Get("Content-Type"))
+				}
+
+			case 4:
 				b, err = ioutil.ReadAll(resp.Body)
 				p = string(b)
 
-			case 4:
-				ret, err = finder.Find(ur, p)
-
 			case 5:
+				ret, err = finder.Find(ur, p)
+				if len(ret) == 0 {
+					alert.Message(alert.INFO, page.Lang.Alert.Info, page.Lang.Home.NoFileFound, "", nav.User.UUID)
+				}
+
+			case 6:
 				if download {
 					go func() {
 						for _, file := range ret {

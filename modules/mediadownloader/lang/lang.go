@@ -5,13 +5,17 @@ import (
 )
 
 type Home struct {
-	Menu             string
-	Title            string
-	Url              string
-	Find             string
-	Link             string
-	Download         string
-	DownloadFinished string
+	Menu                    string
+	Title                   string
+	PleaseEnterUrl          string
+	Url                     string
+	Find                    string
+	Link                    string
+	Download                string
+	DownloadFinished        string
+	NotSupportedContentType string
+	NoFileFound             string
+	SupportedFileExtensions string
 }
 
 type Alert struct {
@@ -36,11 +40,15 @@ func DefaultEn() LangFile {
 	l.Home.Menu = "Tools"
 
 	l.Home.Title = "MediaDownloader"
+	l.Home.PleaseEnterUrl = "please enter url"
 	l.Home.Url = "Url"
 	l.Home.Find = "Find"
 	l.Home.Download = "Find+Download"
 	l.Home.Link = "Link"
 	l.Home.DownloadFinished = "Download Finished!"
+	l.Home.NotSupportedContentType = "not supported content type"
+	l.Home.NoFileFound = "no file found"
+	l.Home.SupportedFileExtensions = "supported file extensions"
 
 	l.Alert.Success = "Success"
 	l.Alert.Info = "Info"
