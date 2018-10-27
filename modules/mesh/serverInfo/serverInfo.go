@@ -9,10 +9,11 @@ import (
 )
 
 type ServerInfo struct {
-	TimeStamp time.Time
-	ID        string
-	Port      int
-	Address   []string
+	TimeStamp        time.Time
+	ID               string
+	Port             int
+	preferredAddress string
+	Address          []string
 }
 
 var (
@@ -76,11 +77,11 @@ func (si *ServerInfo) Update() {
 	var empty []string
 	si.Address = empty
 
+	si.localAddresses()
+
 	if pubAddrUpdInterv > 0 {
 		si.publicAddress()
 	}
-
-	si.localAddresses()
 }
 
 func (si *ServerInfo) publicAddress() {
@@ -135,4 +136,20 @@ func (si ServerInfo) Get() ServerInfo {
 	defer mut.RUnlock()
 
 	return si
+}
+
+func (si *ServerInfo) SetPrefAddress(addr string) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	si.preferredAddress = addr
+}
+
+func (si *ServerInfo) GetPrefAddress() string {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return si.preferredAddress
 }

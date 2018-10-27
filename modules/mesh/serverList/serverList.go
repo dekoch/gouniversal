@@ -64,7 +64,7 @@ func (sl *ServerList) AddList(serverList []serverInfo.ServerInfo) {
 	}
 }
 
-func (sl ServerList) Get() []serverInfo.ServerInfo {
+func (sl *ServerList) Get() []serverInfo.ServerInfo {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -72,7 +72,7 @@ func (sl ServerList) Get() []serverInfo.ServerInfo {
 	return sl.ServerList
 }
 
-func (sl ServerList) GetWithID(id string) (serverInfo.ServerInfo, error) {
+func (sl *ServerList) GetWithID(id string) (serverInfo.ServerInfo, error) {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -87,6 +87,36 @@ func (sl ServerList) GetWithID(id string) (serverInfo.ServerInfo, error) {
 
 	var e serverInfo.ServerInfo
 	return e, errors.New("server not found")
+}
+
+func (sl *ServerList) SetPrefAddress(server serverInfo.ServerInfo, addr string) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	for i := 0; i < len(sl.ServerList); i++ {
+
+		if server.ID == sl.ServerList[i].ID {
+
+			sl.ServerList[i].SetPrefAddress(addr)
+		}
+	}
+}
+
+func (sl *ServerList) GetPrefAddress(server serverInfo.ServerInfo) string {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	for i := 0; i < len(sl.ServerList); i++ {
+
+		if server.ID == sl.ServerList[i].ID {
+
+			return sl.ServerList[i].GetPrefAddress()
+		}
+	}
+
+	return ""
 }
 
 func (sl *ServerList) Delete(id string) {

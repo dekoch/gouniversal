@@ -3,6 +3,8 @@ package fileList
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -52,6 +54,17 @@ func (fl *FileList) Scan() error {
 
 	mut.Lock()
 	defer mut.Unlock()
+
+	// directory from path
+	dir := filepath.Dir(fl.path)
+
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		// if not found, create dir
+		err = os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
 
 	localFiles, err := fileInfo.GetRecursive(fl.path)
 	if err != nil {

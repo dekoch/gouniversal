@@ -167,8 +167,6 @@ func SendMessage(output typesMesh.ServerMessage) error {
 	output.Sender = global.Config.Server.Get()
 	output.Network = global.NetworkConfig.Network.Get()
 
-	var err error
-
 	// encrypt message content
 	b, err := aes.Encrypt(global.Keyfile.GetKey(), string(output.Message.Content))
 	if err != nil {
@@ -177,56 +175,72 @@ func SendMessage(output typesMesh.ServerMessage) error {
 
 	output.Message.Content = []byte(b)
 
-	receiverPort := strconv.Itoa(output.Receiver.Port)
+	// try preferred address
+	prefAddr := global.NetworkConfig.ServerList.GetPrefAddress(output.Receiver)
 
-	serverOK := true
+	if prefAddr != "" {
+
+		err = send(output, prefAddr)
+		if err == nil {
+			return err
+		}
+	}
 
 	// try all addresses from server
 	for _, addr := range output.Receiver.Address {
 
-		if serverOK {
-
-			addressOK := true
-			address := ""
-
-			// check for v4 or v6 addresses
-			ip := net.ParseIP(addr)
-
-			if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
-				addressOK = false
-			}
-
-			if ip.To4() != nil {
-				address = addr
-			} else if ip.To16() != nil {
-				// we have to add []
-				address = "[" + addr + "]"
-			} else {
-				addressOK = false
-			}
-
-			if addressOK {
-
-				conn, err := net.DialTimeout("tcp", address+":"+receiverPort, 5*time.Second)
-				if err == nil {
-
-					c := rpc.NewClient(conn)
-
-					var inputErr string
-					err = c.Call("Server.Message", output, &inputErr)
-					if err == nil {
-
-						c.Close()
-
-						// message sent
-						serverOK = false
-					}
-				}
-			}
+		err = send(output, addr)
+		if err == nil {
+			global.NetworkConfig.ServerList.SetPrefAddress(output.Receiver, addr)
+			return err
 		}
 	}
 
-	return err
+	return errors.New("not send")
+}
+
+func send(output typesMesh.ServerMessage, addr string) error {
+
+	// check for v4 or v6 addresses
+	ip := net.ParseIP(addr)
+	if ip == nil {
+		return errors.New("bad address")
+	}
+
+	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
+		return errors.New("bad address")
+	}
+
+	address := ""
+
+	if ip.To4() != nil {
+		address = addr
+	} else if ip.To16() != nil {
+		// we have to add []
+		address = "[" + addr + "]"
+	} else {
+		return errors.New("bad address")
+	}
+
+	receiverPort := strconv.Itoa(output.Receiver.Port)
+
+	conn, err := net.DialTimeout("tcp", address+":"+receiverPort, 5*time.Second)
+	if err != nil {
+		return err
+	}
+
+	c := rpc.NewClient(conn)
+
+	var inputErr string
+	err = c.Call("Server.Message", output, &inputErr)
+	if err != nil {
+		return err
+	}
+
+	c.Close()
+
+	// message sent
+	return nil
 }
 
 func IsLoop(in serverInfo.ServerInfo) bool {
