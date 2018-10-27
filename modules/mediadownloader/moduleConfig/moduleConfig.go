@@ -39,7 +39,7 @@ func (hc *ModuleConfig) loadDefaults() {
 	hc.DownloadEnabled = true
 	hc.FileRoot = "data/mediadownloader/"
 
-	extension := make([]string, 22)
+	extension := make([]string, 24)
 	extension[0] = ".png"
 	extension[1] = ".jpg"
 	extension[2] = ".jpeg"
@@ -62,6 +62,8 @@ func (hc *ModuleConfig) loadDefaults() {
 	extension[19] = ".tar.gz"
 	extension[20] = ".rar"
 	extension[21] = ".iso"
+	extension[22] = ".m3u"
+	extension[23] = ".m3u8"
 	hc.Extension = extension
 }
 

@@ -39,15 +39,20 @@ func findExtension(ur, raw, extension string) ([]typesMD.DownloadFile, error) {
 
 	var ret []typesMD.DownloadFile
 
+	raw = strings.Replace(raw, "'", "\"", -1)
+
 	files := strings.Split(raw, "href=\"")
+	files = append(strings.Split(raw, "src=\""), files...)
 
 	for _, f := range files {
 
 		paths := strings.SplitAfter(f, "\"")
 
-		for _, p := range paths {
+		if len(paths) > 0 {
 
-			if strings.Contains(strings.ToLower(p), extension) && strings.Contains(p, "<") == false {
+			p := paths[0]
+
+			if strings.Contains(strings.ToLower(p), extension) {
 
 				p = strings.Replace(p, "\"", "", -1)
 
@@ -90,7 +95,19 @@ func findExtension(ur, raw, extension string) ([]typesMD.DownloadFile, error) {
 					n.Filename = name[0]
 				}
 
-				ret = append(ret, n)
+				// check if url is already in list
+				found := false
+
+				for _, r := range ret {
+
+					if r.Url == n.Url {
+						found = true
+					}
+				}
+
+				if found == false {
+					ret = append(ret, n)
+				}
 			}
 		}
 	}
