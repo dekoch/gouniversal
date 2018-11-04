@@ -94,6 +94,8 @@ func sendFileList() {
 				return
 			}
 
+			global.LocalFiles.SourceClean(mesh.GetServerList())
+
 			b, err := json.Marshal(global.LocalFiles.Get())
 			if err != nil {
 				fmt.Println(err)
@@ -169,7 +171,7 @@ func sendUploadReq() {
 					continue
 				}
 
-				if datasize.ByteSize(missingFile.Size).MBytes() > global.Config.MaxFileSize {
+				if datasize.ByteSize(missingFile.Size).MBytes() > global.Config.GetMaxFileSize() {
 					continue
 				}
 
@@ -241,7 +243,7 @@ func uploadFiles() {
 				continue
 			}
 
-			if datasize.ByteSize(missingFile.Size).MBytes() > global.Config.MaxFileSize {
+			if datasize.ByteSize(missingFile.Size).MBytes() > global.Config.GetMaxFileSize() {
 				continue
 			}
 
@@ -249,7 +251,7 @@ func uploadFiles() {
 
 				err = nil
 
-				for i := 0; i <= 8; i++ {
+				for i := 0; i <= 9; i++ {
 
 					switch i {
 					case 0:
@@ -260,31 +262,33 @@ func uploadFiles() {
 
 					case 2:
 						ft.FileInfo = missingFile
+						err = ft.FileInfo.Update(fileRoot)
 
+					case 3:
 						msg.Version = 1.0
 						msg.Type = typesMFS.MessFileUploadStart
 						msg.Content, err = json.Marshal(ft)
 
-					case 3:
+					case 4:
 						b, err = json.Marshal(msg)
 
-					case 4:
+					case 5:
 						size := datasize.ByteSize(missingFile.Size).HumanReadable()
 						console.Output("  > ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
 
 						err = mesh.NewMessage(server, typesMesh.MessFileSync, 1.0, b)
 
-					case 5:
+					case 6:
 						ft.Content, err = file.ReadFile(fileRoot + ft.FileInfo.Path)
 
-					case 6:
+					case 7:
 						msg.Type = typesMFS.MessFileUpload
 						msg.Content, err = json.Marshal(ft)
 
-					case 7:
+					case 8:
 						b, err = json.Marshal(msg)
 
-					case 8:
+					case 9:
 						size := datasize.ByteSize(missingFile.Size).HumanReadable()
 						console.Output("- > ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
 

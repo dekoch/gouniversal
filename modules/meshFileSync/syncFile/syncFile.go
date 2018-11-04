@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
 	"github.com/dekoch/gouniversal/shared/io/file"
 	"github.com/google/uuid"
 )
@@ -114,7 +115,25 @@ func (f *SyncFile) DeleteSource(id string) {
 	}
 
 	f.Sources = newList
+}
 
+func (f *SyncFile) CleanSources(servers []serverInfo.ServerInfo) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	var newList []string
+
+	for _, src := range f.Sources {
+		for _, server := range servers {
+
+			if src == server.ID {
+				newList = append(newList, src)
+			}
+		}
+	}
+
+	f.Sources = newList
 }
 
 func (f *SyncFile) GetSources() []string {
@@ -125,32 +144,32 @@ func (f *SyncFile) GetSources() []string {
 	return f.Sources
 }
 
-func (fl *SyncFile) SelectSource(thisID string) (string, error) {
+func (f *SyncFile) SelectSource(thisID string) (string, error) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	l := len(fl.Sources)
+	l := len(f.Sources)
 
 	if l == 1 {
 		// if only one source in list
-		if fl.Sources[0] != thisID {
-			return fl.Sources[0], nil
+		if f.Sources[0] != thisID {
+			return f.Sources[0], nil
 		}
 	} else if l > 1 {
 
 		// select randomly
-		for range fl.Sources {
+		for range f.Sources {
 
 			index := rand.Intn(l)
 
-			if fl.Sources[index] != thisID {
-				return fl.Sources[index], nil
+			if f.Sources[index] != thisID {
+				return f.Sources[index], nil
 			}
 		}
 
 		// if random fails
-		for _, src := range fl.Sources {
+		for _, src := range f.Sources {
 
 			if src != thisID {
 				return src, nil
@@ -161,18 +180,18 @@ func (fl *SyncFile) SelectSource(thisID string) (string, error) {
 	return "", errors.New("no source found")
 }
 
-func (fl *SyncFile) SetDestination(id string) {
+func (f *SyncFile) SetDestination(id string) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	fl.destination = id
+	f.destination = id
 }
 
-func (fl *SyncFile) GetDestination() string {
+func (f *SyncFile) GetDestination() string {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	return fl.destination
+	return f.destination
 }

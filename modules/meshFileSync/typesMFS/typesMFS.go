@@ -1,6 +1,7 @@
 package typesMFS
 
 import (
+	"github.com/dekoch/gouniversal/modules/meshFileSync/lang"
 	"github.com/dekoch/gouniversal/modules/meshFileSync/syncFile"
 )
 
@@ -24,4 +25,9 @@ type Message struct {
 type FileTransfer struct {
 	FileInfo syncFile.SyncFile
 	Content  []byte
+}
+
+type Page struct {
+	Content string
+	Lang    lang.LangFile
 }

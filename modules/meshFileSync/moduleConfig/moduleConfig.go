@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"sync"
 
 	"github.com/dekoch/gouniversal/modules/meshFileSync/syncFile"
 	"github.com/dekoch/gouniversal/shared/config"
@@ -14,16 +15,21 @@ import (
 const configFilePath = "data/config/meshfilesync/"
 
 type ModuleConfig struct {
-	Header      config.FileHeader
-	UIFileRoot  string
-	FileRoot    string
-	TempRoot    string
-	MaxFileSize float64 // Megabytes
-	LocalFiles  []syncFile.SyncFile
+	Header       config.FileHeader
+	UIFileRoot   string
+	LangFileRoot string
+	FileRoot     string
+	TempRoot     string
+	MaxFileSize  float64 // Megabytes
+	AutoAdd      bool
+	AutoUpdate   bool
+	AutoDelete   bool
+	LocalFiles   []syncFile.SyncFile
 }
 
 var (
 	header config.FileHeader
+	mut    sync.RWMutex
 )
 
 func init() {
@@ -32,15 +38,25 @@ func init() {
 
 func (hc *ModuleConfig) loadDefaults() {
 
+	mut.Lock()
+	defer mut.Unlock()
+
 	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
 
 	hc.UIFileRoot = "data/ui/meshfilesync/1.0/"
-	hc.FileRoot = "data/meshfilesync/sync/"
+	hc.LangFileRoot = "data/lang/meshfilesync/"
+	hc.FileRoot = "data/meshfilesync/share/"
 	hc.TempRoot = "data/meshfilesync/temp/"
 	hc.MaxFileSize = 100.0
+	hc.AutoAdd = false
+	hc.AutoUpdate = false
+	hc.AutoDelete = false
 }
 
 func (hc ModuleConfig) SaveConfig() error {
+
+	mut.RLock()
+	defer mut.RUnlock()
 
 	hc.Header = config.BuildHeaderWithStruct(header)
 
@@ -66,6 +82,9 @@ func (hc *ModuleConfig) LoadConfig() error {
 		hc.SaveConfig()
 	}
 
+	mut.Lock()
+	defer mut.Unlock()
+
 	b, err := file.ReadFile(configFilePath + header.FileName)
 	if err != nil {
 		console.Log(err, "")
@@ -85,4 +104,68 @@ func (hc *ModuleConfig) LoadConfig() error {
 	}
 
 	return err
+}
+
+func (hc *ModuleConfig) SetMaxFileSize(size float64) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.MaxFileSize = size
+}
+
+func (hc *ModuleConfig) GetMaxFileSize() float64 {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.MaxFileSize
+}
+
+func (hc *ModuleConfig) SetAutoAdd(enable bool) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.AutoAdd = enable
+}
+
+func (hc *ModuleConfig) GetAutoAdd() bool {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.AutoAdd
+}
+
+func (hc *ModuleConfig) SetAutoUpdate(enable bool) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.AutoUpdate = enable
+}
+
+func (hc *ModuleConfig) GetAutoUpdate() bool {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.AutoUpdate
+}
+
+func (hc *ModuleConfig) SetAutoDelete(enable bool) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.AutoDelete = enable
+}
+
+func (hc *ModuleConfig) GetAutoDelete() bool {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.AutoDelete
 }

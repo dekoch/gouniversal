@@ -1,0 +1,50 @@
+<form method="post">
+    <button class="btn btn-default fa fa-eraser" type="submit" name="edit" value="abort" title="{{.Lang.Abort}}"></button>
+    <br>
+    <br>
+    <div class="card">
+        <div class="card-header">
+            {{.Lang.PendingDownloads}}
+        </div>
+        <div class="card-body">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="ckbDownloadAll" name="ckbDownloadAll" value="checked">
+                                <label class="form-check-label" for="ckbDownloadAll">{{.Lang.SelectAll}}</label>
+                            </div>
+                        </th>
+                        <th scope="col">{{.Lang.Name}}</th>
+                        <th scope="col">{{.Lang.Size}}</th>
+                        <th scope="col">{{.Lang.Date}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{.DownloadList}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <br>
+    <div class="card">
+        <div class="card-header">
+            {{.Lang.PendingUploads}}
+        </div>
+        <div class="card-body">
+            <table class="table table-sm table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">{{.Lang.Name}}</th>
+                        <th scope="col">{{.Lang.Size}}</th>
+                        <th scope="col">{{.Lang.Date}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{.UploadList}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</form>

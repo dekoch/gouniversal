@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
 	"github.com/dekoch/gouniversal/modules/meshFileSync/syncFile"
 	"github.com/dekoch/gouniversal/shared/io/fileInfo"
 )
@@ -33,6 +34,16 @@ type FileList struct {
 var (
 	mut sync.Mutex
 )
+
+func (fl *FileList) Lock() {
+
+	mut.Lock()
+}
+
+func (fl *FileList) Unlock() {
+
+	mut.Unlock()
+}
 
 func (fl *FileList) SetPath(p string) {
 
@@ -258,6 +269,17 @@ func (fl *FileList) sourceUpdate(n syncFile.SyncFile) {
 	}
 }
 
+func (fl *FileList) SourceClean(servers []serverInfo.ServerInfo) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	for i, _ := range fl.Files {
+
+		fl.Files[i].CleanSources(servers)
+	}
+}
+
 func (fl *FileList) Get() []syncFile.SyncFile {
 
 	mut.Lock()
@@ -300,22 +322,55 @@ func (fl *FileList) GetLocalMissing(files []syncFile.SyncFile) []syncFile.SyncFi
 
 				found = true
 
-				if local.Deleted {
-					add = true
-				}
+				if local.Deleted &&
+					remote.AddTime.After(local.DelTime) {
 
-				if compare(local, remote) == stateNewer {
-					// remote is newer
 					add = true
-				}
-
-				if local.DelTime.After(remote.AddTime) {
-					add = false
 				}
 			}
 		}
 
 		if add || found == false {
+			ret = append(ret, remote)
+		}
+	}
+
+	return ret
+}
+
+func (fl *FileList) GetLocalOutdated(files []syncFile.SyncFile) []syncFile.SyncFile {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	var ret []syncFile.SyncFile
+
+	var add bool
+
+	for _, remote := range files {
+
+		if remote.Deleted {
+			continue
+		}
+
+		add = false
+
+		for _, local := range fl.Files {
+
+			if local.Deleted {
+				continue
+			}
+
+			if local.Path == remote.Path {
+
+				if compare(local, remote) == stateNewer {
+					// remote is newer
+					add = true
+				}
+			}
+		}
+
+		if add {
 			ret = append(ret, remote)
 		}
 	}

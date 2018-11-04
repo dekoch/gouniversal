@@ -22,12 +22,14 @@ const localTest = false
 
 var (
 	fileRoot string
+	tempRoot string
 	fl       fileList.FileList
 )
 
 func LoadConfig() {
 
 	fileRoot = global.Config.FileRoot
+	tempRoot = global.Config.TempRoot
 
 	if localTest {
 		fileRoot = "input/"
@@ -70,9 +72,10 @@ func Server(input typesMesh.ServerMessage) error {
 func list(input typesMFS.Message, sender serverInfo.ServerInfo) error {
 
 	var (
-		err     error
-		list    []syncFile.SyncFile
-		missing []syncFile.SyncFile
+		err      error
+		list     []syncFile.SyncFile
+		missing  []syncFile.SyncFile
+		outdated []syncFile.SyncFile
 	)
 
 	func() {
@@ -89,27 +92,47 @@ func list(input typesMFS.Message, sender serverInfo.ServerInfo) error {
 
 					err = global.LocalFiles.Scan()
 					missing = global.LocalFiles.GetLocalMissing(list)
+					outdated = global.LocalFiles.GetLocalOutdated(list)
 				} else {
 					err = fl.Scan()
 					missing = fl.GetLocalMissing(list)
+					outdated = fl.GetLocalOutdated(list)
 				}
 
 			case 2:
-				global.DownloadFiles.AddList(missing)
+				if global.Config.GetAutoAdd() {
+
+					global.DownloadFiles.AddList(missing)
+				} else {
+
+					global.MeshFiles.AddList(missing)
+				}
+
+				if global.Config.GetAutoUpdate() {
+
+					global.DownloadFiles.AddList(outdated)
+				} else {
+
+					global.OutdatedFiles.AddList(outdated)
+				}
 
 				// update sources
 				global.LocalFiles.SourceUpdateList(list)
+				global.DownloadFiles.SourceUpdateList(list)
 
 			case 3:
-				for _, lf := range global.LocalFiles.GetRemoteDeleted(list) {
+				if global.Config.GetAutoDelete() {
 
-					path := fileRoot + lf.Path
-					if _, err := os.Stat(path); os.IsNotExist(err) == false {
-						console.Output("removing ("+sender.ID+"): "+path, "meshFS")
+					for _, lf := range global.LocalFiles.GetRemoteDeleted(list) {
 
-						err = os.Remove(path)
-						if err == nil {
-							global.LocalFiles.MarkAsDeleted(lf.Path)
+						path := fileRoot + lf.Path
+						if _, err := os.Stat(path); os.IsNotExist(err) == false {
+							console.Output("removing ("+sender.ID+"): "+path, "meshFS")
+
+							err = os.Remove(path)
+							if err == nil {
+								global.LocalFiles.MarkAsDeleted(lf.Path)
+							}
 						}
 					}
 				}
@@ -205,7 +228,7 @@ func upload(input typesMFS.Message, sender serverInfo.ServerInfo) error {
 
 	func() {
 
-		for i := 0; i <= 5; i++ {
+		for i := 0; i <= 6; i++ {
 
 			switch i {
 			case 0:
@@ -213,27 +236,34 @@ func upload(input typesMFS.Message, sender serverInfo.ServerInfo) error {
 				err = json.Unmarshal(input.Content, &ft)
 
 			case 1:
-				// write file
+				// write file to temp dir
 				size := datasize.ByteSize(ft.FileInfo.Size).HumanReadable()
 				console.Output("<-- ("+size+") \""+ft.FileInfo.Path+"\" from \""+sender.ID+"\"", "meshFS")
-				err = file.WriteFile(fileRoot+ft.FileInfo.Path, ft.Content)
+				err = file.WriteFile(tempRoot+ft.FileInfo.Path, ft.Content)
 
 			case 2:
-				// set file date
-				err = os.Chtimes(fileRoot+ft.FileInfo.Path, ft.FileInfo.ModTime, ft.FileInfo.ModTime)
+				sum, err = file.Checksum(tempRoot + ft.FileInfo.Path)
 
 			case 3:
-				sum, err = file.Checksum(fileRoot + ft.FileInfo.Path)
-
-			case 4:
 				if bytes.Compare(sum, ft.FileInfo.Checksum) != 0 {
 					err = errors.New("error checksum")
 
-					os.Remove(fileRoot + ft.FileInfo.Path)
+					os.Remove(tempRoot + ft.FileInfo.Path)
 				}
 
+			case 4:
+				// set file date
+				err = os.Chtimes(tempRoot+ft.FileInfo.Path, ft.FileInfo.ModTime, ft.FileInfo.ModTime)
+
 			case 5:
-				global.DownloadFiles.Reset()
+				// move file from temp to file dir
+				global.LocalFiles.Lock()
+				err = os.Rename(tempRoot+ft.FileInfo.Path, fileRoot+ft.FileInfo.Path)
+				global.LocalFiles.Unlock()
+
+			case 6:
+				global.LocalFiles.Scan()
+				global.DownloadFiles.Delete(ft.FileInfo.Path)
 				global.UploadTime = time.Now()
 			}
 

@@ -111,6 +111,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 		homepage.RegisterPage(page, nav)
 	}
 
+	if build.ModuleMeshFS {
+		meshFileSync.RegisterPage(page, nav)
+	}
+
 	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
 		mesh.RegisterPage(page, nav)
 	}
@@ -155,6 +159,14 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		if nav.IsNext("Homepage") {
 
 			homepage.Render(page, nav, r)
+		}
+	}
+
+	if build.ModuleMeshFS {
+
+		if nav.IsNext("MeshFS") {
+
+			meshFileSync.Render(page, nav, r)
 		}
 	}
 
