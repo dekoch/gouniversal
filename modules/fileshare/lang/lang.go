@@ -5,6 +5,7 @@ import (
 )
 
 type Home struct {
+	Menu      string
 	Title     string
 	NewFolder string
 	Name      string
@@ -41,6 +42,7 @@ func DefaultEn() LangFile {
 
 	l.Header = config.BuildHeader("en", "LangFileshare", 1.0, "Language File")
 
+	l.Home.Menu = "Tools"
 	l.Home.Title = "Fileshare"
 	l.Home.NewFolder = "new Folder"
 	l.Home.Name = "Name"

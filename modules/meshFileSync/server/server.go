@@ -262,7 +262,7 @@ func upload(input typesMFS.Message, sender serverInfo.ServerInfo) error {
 				global.LocalFiles.Unlock()
 
 			case 6:
-				global.LocalFiles.Scan()
+				global.LocalFiles.Add(ft.FileInfo)
 				global.DownloadFiles.Delete(ft.FileInfo.Path)
 				global.UploadTime = time.Now()
 			}

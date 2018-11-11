@@ -24,7 +24,7 @@ func LoadConfig() {
 
 func RegisterPage(page *typesFileshare.Page, nav *navigation.Navigation) {
 
-	nav.Sitemap.Register("Fileshare", "App:Fileshare:Home", page.Lang.Home.Title)
+	nav.Sitemap.Register(page.Lang.Home.Menu, "App:Fileshare:Home", page.Lang.Home.Title)
 }
 
 func parentDir(path string) string {

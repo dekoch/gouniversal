@@ -220,6 +220,8 @@ func (fl *FileList) add(n syncFile.SyncFile) {
 			found = true
 
 			fl.Files[i] = n
+			// keep old ID
+			fl.Files[i].ID = o.ID
 			fl.Files[i].AddSourceList(o.Sources)
 
 			return
