@@ -3,6 +3,8 @@ package sitemap
 import (
 	"fmt"
 	"strings"
+
+	"github.com/dekoch/gouniversal/shared/functions"
 )
 
 type Page struct {
@@ -26,15 +28,20 @@ type Sitemap struct {
 // titleorder = 10
 func (site *Sitemap) RegisterWithOrder(menu string, menuorder int, path string, title string, titleorder int) {
 
-	newPage := make([]Page, 1)
+	if functions.IsEmpty(path) ||
+		functions.IsEmpty(title) {
+		return
+	}
 
-	newPage[0].Menu = menu
-	newPage[0].MenuOrder = menuorder
-	newPage[0].Path = path
-	newPage[0].Title = title
-	newPage[0].TitleOrder = titleorder
+	var n Page
 
-	site.Pages = append(site.Pages, newPage...)
+	n.Menu = menu
+	n.MenuOrder = menuorder
+	n.Path = path
+	n.Title = title
+	n.TitleOrder = titleorder
+
+	site.Pages = append(site.Pages, n)
 }
 
 // Register adds a pagepath + title to a sitemap
@@ -51,13 +58,10 @@ func (site *Sitemap) Register(menu string, path string, title string) {
 func (site *Sitemap) PageList() []string {
 
 	var list []string
-	path := make([]string, 1)
 
 	for i := len(site.Pages) - 1; i >= 0; i-- {
 
-		path[0] = site.Pages[i].Path
-
-		list = append(list, path...)
+		list = append(list, site.Pages[i].Path)
 	}
 
 	return list

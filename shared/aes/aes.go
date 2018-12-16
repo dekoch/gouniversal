@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// NewKey returns a new key for Encrypt/Decrypt
 func NewKey(size int) ([]byte, error) {
 
 	key := make([]byte, size)
@@ -23,6 +24,7 @@ func NewKey(size int) ([]byte, error) {
 		break
 	}
 
+	// create random key
 	_, err := rand.Read(key)
 	if err != nil {
 		return key, err
@@ -31,6 +33,7 @@ func NewKey(size int) ([]byte, error) {
 	return key, nil
 }
 
+// Encrypt returns an encrypted string
 func Encrypt(key []byte, text string) (string, error) {
 
 	block, err := aes.NewCipher(key)
@@ -51,11 +54,16 @@ func Encrypt(key []byte, text string) (string, error) {
 	return finalMsg, nil
 }
 
+// Decrypt returns a decrypted string
 func Decrypt(key []byte, text string) (string, error) {
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
+	}
+
+	if len(text) == 0 {
+		return "", errors.New("no text")
 	}
 
 	decodedMsg, err := base64.URLEncoding.DecodeString(addBase64Padding(text))

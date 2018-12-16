@@ -1,23 +1,29 @@
-package userToken
+package token
 
 import (
 	"sync"
 
+	"github.com/dekoch/gouniversal/shared/functions"
+
 	"github.com/google/uuid"
 )
 
-type uToken struct {
+type tokenContent struct {
 	uid   string
 	token string
 }
 
-type UserToken struct {
+type Token struct {
 	mut    sync.RWMutex
-	tokens []uToken
+	tokens []tokenContent
 }
 
 // New returns and adds a unique token
-func (t *UserToken) New(uid string) string {
+func (t *Token) New(uid string) string {
+
+	if functions.IsEmpty(uid) {
+		return ""
+	}
 
 	t.mut.Lock()
 	defer t.mut.Unlock()
@@ -33,17 +39,22 @@ func (t *UserToken) New(uid string) string {
 		}
 	}
 
-	newToken := make([]uToken, 1)
-	newToken[0].uid = uid
-	newToken[0].token = ut
+	var newToken tokenContent
+	newToken.uid = uid
+	newToken.token = ut
 
-	t.tokens = append(t.tokens, newToken...)
+	t.tokens = append(t.tokens, newToken)
 
 	return ut
 }
 
 // Check returns true, if the UUID and token match with items inside list
-func (t *UserToken) Check(uid string, ut string) bool {
+func (t *Token) Check(uid string, ut string) bool {
+
+	if functions.IsEmpty(uid) ||
+		functions.IsEmpty(ut) {
+		return false
+	}
 
 	t.mut.RLock()
 	defer t.mut.RUnlock()
@@ -64,21 +75,22 @@ func (t *UserToken) Check(uid string, ut string) bool {
 }
 
 // Remove removes UUID and token from list
-func (t *UserToken) Remove(uid string) {
+func (t *Token) Remove(uid string) {
+
+	if functions.IsEmpty(uid) {
+		return
+	}
 
 	t.mut.Lock()
 	defer t.mut.Unlock()
 
-	var l []uToken
-	n := make([]uToken, 1)
+	var l []tokenContent
 
 	for i := 0; i < len(t.tokens); i++ {
 
 		if uid != t.tokens[i].uid {
 
-			n[0] = t.tokens[i]
-
-			l = append(l, n...)
+			l = append(l, t.tokens[i])
 		}
 	}
 

@@ -69,3 +69,13 @@ decentralised connectivity control
 
 ## HeatingMath
 goroutine demo
+
+# used packages
+github.com/asaskevich/govalidator
+github.com/goburrow/modbus
+github.com/goburrow/serial
+github.com/google/uuid
+github.com/gorilla/context
+github.com/gorilla/securecookie
+github.com/gorilla/sessions
+github.com/tevino/abool

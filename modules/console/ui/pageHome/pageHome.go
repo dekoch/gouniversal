@@ -11,7 +11,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
-	"github.com/dekoch/gouniversal/shared/stringArray"
+	"github.com/dekoch/gouniversal/shared/stringarray"
 )
 
 // SSE writes Server-Sent Events to an HTTP client.
@@ -24,7 +24,7 @@ type consoleMessage struct {
 
 var (
 	messages      = make(chan consoleMessage)
-	clients       stringArray.StringArray
+	clients       stringarray.StringArray
 	streamEnabled bool
 )
 

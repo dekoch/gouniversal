@@ -1,4 +1,4 @@
-package stringArray
+package stringarray
 
 import "sync"
 
@@ -12,10 +12,15 @@ func (s *StringArray) Add(str string) {
 	s.mut.Lock()
 	defer s.mut.Unlock()
 
-	newString := make([]string, 1)
-	newString[0] = str
+	s.str = append(s.str, str)
+}
 
-	s.str = append(s.str, newString...)
+func (s *StringArray) AddList(list []string) {
+
+	for _, l := range list {
+
+		s.Add(l)
+	}
 }
 
 func (s *StringArray) List() []string {
@@ -40,15 +45,12 @@ func (s *StringArray) Remove(str string) {
 	defer s.mut.Unlock()
 
 	var l []string
-	n := make([]string, 1)
 
 	for i := 0; i < len(s.str); i++ {
 
 		if str != s.str[i] {
 
-			n[0] = s.str[i]
-
-			l = append(l, n...)
+			l = append(l, s.str[i])
 		}
 	}
 

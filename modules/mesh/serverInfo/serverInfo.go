@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dekoch/gouniversal/shared/getPublicIP"
+	"github.com/dekoch/gouniversal/shared/getpublicip"
 )
 
 type ServerInfo struct {
@@ -90,7 +90,7 @@ func (si *ServerInfo) publicAddress() {
 
 		publicAddress = ""
 
-		ip, err := getPublicIP.Get()
+		ip, err := getpublicip.Get()
 		if err == nil {
 			publicAddress = ip
 		}

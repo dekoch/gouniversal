@@ -1,4 +1,4 @@
-package getPublicIP
+package getpublicip
 
 import (
 	"errors"
@@ -14,6 +14,7 @@ var servers = [...]string{"https://bot.whatismyipaddress.com",
 	"https://api.ipify.org?format=text",
 	"https://myexternalip.com/raw"}
 
+// Get returns your public IP
 func Get() (string, error) {
 
 	for _, server := range servers {
