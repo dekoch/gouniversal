@@ -19,7 +19,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/tevino/abool"
 
-	meshFSServer "github.com/dekoch/gouniversal/modules/meshFileSync/server"
+	meshFSServer "github.com/dekoch/gouniversal/modules/meshfilesync/server"
 )
 
 const debug = false

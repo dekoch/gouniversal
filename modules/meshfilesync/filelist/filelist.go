@@ -1,4 +1,4 @@
-package fileList
+package filelist
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/syncFile"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/syncfile"
 	"github.com/dekoch/gouniversal/shared/io/fileInfo"
 )
 
@@ -26,7 +26,7 @@ const (
 )
 
 type FileList struct {
-	Files    []syncFile.SyncFile
+	Files    []syncfile.SyncFile
 	path     string
 	serverID string
 }
@@ -120,7 +120,7 @@ func (fl *FileList) Scan() error {
 	}
 
 	var found bool
-	var n syncFile.SyncFile
+	var n syncfile.SyncFile
 
 	// new files
 	for _, lf := range localFiles {
@@ -190,7 +190,7 @@ func (fl *FileList) Scan() error {
 	return nil
 }
 
-func (fl *FileList) Add(n syncFile.SyncFile) {
+func (fl *FileList) Add(n syncfile.SyncFile) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -198,7 +198,7 @@ func (fl *FileList) Add(n syncFile.SyncFile) {
 	fl.add(n)
 }
 
-func (fl *FileList) AddList(files []syncFile.SyncFile) {
+func (fl *FileList) AddList(files []syncfile.SyncFile) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -209,7 +209,7 @@ func (fl *FileList) AddList(files []syncFile.SyncFile) {
 	}
 }
 
-func (fl *FileList) add(n syncFile.SyncFile) {
+func (fl *FileList) add(n syncfile.SyncFile) {
 
 	found := false
 
@@ -233,7 +233,7 @@ func (fl *FileList) add(n syncFile.SyncFile) {
 	}
 }
 
-func (fl *FileList) SourceUpdateList(files []syncFile.SyncFile) {
+func (fl *FileList) SourceUpdateList(files []syncfile.SyncFile) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -244,7 +244,7 @@ func (fl *FileList) SourceUpdateList(files []syncFile.SyncFile) {
 	}
 }
 
-func (fl *FileList) SourceUpdate(n syncFile.SyncFile) {
+func (fl *FileList) SourceUpdate(n syncfile.SyncFile) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -252,7 +252,7 @@ func (fl *FileList) SourceUpdate(n syncFile.SyncFile) {
 	fl.sourceUpdate(n)
 }
 
-func (fl *FileList) sourceUpdate(n syncFile.SyncFile) {
+func (fl *FileList) sourceUpdate(n syncfile.SyncFile) {
 
 	for i, o := range fl.Files {
 
@@ -282,7 +282,7 @@ func (fl *FileList) SourceClean(servers []serverInfo.ServerInfo) {
 	}
 }
 
-func (fl *FileList) Get() []syncFile.SyncFile {
+func (fl *FileList) Get() []syncfile.SyncFile {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -295,16 +295,16 @@ func (fl *FileList) Reset() {
 	mut.Lock()
 	defer mut.Unlock()
 
-	var empty []syncFile.SyncFile
+	var empty []syncfile.SyncFile
 	fl.Files = empty
 }
 
-func (fl *FileList) GetLocalMissing(files []syncFile.SyncFile) []syncFile.SyncFile {
+func (fl *FileList) GetLocalMissing(files []syncfile.SyncFile) []syncfile.SyncFile {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	var ret []syncFile.SyncFile
+	var ret []syncfile.SyncFile
 
 	var add bool
 	var found bool
@@ -340,12 +340,12 @@ func (fl *FileList) GetLocalMissing(files []syncFile.SyncFile) []syncFile.SyncFi
 	return ret
 }
 
-func (fl *FileList) GetLocalOutdated(files []syncFile.SyncFile) []syncFile.SyncFile {
+func (fl *FileList) GetLocalOutdated(files []syncfile.SyncFile) []syncfile.SyncFile {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	var ret []syncFile.SyncFile
+	var ret []syncfile.SyncFile
 
 	var add bool
 
@@ -380,12 +380,12 @@ func (fl *FileList) GetLocalOutdated(files []syncFile.SyncFile) []syncFile.SyncF
 	return ret
 }
 
-func (fl *FileList) GetRemoteDeleted(files []syncFile.SyncFile) []syncFile.SyncFile {
+func (fl *FileList) GetRemoteDeleted(files []syncfile.SyncFile) []syncfile.SyncFile {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	var ret []syncFile.SyncFile
+	var ret []syncfile.SyncFile
 
 	for _, local := range fl.Files {
 
@@ -408,7 +408,7 @@ func (fl *FileList) Delete(path string) {
 	mut.Lock()
 	defer mut.Unlock()
 
-	var l []syncFile.SyncFile
+	var l []syncfile.SyncFile
 
 	for _, file := range fl.Files {
 
@@ -438,7 +438,7 @@ func (fl *FileList) MarkAsDeleted(path string) {
 	}
 }
 
-func compare(in1 syncFile.SyncFile, in2 syncFile.SyncFile) fileState {
+func compare(in1 syncfile.SyncFile, in2 syncfile.SyncFile) fileState {
 
 	ret := stateError
 

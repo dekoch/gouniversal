@@ -1,4 +1,4 @@
-package moduleConfig
+package moduleconfig
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/dekoch/gouniversal/modules/meshFileSync/syncFile"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/syncfile"
 	"github.com/dekoch/gouniversal/shared/config"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
@@ -24,7 +24,7 @@ type ModuleConfig struct {
 	AutoAdd      bool
 	AutoUpdate   bool
 	AutoDelete   bool
-	LocalFiles   []syncFile.SyncFile
+	LocalFiles   []syncfile.SyncFile
 }
 
 var (

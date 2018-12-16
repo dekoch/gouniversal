@@ -6,12 +6,12 @@ import (
 	"github.com/dekoch/gouniversal/build"
 	"github.com/dekoch/gouniversal/modules/console"
 	"github.com/dekoch/gouniversal/modules/fileshare"
-	"github.com/dekoch/gouniversal/modules/heatingMath"
+	"github.com/dekoch/gouniversal/modules/heatingmath"
 	"github.com/dekoch/gouniversal/modules/homepage"
 	"github.com/dekoch/gouniversal/modules/logviewer"
 	"github.com/dekoch/gouniversal/modules/mediadownloader"
 	"github.com/dekoch/gouniversal/modules/mesh"
-	"github.com/dekoch/gouniversal/modules/meshFileSync"
+	"github.com/dekoch/gouniversal/modules/meshfilesync"
 	"github.com/dekoch/gouniversal/modules/messenger"
 	"github.com/dekoch/gouniversal/modules/modbustest"
 	"github.com/dekoch/gouniversal/modules/openespm"
@@ -63,7 +63,7 @@ func LoadConfig() {
 
 	if build.ModuleMeshFS {
 		sharedConsole.Log("MeshFileSync enabled", "Module")
-		meshFileSync.LoadConfig()
+		meshfilesync.LoadConfig()
 	}
 
 	if build.ModuleMediaDownloader {
@@ -78,7 +78,7 @@ func LoadConfig() {
 
 	if build.ModuleHeatingMath {
 		sharedConsole.Log("HeatingMath enabled", "Module")
-		heatingMath.LoadConfig()
+		heatingmath.LoadConfig()
 	}
 }
 
@@ -112,7 +112,7 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 	}
 
 	if build.ModuleMeshFS {
-		meshFileSync.RegisterPage(page, nav)
+		meshfilesync.RegisterPage(page, nav)
 	}
 
 	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
@@ -166,7 +166,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 		if nav.IsNext("MeshFS") {
 
-			meshFileSync.Render(page, nav, r)
+			meshfilesync.Render(page, nav, r)
 		}
 	}
 
@@ -205,7 +205,7 @@ func Exit() {
 	}
 
 	if build.ModuleMeshFS {
-		meshFileSync.Exit()
+		meshfilesync.Exit()
 	}
 
 	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {

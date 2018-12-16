@@ -1,4 +1,4 @@
-package meshFileSync
+package meshfilesync
 
 import (
 	"math/rand"
@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/dekoch/gouniversal/modules/mesh"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/client"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/global"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/lang"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/server"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/ui"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/client"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/global"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/lang"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/server"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/ui"
 	"github.com/dekoch/gouniversal/shared/language"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"

@@ -10,8 +10,8 @@ import (
 	"github.com/dekoch/gouniversal/modules/mesh"
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
 	"github.com/dekoch/gouniversal/modules/mesh/typesMesh"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/global"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/typesMFS"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/global"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/typesmfs"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/datasize"
 	"github.com/dekoch/gouniversal/shared/io/file"
@@ -101,8 +101,8 @@ func sendFileList() {
 				fmt.Println(err)
 			} else {
 
-				var msg typesMFS.Message
-				msg.Type = typesMFS.MessList
+				var msg typesmfs.Message
+				msg.Type = typesmfs.MessList
 				msg.Version = 1.0
 				msg.Content = b
 
@@ -158,7 +158,7 @@ func sendUploadReq() {
 				server   serverInfo.ServerInfo
 				serverID string
 
-				msg typesMFS.Message
+				msg typesmfs.Message
 			)
 
 			thisID := mesh.GetServerInfo().ID
@@ -189,7 +189,7 @@ func sendUploadReq() {
 							server, err = mesh.GetServerWithID(serverID)
 
 						case 2:
-							msg.Type = typesMFS.MessFileUploadReq
+							msg.Type = typesmfs.MessFileUploadReq
 							msg.Version = 1.0
 							msg.Content, err = json.Marshal(missingFile)
 
@@ -231,8 +231,8 @@ func uploadFiles() {
 			server   serverInfo.ServerInfo
 			serverID string
 
-			msg typesMFS.Message
-			ft  typesMFS.FileTransfer
+			msg typesmfs.Message
+			ft  typesmfs.FileTransfer
 		)
 
 		missingFiles := global.UploadFiles.Get()
@@ -266,7 +266,7 @@ func uploadFiles() {
 
 					case 3:
 						msg.Version = 1.0
-						msg.Type = typesMFS.MessFileUploadStart
+						msg.Type = typesmfs.MessFileUploadStart
 						msg.Content, err = json.Marshal(ft)
 
 					case 4:
@@ -282,7 +282,7 @@ func uploadFiles() {
 						ft.Content, err = file.ReadFile(fileRoot + ft.FileInfo.Path)
 
 					case 7:
-						msg.Type = typesMFS.MessFileUpload
+						msg.Type = typesmfs.MessFileUpload
 						msg.Content, err = json.Marshal(ft)
 
 					case 8:

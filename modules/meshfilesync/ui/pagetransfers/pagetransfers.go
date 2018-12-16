@@ -1,23 +1,23 @@
-package pageTransfers
+package pagetransfers
 
 import (
 	"html/template"
 	"net/http"
 
-	"github.com/dekoch/gouniversal/modules/meshFileSync/global"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/lang"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/typesMFS"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/global"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/lang"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/typesmfs"
 	"github.com/dekoch/gouniversal/shared/datasize"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
 )
 
-func RegisterPage(page *typesMFS.Page, nav *navigation.Navigation) {
+func RegisterPage(page *typesmfs.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register(page.Lang.Transfers.Menu, "App:MeshFS:Transfers", page.Lang.Transfers.Title)
 }
 
-func Render(page *typesMFS.Page, nav *navigation.Navigation, r *http.Request) {
+func Render(page *typesmfs.Page, nav *navigation.Navigation, r *http.Request) {
 
 	button := r.FormValue("edit")
 

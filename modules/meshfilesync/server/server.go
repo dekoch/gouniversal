@@ -9,10 +9,10 @@ import (
 
 	"github.com/dekoch/gouniversal/modules/mesh/serverInfo"
 	"github.com/dekoch/gouniversal/modules/mesh/typesMesh"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/fileList"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/global"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/syncFile"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/typesMFS"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/filelist"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/global"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/syncfile"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/typesmfs"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/datasize"
 	"github.com/dekoch/gouniversal/shared/io/file"
@@ -23,7 +23,7 @@ const localTest = false
 var (
 	fileRoot string
 	tempRoot string
-	fl       fileList.FileList
+	fl       filelist.FileList
 )
 
 func LoadConfig() {
@@ -41,25 +41,25 @@ func LoadConfig() {
 
 func Server(input typesMesh.ServerMessage) error {
 
-	var msg typesMFS.Message
+	var msg typesmfs.Message
 
 	err := json.Unmarshal(input.Message.Content, &msg)
 	if err == nil {
 
 		switch msg.Type {
-		case typesMFS.MessList:
+		case typesmfs.MessList:
 
 			err = list(msg, input.Sender)
 
-		case typesMFS.MessFileUploadReq:
+		case typesmfs.MessFileUploadReq:
 
 			err = uploadReq(msg, input.Sender)
 
-		case typesMFS.MessFileUploadStart:
+		case typesmfs.MessFileUploadStart:
 
 			err = uploadStart(msg, input.Sender)
 
-		case typesMFS.MessFileUpload:
+		case typesmfs.MessFileUpload:
 
 			err = upload(msg, input.Sender)
 		}
@@ -69,13 +69,13 @@ func Server(input typesMesh.ServerMessage) error {
 }
 
 // get filelist from client
-func list(input typesMFS.Message, sender serverInfo.ServerInfo) error {
+func list(input typesmfs.Message, sender serverInfo.ServerInfo) error {
 
 	var (
 		err      error
-		list     []syncFile.SyncFile
-		missing  []syncFile.SyncFile
-		outdated []syncFile.SyncFile
+		list     []syncfile.SyncFile
+		missing  []syncfile.SyncFile
+		outdated []syncfile.SyncFile
 	)
 
 	func() {
@@ -148,11 +148,11 @@ func list(input typesMFS.Message, sender serverInfo.ServerInfo) error {
 	return err
 }
 
-func uploadReq(input typesMFS.Message, sender serverInfo.ServerInfo) error {
+func uploadReq(input typesmfs.Message, sender serverInfo.ServerInfo) error {
 
 	var (
 		err  error
-		file syncFile.SyncFile
+		file syncfile.SyncFile
 	)
 
 	func() {
@@ -183,11 +183,11 @@ func uploadReq(input typesMFS.Message, sender serverInfo.ServerInfo) error {
 	return err
 }
 
-func uploadStart(input typesMFS.Message, sender serverInfo.ServerInfo) error {
+func uploadStart(input typesmfs.Message, sender serverInfo.ServerInfo) error {
 
 	var (
 		err error
-		ft  typesMFS.FileTransfer
+		ft  typesmfs.FileTransfer
 	)
 
 	func() {
@@ -218,11 +218,11 @@ func uploadStart(input typesMFS.Message, sender serverInfo.ServerInfo) error {
 }
 
 // client can upload missing files to server
-func upload(input typesMFS.Message, sender serverInfo.ServerInfo) error {
+func upload(input typesmfs.Message, sender serverInfo.ServerInfo) error {
 
 	var (
 		err error
-		ft  typesMFS.FileTransfer
+		ft  typesmfs.FileTransfer
 		sum []byte
 	)
 

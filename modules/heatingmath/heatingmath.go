@@ -1,4 +1,4 @@
-package heatingMath
+package heatingmath
 
 import (
 	"fmt"

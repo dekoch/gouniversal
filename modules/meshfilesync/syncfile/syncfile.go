@@ -1,4 +1,4 @@
-package syncFile
+package syncfile
 
 import (
 	"errors"

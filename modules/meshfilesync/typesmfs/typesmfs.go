@@ -1,8 +1,8 @@
-package typesMFS
+package typesmfs
 
 import (
-	"github.com/dekoch/gouniversal/modules/meshFileSync/lang"
-	"github.com/dekoch/gouniversal/modules/meshFileSync/syncFile"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/lang"
+	"github.com/dekoch/gouniversal/modules/meshfilesync/syncfile"
 )
 
 type MessageType int
@@ -23,7 +23,7 @@ type Message struct {
 }
 
 type FileTransfer struct {
-	FileInfo syncFile.SyncFile
+	FileInfo syncfile.SyncFile
 	Content  []byte
 }
 
