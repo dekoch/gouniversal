@@ -12,14 +12,14 @@ import (
 
 	"github.com/dekoch/gouniversal/modules"
 	"github.com/dekoch/gouniversal/program/global"
-	"github.com/dekoch/gouniversal/program/guestManagement"
-	"github.com/dekoch/gouniversal/program/ui/pageHome"
-	"github.com/dekoch/gouniversal/program/ui/pageLogin"
+	"github.com/dekoch/gouniversal/program/guestmanagement"
+	"github.com/dekoch/gouniversal/program/ui/pagehome"
+	"github.com/dekoch/gouniversal/program/ui/pagelogin"
 	"github.com/dekoch/gouniversal/program/ui/settings"
 	"github.com/dekoch/gouniversal/program/ui/uifunc"
-	"github.com/dekoch/gouniversal/program/userManagement"
+	"github.com/dekoch/gouniversal/program/usermanagement"
 	"github.com/dekoch/gouniversal/shared/alert"
-	"github.com/dekoch/gouniversal/shared/clientInfo"
+	"github.com/dekoch/gouniversal/shared/clientinfo"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
@@ -40,7 +40,7 @@ type menuDropdown struct {
 var (
 	store      = new(sessions.CookieStore)
 	cookieName string
-	guest      guestManagement.GuestManagement
+	guest      guestmanagement.GuestManagement
 )
 
 func setCookie(parameter string, value string, w http.ResponseWriter, r *http.Request) {
@@ -143,8 +143,8 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	}
 
 	// title
-	if global.UiConfig.Title != "" {
-		c.Title = global.UiConfig.Title + " - " + c.MenuBrand
+	if global.UIConfig.Title != "" {
+		c.Title = global.UIConfig.Title + " - " + c.MenuBrand
 	} else {
 		c.Title = c.MenuBrand
 	}
@@ -161,7 +161,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 		if pages[i].Menu != "" {
 
-			if userManagement.IsPageAllowed(pages[i].Path, nav.User) ||
+			if usermanagement.IsPageAllowed(pages[i].Path, nav.User) ||
 				nav.GodMode {
 
 				dropdownFound := false
@@ -280,7 +280,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	c.UUID = template.HTML(nav.User.UUID)
 	c.Content = template.HTML(page.Content)
 
-	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"program.html", c)
+	p, err := functions.PageToString(global.UIConfig.ProgramFileRoot+"program.html", c)
 	if err != nil {
 		console.Log(err, "ui.go")
 		p = err.Error()
@@ -298,9 +298,9 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// redirect to HTTPS if enabled
-		if global.UiConfig.HTTPS.Enabled {
+		if global.UIConfig.HTTPS.Enabled {
 			host := strings.Split(r.Host, ":")
-			port := strconv.Itoa(global.UiConfig.HTTPS.Port)
+			port := strconv.Itoa(global.UIConfig.HTTPS.Port)
 
 			http.Redirect(w, r, "https://"+host[0]+":"+port+"/app/", http.StatusSeeOther)
 		} else {
@@ -308,13 +308,13 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		}
 
 	} else if r.URL.Path == "/favicon.ico" {
-		icon := global.UiConfig.StaticFileRoot + "favicon.ico"
+		icon := global.UIConfig.StaticFileRoot + "favicon.ico"
 
 		if _, err := os.Stat(icon); os.IsNotExist(err) == false {
 			http.ServeFile(w, r, icon)
 		}
 	} else {
-		console.Log("Error 404 \""+r.URL.Path+"\" ("+clientInfo.String(r)+")", "handleRoot()")
+		console.Log("Error 404 \""+r.URL.Path+"\" ("+clientinfo.String(r)+")", "handleRoot()")
 
 		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(http.StatusNotFound)
@@ -332,11 +332,11 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 	global.Lang.SelectLang(nav.User.Lang, &page.Lang)
 
-	pageHome.RegisterPage(page, nav)
+	pagehome.RegisterPage(page, nav)
 	modules.RegisterPage(page, nav)
 	settings.RegisterPage(page, nav)
 	nav.Sitemap.Register("Program", "Program:Exit", page.Lang.Exit.Title)
-	pageLogin.RegisterPage(page, nav)
+	pagelogin.RegisterPage(page, nav)
 
 	newPath := r.FormValue("navigation")
 
@@ -353,7 +353,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 			if p.Menu != "" && nav.Path == "init" {
 
-				if userManagement.IsPageAllowed(p.Path, nav.User) ||
+				if usermanagement.IsPageAllowed(p.Path, nav.User) ||
 					nav.GodMode {
 
 					nav.Path = p.Path
@@ -384,7 +384,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 			if nav.IsNext("Home") {
 
-				pageHome.Render(page, nav, r)
+				pagehome.Render(page, nav, r)
 
 			} else if nav.IsNext("Settings") {
 
@@ -439,16 +439,16 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 				if valid {
 
-					console.Log("\""+name+"\" logged in ("+clientInfo.String(r)+")", "Login")
+					console.Log("\""+name+"\" logged in ("+clientinfo.String(r)+")", "Login")
 
 					nav.RedirectPath("Program:Home", false)
 				} else {
 
 					if functions.IsEmpty(name) == false {
-						console.Log("failed login with user \""+name+"\" ("+clientInfo.String(r)+")", "Login")
+						console.Log("failed login with user \""+name+"\" ("+clientinfo.String(r)+")", "Login")
 					}
 
-					pageLogin.Render(page, nav, r)
+					pagelogin.Render(page, nav, r)
 				}
 
 			} else if nav.IsNext("Logout") {
@@ -519,7 +519,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	sm = nav.Sitemap.PageList()
 	console.Output("####")
 	for i := 0; i < len(sm); i++ {
-		if userManagement.IsPageAllowed(sm[i], nav.User) {
+		if usermanagement.IsPageAllowed(sm[i], nav.User) {
 			console.Output(sm[i])
 		}
 	}
@@ -533,7 +533,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
-	if global.UiConfig.Recovery {
+	if global.UIConfig.Recovery {
 
 		button := r.FormValue("recovery")
 
@@ -543,8 +543,8 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
 		} else if button == "disablerecovery" {
 
-			global.UiConfig.Recovery = false
-			global.UiConfig.SaveConfig()
+			global.UIConfig.Recovery = false
+			global.UIConfig.SaveConfig()
 
 		} else if button == "cookies" {
 
@@ -565,7 +565,7 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
 		re.Temp = ""
 
-		templ, err := template.ParseFiles(global.UiConfig.ProgramFileRoot + "recovery.html")
+		templ, err := template.ParseFiles(global.UIConfig.ProgramFileRoot + "recovery.html")
 		if err != nil {
 			console.Log(err, "")
 		}
@@ -578,12 +578,12 @@ func handleRecovery(w http.ResponseWriter, r *http.Request) {
 func StartServer() {
 	console.Log("starting webserver...", " ")
 
-	if _, err := os.Stat(global.UiConfig.ProgramFileRoot); os.IsNotExist(err) {
+	if _, err := os.Stat(global.UIConfig.ProgramFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
 		console.Log("error: ProgramFileRoot not found", "ui.go")
 	}
 
-	if _, err := os.Stat(global.UiConfig.StaticFileRoot); os.IsNotExist(err) {
+	if _, err := os.Stat(global.UIConfig.StaticFileRoot); os.IsNotExist(err) {
 		// if not found, exit program
 		console.Log("error: StaticFileRoot not found", "ui.go")
 	}
@@ -606,55 +606,55 @@ func StartServer() {
 		modules.LoadConfig()
 
 		// if HTTPS is enabled, check cert and key file
-		if global.UiConfig.HTTPS.Enabled {
-			if _, err = os.Stat(global.UiConfig.HTTPS.CertFile); os.IsNotExist(err) {
-				global.UiConfig.HTTPS.Enabled = false
-				console.Log("missing CertFile \""+global.UiConfig.HTTPS.CertFile+"\"", " ")
+		if global.UIConfig.HTTPS.Enabled {
+			if _, err = os.Stat(global.UIConfig.HTTPS.CertFile); os.IsNotExist(err) {
+				global.UIConfig.HTTPS.Enabled = false
+				console.Log("missing CertFile \""+global.UIConfig.HTTPS.CertFile+"\"", " ")
 			}
 
-			if _, err = os.Stat(global.UiConfig.HTTPS.KeyFile); os.IsNotExist(err) {
-				global.UiConfig.HTTPS.Enabled = false
-				console.Log("missing KeyFile \""+global.UiConfig.HTTPS.KeyFile+"\"", " ")
+			if _, err = os.Stat(global.UIConfig.HTTPS.KeyFile); os.IsNotExist(err) {
+				global.UIConfig.HTTPS.Enabled = false
+				console.Log("missing KeyFile \""+global.UIConfig.HTTPS.KeyFile+"\"", " ")
 			}
 		}
 
 		// configure server
-		fs := http.FileServer(http.Dir(global.UiConfig.StaticFileRoot))
+		fs := http.FileServer(http.Dir(global.UIConfig.StaticFileRoot))
 		http.Handle("/static/", http.StripPrefix("/static/", fs))
 		http.HandleFunc("/", handleRoot)
 		http.HandleFunc("/app/", handleApp)
 		http.HandleFunc("/recovery/", handleRecovery)
 
 		// start HTTP server
-		if global.UiConfig.HTTP.Enabled {
+		if global.UIConfig.HTTP.Enabled {
 
-			go http.ListenAndServe(":"+strconv.Itoa(global.UiConfig.HTTP.Port), nil)
+			go http.ListenAndServe(":"+strconv.Itoa(global.UIConfig.HTTP.Port), nil)
 		}
 
 		// start HTTPS server
-		if global.UiConfig.HTTPS.Enabled {
+		if global.UIConfig.HTTPS.Enabled {
 
-			go http.ListenAndServeTLS(":"+strconv.Itoa(global.UiConfig.HTTPS.Port), global.UiConfig.HTTPS.CertFile, global.UiConfig.HTTPS.KeyFile, nil)
+			go http.ListenAndServeTLS(":"+strconv.Itoa(global.UIConfig.HTTPS.Port), global.UIConfig.HTTPS.CertFile, global.UIConfig.HTTPS.KeyFile, nil)
 		}
 
 		for _, a := range addrs {
 			if ipnet, ok := a.(*net.IPNet); ok {
 				if ipnet.IP.To4() != nil {
 
-					if global.UiConfig.HTTP.Enabled {
+					if global.UIConfig.HTTP.Enabled {
 
-						console.Log("http://"+ipnet.IP.String()+":"+strconv.Itoa(global.UiConfig.HTTP.Port), " ")
+						console.Log("http://"+ipnet.IP.String()+":"+strconv.Itoa(global.UIConfig.HTTP.Port), " ")
 					}
 
-					if global.UiConfig.HTTPS.Enabled {
+					if global.UIConfig.HTTPS.Enabled {
 
-						console.Log("https://"+ipnet.IP.String()+":"+strconv.Itoa(global.UiConfig.HTTPS.Port), " ")
+						console.Log("https://"+ipnet.IP.String()+":"+strconv.Itoa(global.UIConfig.HTTPS.Port), " ")
 					}
 				}
 			}
 		}
 
-		if global.UiConfig.Recovery {
+		if global.UIConfig.Recovery {
 			console.Log("WARNING! Recovery Mode ist enabled", " ")
 		}
 	} else {

@@ -3,8 +3,8 @@ package navigation
 import (
 	"strings"
 
-	"github.com/dekoch/gouniversal/program/userConfig"
-	"github.com/dekoch/gouniversal/program/userManagement"
+	"github.com/dekoch/gouniversal/program/userconfig"
+	"github.com/dekoch/gouniversal/program/usermanagement"
 	"github.com/dekoch/gouniversal/shared/sitemap"
 )
 
@@ -15,7 +15,7 @@ type Navigation struct {
 	Redirect       string
 	PathAfterLogin string
 	Home           string
-	User           userConfig.User
+	User           userconfig.User
 	Guest          bool
 	GodMode        bool
 	Sitemap        sitemap.Sitemap
@@ -86,7 +86,7 @@ func (nav *Navigation) NavigatePath(path string) {
 
 	if len(path) > 0 {
 
-		if userManagement.IsPageAllowed(path, nav.User) ||
+		if usermanagement.IsPageAllowed(path, nav.User) ||
 			nav.GodMode {
 
 			nav.Path = path

@@ -1,4 +1,4 @@
-package groupManagement
+package groupmanagement
 
 import (
 	"github.com/dekoch/gouniversal/program/global"

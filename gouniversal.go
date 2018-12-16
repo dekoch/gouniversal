@@ -25,11 +25,11 @@ func main() {
 
 	if build.UIEnabled {
 
-		global.UiConfig.LoadConfig()
+		global.UIConfig.LoadConfig()
 	}
 
 	// UI or console mode
-	if build.UIEnabled && global.UiConfig.UIEnabled {
+	if build.UIEnabled && global.UIConfig.UIEnabled {
 		// start UI
 		go ui.StartServer()
 	} else {
@@ -66,7 +66,7 @@ func main() {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	if build.UIEnabled && global.UiConfig.UIEnabled {
+	if build.UIEnabled && global.UIConfig.UIEnabled {
 		ui.Exit()
 	}
 

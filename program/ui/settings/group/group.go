@@ -3,8 +3,8 @@ package group
 import (
 	"net/http"
 
-	"github.com/dekoch/gouniversal/program/ui/settings/group/pageGroupEdit"
-	"github.com/dekoch/gouniversal/program/ui/settings/group/pageGroupList"
+	"github.com/dekoch/gouniversal/program/ui/settings/group/pagegroupedit"
+	"github.com/dekoch/gouniversal/program/ui/settings/group/pagegrouplist"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 )
@@ -12,8 +12,8 @@ import (
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Program", "Program:Settings:Group", page.Lang.Settings.Group.Title)
-	pageGroupList.RegisterPage(page, nav)
-	pageGroupEdit.RegisterPage(page, nav)
+	pagegrouplist.RegisterPage(page, nav)
+	pagegroupedit.RegisterPage(page, nav)
 }
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
@@ -24,11 +24,11 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	if nav.IsNext("List") {
 
-		pageGroupList.Render(page, nav, r)
+		pagegrouplist.Render(page, nav, r)
 
 	} else if nav.IsNext("Edit") {
 
-		pageGroupEdit.Render(page, nav, r)
+		pagegroupedit.Render(page, nav, r)
 	} else {
 		nav.RedirectPath("404", true)
 	}

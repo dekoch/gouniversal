@@ -1,4 +1,4 @@
-package pageUserList
+package pageuserlist
 
 import (
 	"html/template"
@@ -50,7 +50,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	c.UserList = template.HTML(tbody)
 
-	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"settings/userlist.html", c)
+	p, err := functions.PageToString(global.UIConfig.ProgramFileRoot+"settings/userlist.html", c)
 	if err == nil {
 		page.Content += p
 	} else {

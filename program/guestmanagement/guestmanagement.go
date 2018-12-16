@@ -1,17 +1,17 @@
-package guestManagement
+package guestmanagement
 
 import (
 	"sync"
 
 	"github.com/dekoch/gouniversal/program/global"
-	"github.com/dekoch/gouniversal/program/userConfig"
+	"github.com/dekoch/gouniversal/program/userconfig"
 	"github.com/dekoch/gouniversal/shared/console"
 
 	"github.com/google/uuid"
 )
 
 type guestUser struct {
-	User          userConfig.User
+	User          userconfig.User
 	LoginAttempts int
 }
 
@@ -21,7 +21,7 @@ type GuestManagement struct {
 
 var mut sync.RWMutex
 
-func (c *GuestManagement) NewGuest() userConfig.User {
+func (c *GuestManagement) NewGuest() userconfig.User {
 
 	newGuest := make([]guestUser, 1)
 
@@ -44,7 +44,7 @@ func (c *GuestManagement) NewGuest() userConfig.User {
 
 	guests := len(c.User)
 	// if number of guests exceeds maximum, remove the oldest
-	if guests > global.UiConfig.MaxGuests {
+	if guests > global.UIConfig.MaxGuests {
 		c.User = c.User[1:guests]
 	}
 
@@ -53,7 +53,7 @@ func (c *GuestManagement) NewGuest() userConfig.User {
 	return newGuest[0].User
 }
 
-func (c *GuestManagement) SelectGuest(uid string) userConfig.User {
+func (c *GuestManagement) SelectGuest(uid string) userconfig.User {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -67,7 +67,7 @@ func (c *GuestManagement) SelectGuest(uid string) userConfig.User {
 		}
 	}
 
-	var user userConfig.User
+	var user userconfig.User
 	user.State = -1
 	return user
 }
@@ -84,7 +84,7 @@ func (c *GuestManagement) MaxLoginAttempts(uid string) bool {
 
 			c.User[u].LoginAttempts++
 
-			if c.User[u].LoginAttempts > global.UiConfig.MaxLoginAttempts {
+			if c.User[u].LoginAttempts > global.UIConfig.MaxLoginAttempts {
 				return true
 			}
 

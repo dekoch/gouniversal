@@ -1,4 +1,4 @@
-package uiConfig
+package uiconfig
 
 import (
 	"encoding/json"
@@ -13,26 +13,26 @@ import (
 
 const configFilePath = "data/config/"
 
-type UiHTTP struct {
+type UIHTTP struct {
 	Enabled bool
 	Port    int
 }
 
-type UiHTTPS struct {
+type UIHTTPS struct {
 	Enabled  bool
 	Port     int
 	CertFile string
 	KeyFile  string
 }
 
-type UiConfig struct {
+type UIConfig struct {
 	Header           config.FileHeader
 	UIEnabled        bool
 	Title            string
 	ProgramFileRoot  string
 	StaticFileRoot   string
-	HTTP             UiHTTP
-	HTTPS            UiHTTPS
+	HTTP             UIHTTP
+	HTTPS            UIHTTPS
 	MaxGuests        int
 	MaxLoginAttempts int
 	Recovery         bool
@@ -47,7 +47,7 @@ func init() {
 	header = config.FileHeader{HeaderVersion: 0.0, FileName: "ui", ContentName: "ui", ContentVersion: 1.0, Comment: "UI config file"}
 }
 
-func (c *UiConfig) loadDefaults() {
+func (c *UIConfig) loadDefaults() {
 
 	console.Log("loading defaults \""+configFilePath+header.FileName+"\"", " ")
 
@@ -69,7 +69,7 @@ func (c *UiConfig) loadDefaults() {
 	c.Recovery = false
 }
 
-func (c UiConfig) SaveConfig() error {
+func (c UIConfig) SaveConfig() error {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -90,7 +90,7 @@ func (c UiConfig) SaveConfig() error {
 	return err
 }
 
-func (c *UiConfig) LoadConfig() error {
+func (c *UIConfig) LoadConfig() error {
 
 	if _, err := os.Stat(configFilePath + header.FileName); os.IsNotExist(err) {
 		// if not found, create default file

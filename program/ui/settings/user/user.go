@@ -3,8 +3,8 @@ package user
 import (
 	"net/http"
 
-	"github.com/dekoch/gouniversal/program/ui/settings/user/pageUserEdit"
-	"github.com/dekoch/gouniversal/program/ui/settings/user/pageUserList"
+	"github.com/dekoch/gouniversal/program/ui/settings/user/pageuseredit"
+	"github.com/dekoch/gouniversal/program/ui/settings/user/pageuserlist"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 )
@@ -12,8 +12,8 @@ import (
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	nav.Sitemap.Register("Program", "Program:Settings:User", page.Lang.Settings.User.Title)
-	pageUserList.RegisterPage(page, nav)
-	pageUserEdit.RegisterPage(page, nav)
+	pageuserlist.RegisterPage(page, nav)
+	pageuseredit.RegisterPage(page, nav)
 }
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
@@ -24,11 +24,11 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	if nav.IsNext("List") {
 
-		pageUserList.Render(page, nav, r)
+		pageuserlist.Render(page, nav, r)
 
 	} else if nav.IsNext("Edit") {
 
-		pageUserEdit.Render(page, nav, r)
+		pageuseredit.Render(page, nav, r)
 	} else {
 		nav.RedirectPath("404", true)
 	}

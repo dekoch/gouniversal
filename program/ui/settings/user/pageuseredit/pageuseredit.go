@@ -1,4 +1,4 @@
-package pageUserEdit
+package pageuseredit
 
 import (
 	"errors"
@@ -10,8 +10,8 @@ import (
 	"github.com/dekoch/gouniversal/program/global"
 	"github.com/dekoch/gouniversal/program/lang"
 	"github.com/dekoch/gouniversal/program/ui/uifunc"
-	"github.com/dekoch/gouniversal/program/userConfig"
-	"github.com/dekoch/gouniversal/program/userManagement"
+	"github.com/dekoch/gouniversal/program/userconfig"
+	"github.com/dekoch/gouniversal/program/usermanagement"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
@@ -31,7 +31,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type content struct {
 		Lang     lang.SettingsUserEdit
-		User     userConfig.User
+		User     userconfig.User
 		CmbLang  template.HTML
 		CmbState template.HTML
 		Groups   template.HTML
@@ -129,7 +129,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		grouplist += "<td>" + g.Name + "</td>"
 		grouplist += "<td><input type=\"checkbox\" name=\"selectedgroups\" value=\"" + g.UUID + "\""
 
-		if userManagement.IsUserInGroup(g.UUID, c.User) {
+		if usermanagement.IsUserInGroup(g.UUID, c.User) {
 
 			grouplist += " checked"
 		}
@@ -139,7 +139,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	c.Groups = template.HTML(grouplist)
 
 	// display user
-	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"settings/useredit.html", c)
+	p, err := functions.PageToString(global.UIConfig.ProgramFileRoot+"settings/useredit.html", c)
 	if err == nil {
 		page.Content += p
 	} else {
@@ -151,7 +151,7 @@ func newUser() string {
 
 	u := uuid.Must(uuid.NewRandom())
 
-	var newUser userConfig.User
+	var newUser userconfig.User
 	newUser.UUID = u.String()
 	newUser.LoginName = u.String()
 	newUser.Lang = "en"

@@ -1,4 +1,4 @@
-package pageGroupList
+package pagegrouplist
 
 import (
 	"html/template"
@@ -50,7 +50,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	c.GroupList = template.HTML(tbody)
 
-	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"settings/grouplist.html", c)
+	p, err := functions.PageToString(global.UIConfig.ProgramFileRoot+"settings/grouplist.html", c)
 	if err == nil {
 		page.Content += p
 	} else {

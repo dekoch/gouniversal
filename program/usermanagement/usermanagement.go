@@ -1,11 +1,11 @@
-package userManagement
+package usermanagement
 
 import (
-	"github.com/dekoch/gouniversal/program/groupManagement"
-	"github.com/dekoch/gouniversal/program/userConfig"
+	"github.com/dekoch/gouniversal/program/groupmanagement"
+	"github.com/dekoch/gouniversal/program/userconfig"
 )
 
-func IsUserInGroup(gid string, user userConfig.User) bool {
+func IsUserInGroup(gid string, user userconfig.User) bool {
 
 	for i := 0; i < len(user.Groups); i++ {
 
@@ -19,7 +19,7 @@ func IsUserInGroup(gid string, user userConfig.User) bool {
 	return false
 }
 
-func IsPageAllowed(path string, user userConfig.User) bool {
+func IsPageAllowed(path string, user userconfig.User) bool {
 
 	// always allowed pages
 	if path == "Account:Login" ||
@@ -41,7 +41,7 @@ func IsPageAllowed(path string, user userConfig.User) bool {
 
 	// test each group
 	for i := 0; i < len(user.Groups); i++ {
-		if groupManagement.IsPageAllowed(path, user.Groups[i], true) {
+		if groupmanagement.IsPageAllowed(path, user.Groups[i], true) {
 			return true
 		}
 	}

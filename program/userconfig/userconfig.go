@@ -1,4 +1,4 @@
-package userConfig
+package userconfig
 
 import (
 	"encoding/json"

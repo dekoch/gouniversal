@@ -1,4 +1,4 @@
-package groupConfig
+package groupconfig
 
 import (
 	"encoding/json"

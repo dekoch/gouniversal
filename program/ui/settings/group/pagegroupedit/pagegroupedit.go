@@ -1,4 +1,4 @@
-package pageGroupEdit
+package pagegroupedit
 
 import (
 	"errors"
@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/dekoch/gouniversal/program/global"
-	"github.com/dekoch/gouniversal/program/groupConfig"
-	"github.com/dekoch/gouniversal/program/groupManagement"
+	"github.com/dekoch/gouniversal/program/groupconfig"
+	"github.com/dekoch/gouniversal/program/groupmanagement"
 	"github.com/dekoch/gouniversal/program/lang"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
@@ -30,7 +30,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type content struct {
 		Lang     lang.SettingsGroupEdit
-		Group    groupConfig.Group
+		Group    groupconfig.Group
 		CmbState template.HTML
 		Pages    template.HTML
 	}
@@ -101,7 +101,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		pagelist += "<td>" + sm[i] + "</td>"
 		pagelist += "<td><input type=\"checkbox\" name=\"selectedpages\" value=\"" + sm[i] + "\""
 
-		if groupManagement.IsPageAllowed(sm[i], c.Group.UUID, false) {
+		if groupmanagement.IsPageAllowed(sm[i], c.Group.UUID, false) {
 
 			pagelist += " checked"
 		}
@@ -111,7 +111,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	c.Pages = template.HTML(pagelist)
 
 	// display group
-	p, err := functions.PageToString(global.UiConfig.ProgramFileRoot+"settings/groupedit.html", c)
+	p, err := functions.PageToString(global.UIConfig.ProgramFileRoot+"settings/groupedit.html", c)
 	if err == nil {
 		page.Content += p
 	} else {
@@ -123,7 +123,7 @@ func newGroup() string {
 
 	u := uuid.Must(uuid.NewRandom())
 
-	var newGroup groupConfig.Group
+	var newGroup groupconfig.Group
 	newGroup.UUID = u.String()
 	newGroup.Name = u.String()
 	newGroup.State = 1 // active

@@ -1,4 +1,4 @@
-package clientInfo
+package clientinfo
 
 import (
 	"net"
