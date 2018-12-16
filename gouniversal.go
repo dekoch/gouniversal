@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/dekoch/gouniversal/build"
-	"github.com/dekoch/gouniversal/modules"
+	"github.com/dekoch/gouniversal/module"
 	"github.com/dekoch/gouniversal/program/global"
 	"github.com/dekoch/gouniversal/program/lang"
 	"github.com/dekoch/gouniversal/program/ui"
@@ -35,7 +35,7 @@ func main() {
 	} else {
 		console.Log("UI is disabled", " ")
 
-		modules.LoadConfig()
+		module.LoadConfig()
 	}
 
 	go consoleInput()
@@ -70,7 +70,7 @@ func main() {
 		ui.Exit()
 	}
 
-	modules.Exit()
+	module.Exit()
 
 	console.Log("App ended", " ")
 	os.Exit(1)

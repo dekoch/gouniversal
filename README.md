@@ -29,7 +29,7 @@ gouniversal/
 │           └── 1.0/
 ├── gouniversal.go
 ├── modules/ (add your Applications and Modules here)
-│   ├── modules.go (register your Application/Module)
+│   ├── module.go (register your Application/Module)
 │   └── openespm/ (first Application/Template/Test)
 │       └── openespm.go
 ├── program/ (Just!!! user/group administration, navigation, alarms.

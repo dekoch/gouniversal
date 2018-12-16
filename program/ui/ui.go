@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dekoch/gouniversal/modules"
+	"github.com/dekoch/gouniversal/module"
 	"github.com/dekoch/gouniversal/program/global"
 	"github.com/dekoch/gouniversal/program/guestmanagement"
 	"github.com/dekoch/gouniversal/program/ui/pagehome"
@@ -333,7 +333,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	global.Lang.SelectLang(nav.User.Lang, &page.Lang)
 
 	pagehome.RegisterPage(page, nav)
-	modules.RegisterPage(page, nav)
+	module.RegisterPage(page, nav)
 	settings.RegisterPage(page, nav)
 	nav.Sitemap.Register("Program", "Program:Exit", page.Lang.Exit.Title)
 	pagelogin.RegisterPage(page, nav)
@@ -396,7 +396,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 			}
 		} else if nav.IsNext("App") {
 
-			modules.Render(page, nav, r)
+			module.Render(page, nav, r)
 
 		} else if nav.IsNext("Account") {
 
@@ -603,7 +603,7 @@ func StartServer() {
 		global.GroupConfig.LoadConfig()
 
 		alert.Start()
-		modules.LoadConfig()
+		module.LoadConfig()
 
 		// if HTTPS is enabled, check cert and key file
 		if global.UIConfig.HTTPS.Enabled {
