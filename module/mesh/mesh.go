@@ -7,8 +7,8 @@ import (
 	"github.com/dekoch/gouniversal/module/mesh/global"
 	"github.com/dekoch/gouniversal/module/mesh/lang"
 	"github.com/dekoch/gouniversal/module/mesh/server"
-	"github.com/dekoch/gouniversal/module/mesh/serverInfo"
-	"github.com/dekoch/gouniversal/module/mesh/typesMesh"
+	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
+	"github.com/dekoch/gouniversal/module/mesh/typemesh"
 	"github.com/dekoch/gouniversal/module/mesh/ui"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/language"
@@ -48,26 +48,26 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	ui.Render(page, nav, r)
 }
 
-func GetServerInfo() serverInfo.ServerInfo {
+func GetServerInfo() serverinfo.ServerInfo {
 	global.Config.Server.Update()
 	return global.Config.Server.Get()
 }
 
-func GetServerList() []serverInfo.ServerInfo {
+func GetServerList() []serverinfo.ServerInfo {
 	return global.NetworkConfig.ServerList.Get()
 }
 
-func GetServerWithID(id string) (serverInfo.ServerInfo, error) {
+func GetServerWithID(id string) (serverinfo.ServerInfo, error) {
 	return global.NetworkConfig.ServerList.GetWithID(id)
 }
 
-func SendMessage(output typesMesh.ServerMessage) error {
+func SendMessage(output typemesh.ServerMessage) error {
 	return client.SendMessage(output)
 }
 
-func NewMessage(receiver serverInfo.ServerInfo, t typesMesh.MessageType, ver float32, c []byte) error {
+func NewMessage(receiver serverinfo.ServerInfo, t typemesh.MessageType, ver float32, c []byte) error {
 
-	var output typesMesh.ServerMessage
+	var output typemesh.ServerMessage
 
 	output.Receiver = receiver
 	output.Message.Type = t
@@ -77,7 +77,7 @@ func NewMessage(receiver serverInfo.ServerInfo, t typesMesh.MessageType, ver flo
 	return client.SendMessage(output)
 }
 
-func IsLoop(in serverInfo.ServerInfo) bool {
+func IsLoop(in serverinfo.ServerInfo) bool {
 	return client.IsLoop(in)
 }
 

@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/dekoch/gouniversal/module/mediadownloader/global"
-	"github.com/dekoch/gouniversal/module/mediadownloader/typesMD"
+	"github.com/dekoch/gouniversal/module/mediadownloader/typemd"
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
-func Download(f typesMD.DownloadFile) error {
+func Download(f typemd.DownloadFile) error {
 
 	resp, err := http.Get(f.Url)
 	if err != nil {

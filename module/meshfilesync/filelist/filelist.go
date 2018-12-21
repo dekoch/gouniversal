@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dekoch/gouniversal/module/mesh/serverInfo"
+	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
 	"github.com/dekoch/gouniversal/module/meshfilesync/syncfile"
 	"github.com/dekoch/gouniversal/shared/io/fileInfo"
 )
@@ -271,7 +271,7 @@ func (fl *FileList) sourceUpdate(n syncfile.SyncFile) {
 	}
 }
 
-func (fl *FileList) SourceClean(servers []serverInfo.ServerInfo) {
+func (fl *FileList) SourceClean(servers []serverinfo.ServerInfo) {
 
 	mut.Lock()
 	defer mut.Unlock()

@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/dekoch/gouniversal/module/mesh/global"
-	"github.com/dekoch/gouniversal/module/mesh/serverInfo"
+	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
 	"github.com/dekoch/gouniversal/module/mesh/settings"
-	"github.com/dekoch/gouniversal/module/mesh/typesMesh"
+	"github.com/dekoch/gouniversal/module/mesh/typemesh"
 	"github.com/dekoch/gouniversal/shared/aes"
 	"github.com/dekoch/gouniversal/shared/console"
 )
@@ -67,8 +67,8 @@ func announce() {
 		global.NetworkConfig.ServerList.Add(global.Config.Server.Get())
 
 		serverList := global.NetworkConfig.ServerList.Get()
-		var message typesMesh.ServerMessage
-		message.Message.Type = typesMesh.MessAnnounce
+		var message typemesh.ServerMessage
+		message.Message.Type = typemesh.MessAnnounce
 		message.Message.Version = 1.0
 
 		b, err := json.Marshal(serverList)
@@ -96,7 +96,7 @@ func announce() {
 
 				message.Receiver = server
 
-				go func(msg typesMesh.ServerMessage) {
+				go func(msg typemesh.ServerMessage) {
 
 					SendMessage(msg)
 
@@ -120,8 +120,8 @@ func hello() {
 
 		global.Config.Server.Update()
 
-		var message typesMesh.ServerMessage
-		message.Message.Type = typesMesh.MessHello
+		var message typemesh.ServerMessage
+		message.Message.Type = typemesh.MessHello
 
 		serverList := global.NetworkConfig.ServerList.Get()
 
@@ -143,7 +143,7 @@ func hello() {
 
 			message.Receiver = server
 
-			go func(msg typesMesh.ServerMessage) {
+			go func(msg typemesh.ServerMessage) {
 
 				SendMessage(msg)
 
@@ -157,7 +157,7 @@ func hello() {
 	}
 }
 
-func SendMessage(output typesMesh.ServerMessage) error {
+func SendMessage(output typemesh.ServerMessage) error {
 
 	// send only to addresses from other systems
 	if IsLoop(output.Receiver) {
@@ -199,7 +199,7 @@ func SendMessage(output typesMesh.ServerMessage) error {
 	return errors.New("not send")
 }
 
-func send(output typesMesh.ServerMessage, addr string) error {
+func send(output typemesh.ServerMessage, addr string) error {
 
 	// check for v4 or v6 addresses
 	ip := net.ParseIP(addr)
@@ -243,7 +243,7 @@ func send(output typesMesh.ServerMessage, addr string) error {
 	return nil
 }
 
-func IsLoop(in serverInfo.ServerInfo) bool {
+func IsLoop(in serverinfo.ServerInfo) bool {
 
 	if settings.LocalConnection {
 		return false

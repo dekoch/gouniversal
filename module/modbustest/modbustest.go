@@ -8,14 +8,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dekoch/gouniversal/module/modbustest/moduleConfig"
+	"github.com/dekoch/gouniversal/module/modbustest/moduleconfig"
 	"github.com/dekoch/gouniversal/shared/console"
 
 	"github.com/goburrow/modbus"
 )
 
 var (
-	mConfig       moduleConfig.ModuleConfig
+	mConfig       moduleconfig.ModuleConfig
 	mutConnection sync.Mutex
 )
 
@@ -76,7 +76,7 @@ func bitToValue(highbyte bool, bit int, val bool) uint16 {
 	return 0
 }
 
-func readModbus(c moduleConfig.Station, client modbus.Client) (modInput, error) {
+func readModbus(c moduleconfig.Station, client modbus.Client) (modInput, error) {
 
 	fmt.Print("r ")
 
@@ -118,7 +118,7 @@ func readModbus(c moduleConfig.Station, client modbus.Client) (modInput, error) 
 	return in, nil
 }
 
-func writeModbus(c moduleConfig.Station, o modOutput, client modbus.Client) error {
+func writeModbus(c moduleconfig.Station, o modOutput, client modbus.Client) error {
 
 	fmt.Print("w ")
 
@@ -149,7 +149,7 @@ func writeModbus(c moduleConfig.Station, o modOutput, client modbus.Client) erro
 	return nil
 }
 
-func station(no int, c moduleConfig.Station, client modbus.Client) {
+func station(no int, c moduleconfig.Station, client modbus.Client) {
 
 	fmt.Println(c.ReadOffset)
 	fmt.Println(c.WriteOffset)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/dekoch/gouniversal/module/openespm/app"
 	"github.com/dekoch/gouniversal/module/openespm/global"
-	"github.com/dekoch/gouniversal/module/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/module/openespm/typeoespm"
 	"github.com/dekoch/gouniversal/module/openespm/ui/settings"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
@@ -14,7 +14,7 @@ import (
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
-	appPage := new(typesOESPM.Page)
+	appPage := new(typeoespm.Page)
 	global.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
 	settings.RegisterPage(appPage, nav)
@@ -34,7 +34,7 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	appPage := new(typesOESPM.Page)
+	appPage := new(typeoespm.Page)
 	appPage.Content = page.Content
 	global.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
@@ -62,7 +62,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	page.Content += appPage.Content
 }
 
-func loadAppConfig(page *typesOESPM.Page, nav *navigation.Navigation) error {
+func loadAppConfig(page *typeoespm.Page, nav *navigation.Navigation) error {
 
 	// search app UUID inside path
 	index := strings.LastIndex(nav.Path, ":")

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/dekoch/gouniversal/module/fileshare/global"
-	"github.com/dekoch/gouniversal/module/fileshare/typesFileshare"
+	"github.com/dekoch/gouniversal/module/fileshare/typefileshare"
 	"github.com/dekoch/gouniversal/shared/console"
 )
 
@@ -20,7 +20,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	startTime := time.Now()
 
-	req := new(typesFileshare.Request)
+	req := new(typefileshare.Request)
 
 	req.Values = r.URL.Query()
 	console.Output("GET params:", "")
@@ -30,7 +30,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	req.Key = req.Values.Get("key")
 	req.FilePath = req.Values.Get("file")
 
-	resp := new(typesFileshare.Response)
+	resp := new(typefileshare.Response)
 	resp.Status = http.StatusOK
 	resp.Err = nil
 	resp.Content = ""

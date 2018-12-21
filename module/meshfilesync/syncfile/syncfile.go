@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dekoch/gouniversal/module/mesh/serverInfo"
+	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
 	"github.com/dekoch/gouniversal/shared/io/file"
 	"github.com/google/uuid"
 )
@@ -117,7 +117,7 @@ func (f *SyncFile) DeleteSource(id string) {
 	f.Sources = newList
 }
 
-func (f *SyncFile) CleanSources(servers []serverInfo.ServerInfo) {
+func (f *SyncFile) CleanSources(servers []serverinfo.ServerInfo) {
 
 	mut.Lock()
 	defer mut.Unlock()

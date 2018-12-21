@@ -1,11 +1,11 @@
 package global
 
 import (
-	"github.com/dekoch/gouniversal/module/logviewer/moduleConfig"
+	"github.com/dekoch/gouniversal/module/logviewer/moduleconfig"
 	"github.com/dekoch/gouniversal/shared/language"
 )
 
 var (
-	Config moduleConfig.ModuleConfig
+	Config moduleconfig.ModuleConfig
 	Lang   language.Language
 )

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/dekoch/gouniversal/module/mesh"
-	"github.com/dekoch/gouniversal/module/mesh/typesMesh"
+	"github.com/dekoch/gouniversal/module/mesh/typemesh"
 	"github.com/dekoch/gouniversal/module/messenger/global"
 	"github.com/dekoch/gouniversal/shared/io/file"
 )
@@ -46,7 +46,7 @@ func hello() {
 
 		func() {
 
-			var message typesMesh.ServerMessage
+			var message typemesh.ServerMessage
 			var err error
 
 			message.Receiver, err = mesh.GetServerWithID("9c3fc567-c4c7-43b9-a239-87de716d2d86")
@@ -55,7 +55,7 @@ func hello() {
 				return
 			}
 
-			message.Message.Type = typesMesh.MessMessenger
+			message.Message.Type = typemesh.MessMessenger
 			message.Message.Version = 1.0
 
 			b, err := file.ReadFile("test.tar.gz")

@@ -28,7 +28,7 @@ gouniversal/
 │       └── static/
 │           └── 1.0/
 ├── gouniversal.go
-├── modules/ (add your Applications and Modules here)
+├── module/ (add your Applications and Modules here)
 │   ├── module.go (register your Application/Module)
 │   └── openespm/ (first Application/Template/Test)
 │       └── openespm.go

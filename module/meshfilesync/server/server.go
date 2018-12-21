@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/dekoch/gouniversal/module/mesh/serverInfo"
-	"github.com/dekoch/gouniversal/module/mesh/typesMesh"
+	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
+	"github.com/dekoch/gouniversal/module/mesh/typemesh"
 	"github.com/dekoch/gouniversal/module/meshfilesync/filelist"
 	"github.com/dekoch/gouniversal/module/meshfilesync/global"
 	"github.com/dekoch/gouniversal/module/meshfilesync/syncfile"
@@ -39,7 +39,7 @@ func LoadConfig() {
 	}
 }
 
-func Server(input typesMesh.ServerMessage) error {
+func Server(input typemesh.ServerMessage) error {
 
 	var msg typesmfs.Message
 
@@ -69,7 +69,7 @@ func Server(input typesMesh.ServerMessage) error {
 }
 
 // get filelist from client
-func list(input typesmfs.Message, sender serverInfo.ServerInfo) error {
+func list(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 
 	var (
 		err      error
@@ -148,7 +148,7 @@ func list(input typesmfs.Message, sender serverInfo.ServerInfo) error {
 	return err
 }
 
-func uploadReq(input typesmfs.Message, sender serverInfo.ServerInfo) error {
+func uploadReq(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 
 	var (
 		err  error
@@ -183,7 +183,7 @@ func uploadReq(input typesmfs.Message, sender serverInfo.ServerInfo) error {
 	return err
 }
 
-func uploadStart(input typesmfs.Message, sender serverInfo.ServerInfo) error {
+func uploadStart(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 
 	var (
 		err error
@@ -218,7 +218,7 @@ func uploadStart(input typesmfs.Message, sender serverInfo.ServerInfo) error {
 }
 
 // client can upload missing files to server
-func upload(input typesmfs.Message, sender serverInfo.ServerInfo) error {
+func upload(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 
 	var (
 		err error

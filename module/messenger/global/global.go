@@ -1,9 +1,7 @@
 package global
 
-import (
-	"github.com/dekoch/gouniversal/module/messenger/moduleConfig"
-)
+import "github.com/dekoch/gouniversal/module/messenger/moduleconfig"
 
 var (
-	Config moduleConfig.ModuleConfig
+	Config moduleconfig.ModuleConfig
 )

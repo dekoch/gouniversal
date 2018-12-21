@@ -1,7 +1,7 @@
 package global
 
-import "github.com/dekoch/gouniversal/module/homepage/moduleConfig"
+import "github.com/dekoch/gouniversal/module/homepage/moduleconfig"
 
 var (
-	Config moduleConfig.ModuleConfig
+	Config moduleconfig.ModuleConfig
 )

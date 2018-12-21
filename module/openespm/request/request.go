@@ -6,11 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dekoch/gouniversal/shared/console"
-
 	"github.com/dekoch/gouniversal/module/openespm/app"
 	"github.com/dekoch/gouniversal/module/openespm/global"
-	"github.com/dekoch/gouniversal/module/openespm/typesOESPM"
+	"github.com/dekoch/gouniversal/module/openespm/typeoespm"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 )
 
@@ -18,7 +17,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	startTime := time.Now()
 
-	req := new(typesOESPM.Request)
+	req := new(typeoespm.Request)
 
 	req.Values = r.URL.Query()
 	console.Output("GET params:", "")
@@ -27,8 +26,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	req.ID = req.Values.Get("id")
 	req.Key = req.Values.Get("key")
 
-	resp := new(typesOESPM.Response)
-	resp.Type = typesOESPM.PLAIN
+	resp := new(typeoespm.Response)
+	resp.Type = typeoespm.PLAIN
 	resp.Content = ""
 	resp.Status = http.StatusOK
 	resp.Err = nil
@@ -87,10 +86,10 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	} else {
 
 		switch resp.Type {
-		case typesOESPM.JSON:
+		case typeoespm.JSON:
 			w.Header().Set("Content-Type", "application/json")
 
-		case typesOESPM.XML:
+		case typeoespm.XML:
 			w.Header().Set("Content-Type", "application/xml")
 		}
 

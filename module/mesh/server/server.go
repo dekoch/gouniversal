@@ -11,9 +11,9 @@ import (
 
 	"github.com/dekoch/gouniversal/build"
 	"github.com/dekoch/gouniversal/module/mesh/global"
-	"github.com/dekoch/gouniversal/module/mesh/serverInfo"
+	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
 	"github.com/dekoch/gouniversal/module/mesh/settings"
-	"github.com/dekoch/gouniversal/module/mesh/typesMesh"
+	"github.com/dekoch/gouniversal/module/mesh/typemesh"
 	"github.com/dekoch/gouniversal/shared/aes"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/google/uuid"
@@ -99,7 +99,7 @@ func Restart() {
 	go start()
 }
 
-func (this *Server) Message(input typesMesh.ServerMessage, output *string) error {
+func (this *Server) Message(input typemesh.ServerMessage, output *string) error {
 
 	var err error
 
@@ -135,7 +135,7 @@ func (this *Server) Message(input typesMesh.ServerMessage, output *string) error
 				writeDebug(input.Message.Type, input.Sender.ID)
 			}
 
-			if input.Message.Type == typesMesh.MessAnnounce {
+			if input.Message.Type == typemesh.MessAnnounce {
 				if input.Message.Version == 1.0 {
 					announce(input)
 				}
@@ -146,11 +146,11 @@ func (this *Server) Message(input typesMesh.ServerMessage, output *string) error
 			} else {
 
 				switch input.Message.Type {
-				case typesMesh.MessHello:
+				case typemesh.MessHello:
 
 					global.NetworkConfig.ServerList.Add(input.Sender)
 
-				case typesMesh.MessFileSync:
+				case typemesh.MessFileSync:
 
 					if build.ModuleMeshFS {
 						if input.Message.Version == 1.0 {
@@ -174,13 +174,13 @@ func (this *Server) Message(input typesMesh.ServerMessage, output *string) error
 	return nil
 }
 
-func announce(input typesMesh.ServerMessage) {
+func announce(input typemesh.ServerMessage) {
 
 	// update network
 	global.NetworkConfig.Network.Update(input.Network)
 
 	// update server list
-	var newList []serverInfo.ServerInfo
+	var newList []serverinfo.ServerInfo
 
 	err := json.Unmarshal(input.Message.Content, &newList)
 	if err != nil {
@@ -191,24 +191,24 @@ func announce(input typesMesh.ServerMessage) {
 	}
 }
 
-func writeDebug(t typesMesh.MessageType, id string) {
+func writeDebug(t typemesh.MessageType, id string) {
 
 	var s string
 
 	switch t {
-	case typesMesh.MessAnnounce:
+	case typemesh.MessAnnounce:
 		s = "announce"
 
-	case typesMesh.MessHello:
+	case typemesh.MessHello:
 		s = "hello"
 
-	case typesMesh.MessRAW:
+	case typemesh.MessRAW:
 		s = "raw"
 
-	case typesMesh.MessMessenger:
+	case typemesh.MessMessenger:
 		s = "messenger"
 
-	case typesMesh.MessFileSync:
+	case typemesh.MessFileSync:
 		s = "meshFileSync"
 
 	default:

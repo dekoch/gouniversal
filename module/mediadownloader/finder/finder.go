@@ -7,14 +7,14 @@ import (
 	"strings"
 
 	"github.com/dekoch/gouniversal/module/mediadownloader/global"
-	"github.com/dekoch/gouniversal/module/mediadownloader/typesMD"
+	"github.com/dekoch/gouniversal/module/mediadownloader/typemd"
 )
 
-func Find(ur, raw string) ([]typesMD.DownloadFile, error) {
+func Find(ur, raw string) ([]typemd.DownloadFile, error) {
 
 	var (
-		ret []typesMD.DownloadFile
-		n   []typesMD.DownloadFile
+		ret []typemd.DownloadFile
+		n   []typemd.DownloadFile
 		err error
 	)
 
@@ -35,9 +35,9 @@ func Find(ur, raw string) ([]typesMD.DownloadFile, error) {
 	return ret, err
 }
 
-func findExtension(ur, raw, extension string) ([]typesMD.DownloadFile, error) {
+func findExtension(ur, raw, extension string) ([]typemd.DownloadFile, error) {
 
-	var ret []typesMD.DownloadFile
+	var ret []typemd.DownloadFile
 
 	raw = strings.Replace(raw, "'", "\"", -1)
 
@@ -86,7 +86,7 @@ func findExtension(ur, raw, extension string) ([]typesMD.DownloadFile, error) {
 					}
 				}
 
-				var n typesMD.DownloadFile
+				var n typemd.DownloadFile
 				n.Url = p
 
 				name := strings.SplitAfter(path.Base(p), extension)
@@ -115,9 +115,9 @@ func findExtension(ur, raw, extension string) ([]typesMD.DownloadFile, error) {
 	return ret, nil
 }
 
-func findOnInstagram(raw string) ([]typesMD.DownloadFile, error) {
+func findOnInstagram(raw string) ([]typemd.DownloadFile, error) {
 
-	var ret []typesMD.DownloadFile
+	var ret []typemd.DownloadFile
 
 	found, file, err := instagramMeta(raw, "video", ".mp4")
 	if err == nil {
@@ -139,9 +139,9 @@ func findOnInstagram(raw string) ([]typesMD.DownloadFile, error) {
 	return ret, err
 }
 
-func instagramMeta(raw, property, extension string) (bool, typesMD.DownloadFile, error) {
+func instagramMeta(raw, property, extension string) (bool, typemd.DownloadFile, error) {
 
-	var ret typesMD.DownloadFile
+	var ret typemd.DownloadFile
 
 	files := strings.Split(raw, "<meta property=\"og:"+property+"\" content=\"")
 

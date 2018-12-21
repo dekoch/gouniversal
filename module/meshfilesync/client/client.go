@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/dekoch/gouniversal/module/mesh"
-	"github.com/dekoch/gouniversal/module/mesh/serverInfo"
-	"github.com/dekoch/gouniversal/module/mesh/typesMesh"
+	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
+	"github.com/dekoch/gouniversal/module/mesh/typemesh"
 	"github.com/dekoch/gouniversal/module/meshfilesync/global"
 	"github.com/dekoch/gouniversal/module/meshfilesync/typesmfs"
 	"github.com/dekoch/gouniversal/shared/console"
@@ -127,11 +127,11 @@ func sendFileList() {
 
 						wg.Add(1)
 
-						go func(s serverInfo.ServerInfo, jsonReq []byte) {
+						go func(s serverinfo.ServerInfo, jsonReq []byte) {
 
 							defer wg.Done()
 
-							mesh.NewMessage(s, typesMesh.MessFileSync, 1.0, jsonReq)
+							mesh.NewMessage(s, typemesh.MessFileSync, 1.0, jsonReq)
 						}(server, b)
 					}
 
@@ -155,7 +155,7 @@ func sendUploadReq() {
 			var (
 				err      error
 				b        []byte
-				server   serverInfo.ServerInfo
+				server   serverinfo.ServerInfo
 				serverID string
 
 				msg typesmfs.Message
@@ -200,7 +200,7 @@ func sendUploadReq() {
 							size := datasize.ByteSize(missingFile.Size).HumanReadable()
 							console.Output("?-> ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
 
-							err = mesh.NewMessage(server, typesMesh.MessFileSync, 1.0, b)
+							err = mesh.NewMessage(server, typemesh.MessFileSync, 1.0, b)
 
 						case 5:
 							global.DownloadFiles.Delete(missingFile.Path)
@@ -228,7 +228,7 @@ func uploadFiles() {
 		var (
 			err      error
 			b        []byte
-			server   serverInfo.ServerInfo
+			server   serverinfo.ServerInfo
 			serverID string
 
 			msg typesmfs.Message
@@ -276,7 +276,7 @@ func uploadFiles() {
 						size := datasize.ByteSize(missingFile.Size).HumanReadable()
 						console.Output("  > ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
 
-						err = mesh.NewMessage(server, typesMesh.MessFileSync, 1.0, b)
+						err = mesh.NewMessage(server, typemesh.MessFileSync, 1.0, b)
 
 					case 6:
 						ft.Content, err = file.ReadFile(fileRoot + ft.FileInfo.Path)
@@ -292,7 +292,7 @@ func uploadFiles() {
 						size := datasize.ByteSize(missingFile.Size).HumanReadable()
 						console.Output("- > ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
 
-						err = mesh.NewMessage(server, typesMesh.MessFileSync, 1.0, b)
+						err = mesh.NewMessage(server, typemesh.MessFileSync, 1.0, b)
 
 						if err == nil {
 							console.Output("--> ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
