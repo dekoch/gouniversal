@@ -8,6 +8,7 @@ import (
 	"github.com/dekoch/gouniversal/module/fileshare"
 	"github.com/dekoch/gouniversal/module/heatingmath"
 	"github.com/dekoch/gouniversal/module/homepage"
+	"github.com/dekoch/gouniversal/module/iptracker"
 	"github.com/dekoch/gouniversal/module/logviewer"
 	"github.com/dekoch/gouniversal/module/mediadownloader"
 	"github.com/dekoch/gouniversal/module/mesh"
@@ -69,6 +70,11 @@ func LoadConfig() {
 	if build.ModuleMediaDownloader {
 		sharedConsole.Log("MediaDownloader enabled", "Module")
 		mediadownloader.LoadConfig()
+	}
+
+	if build.ModuleIPTracker {
+		sharedConsole.Log("IPTracker enabled", "Module")
+		iptracker.LoadConfig()
 	}
 
 	if build.ModuleModbusTest {
@@ -214,6 +220,10 @@ func Exit() {
 
 	if build.ModuleMediaDownloader {
 		mediadownloader.Exit()
+	}
+
+	if build.ModuleIPTracker {
+		iptracker.Exit()
 	}
 
 	if build.ModuleLogViewer {

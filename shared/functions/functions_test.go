@@ -13,6 +13,8 @@ func TestIsEmtpy(t *testing.T) {
 		{"", true},
 		{" ", true},
 		{"  ", true},
+		{"\r", true},
+		{"\n", true},
 		{"foo", false},
 	}
 

@@ -46,6 +46,8 @@ func PageToString(path string, data interface{}) (string, error) {
 func IsEmpty(s string) bool {
 
 	str := strings.Replace(s, " ", "", -1)
+	str = strings.Replace(str, "\r", "", -1)
+	str = strings.Replace(str, "\n", "", -1)
 
 	return len(str) == 0
 }
