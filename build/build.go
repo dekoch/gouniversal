@@ -16,3 +16,4 @@ const ModuleMediaDownloader = true
 const ModuleIPTracker = true
 const ModuleModbusTest = false
 const ModuleHeatingMath = false
+const ModuleMark = false

@@ -10,6 +10,7 @@ import (
 	"github.com/dekoch/gouniversal/module/homepage"
 	"github.com/dekoch/gouniversal/module/iptracker"
 	"github.com/dekoch/gouniversal/module/logviewer"
+	"github.com/dekoch/gouniversal/module/mark"
 	"github.com/dekoch/gouniversal/module/mediadownloader"
 	"github.com/dekoch/gouniversal/module/mesh"
 	"github.com/dekoch/gouniversal/module/meshfilesync"
@@ -85,6 +86,11 @@ func LoadConfig() {
 	if build.ModuleHeatingMath {
 		sharedConsole.Log("HeatingMath enabled", "Module")
 		heatingmath.LoadConfig()
+	}
+
+	if build.ModuleMark {
+		sharedConsole.Log("Mark enabled", "Module")
+		mark.LoadConfig()
 	}
 }
 
