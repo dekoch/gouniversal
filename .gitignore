@@ -3,6 +3,13 @@
 *.dll
 *.so
 *.dylib
+debug
+amd64
+arm5
+arm6
+arm7
+aarch64
+i386
 
 # Test binary, build with `go test -c`
 *.test
@@ -12,14 +19,12 @@
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
-debug
-amd64
-arm5
-i386
-data/log/*
-data/homepage/dekoch.net/static/
+
+# Project data
 data/config/mesh/mesh
 data/config/mesh/network
 data/config/mesh/network.key
 data/config/meshfilesync/meshfilesync
+data/homepage/dekoch.net/static/
+data/log/
 data/meshfilesync/
