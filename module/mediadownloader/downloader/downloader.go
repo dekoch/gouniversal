@@ -22,7 +22,5 @@ func Download(f typemd.DownloadFile) error {
 		return err
 	}
 
-	file.WriteFile(global.Config.FileRoot+f.Filename, b)
-
-	return nil
+	return file.WriteFile(global.Config.FileRoot+f.Filename, b)
 }

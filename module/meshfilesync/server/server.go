@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
@@ -228,7 +229,7 @@ func upload(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 
 	func() {
 
-		for i := 0; i <= 6; i++ {
+		for i := 0; i <= 7; i++ {
 
 			switch i {
 			case 0:
@@ -256,12 +257,21 @@ func upload(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 				err = os.Chtimes(tempRoot+ft.FileInfo.Path, ft.FileInfo.ModTime, ft.FileInfo.ModTime)
 
 			case 5:
+				// if not found, create dir
+				dir := filepath.Dir(fileRoot + ft.FileInfo.Path)
+
+				if _, errDir := os.Stat(dir); os.IsNotExist(errDir) {
+
+					err = os.MkdirAll(dir, os.ModePerm)
+				}
+
+			case 6:
 				// move file from temp to file dir
 				global.LocalFiles.Lock()
 				err = os.Rename(tempRoot+ft.FileInfo.Path, fileRoot+ft.FileInfo.Path)
 				global.LocalFiles.Unlock()
 
-			case 6:
+			case 7:
 				global.LocalFiles.Add(ft.FileInfo)
 				global.DownloadFiles.Delete(ft.FileInfo.Path)
 				global.UploadTime = time.Now()

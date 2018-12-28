@@ -16,8 +16,11 @@ var (
 
 func LoadConfig() {
 
-	go run()
-	go job()
+	if global.Config.GetUpdInterval() != 0 {
+
+		go run()
+		go job()
+	}
 }
 
 func job() {
