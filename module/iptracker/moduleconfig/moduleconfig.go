@@ -39,7 +39,7 @@ func (hc *ModuleConfig) loadDefaults() {
 
 	hc.UIFileRoot = "data/ui/iptracker/1.0/"
 	hc.LangFileRoot = "data/lang/iptracker/"
-	hc.UpdInterv = 15
+	hc.UpdInterv = 0
 }
 
 func (hc ModuleConfig) SaveConfig() error {
@@ -95,10 +95,26 @@ func (hc *ModuleConfig) LoadConfig() error {
 	return err
 }
 
+func (hc *ModuleConfig) SetUpdInterval(m int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.UpdInterv = m
+}
+
 func (hc *ModuleConfig) GetUpdInterval() time.Duration {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
 	return time.Duration(hc.UpdInterv) * time.Minute
+}
+
+func (hc *ModuleConfig) GetUpdIntervalInt() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.UpdInterv
 }

@@ -125,21 +125,40 @@ func getTime() string {
 }
 
 /*
-RPi B OpenWRT
+Raspberry Pi B OpenWRT
 arm5
-2018/12/28 21:02:03 mark: single enc	c:140089 t:30000.1ms
-2018/12/28 21:02:33 mark: multi enc		c:136903 t:30002.7ms
+2018/12/29 13:09:38 mark: single enc	c:166992 t:30000.2ms
+2018/12/29 13:10:08 mark: multi enc		c:164590 t:30003.0ms
 arm6
-2018/12/28 21:00:30 mark: single enc	c:166846 t:30000.2ms
-2018/12/28 21:01:00 mark: multi enc		c:163833 t:30002.1ms
+2018/12/29 13:08:00 mark: single enc	c:193839 t:30000.1ms
+2018/12/29 13:08:30 mark: multi enc		c:192503 t:30002.4ms
 
-RPi 3 B OpenWRT
+Raspberry Pi B buildroot
+arm5
+1970/01/01 00:02:05 mark: single enc	c:159194 t:30000.1ms
+1970/01/01 00:02:35 mark: multi enc		c:157103 t:30002.7ms
+arm6
+1970/01/01 00:05:35 mark: single enc	c:182115 t:30000.1ms
+1970/01/01 00:06:05 mark: multi enc		c:182365 t:30002.2ms
+
+Raspberry Pi 3 B OpenWRT
 aarch64
 2018/12/28 20:57:08 mark: single enc	c:1083464 t:30000.0ms
 2018/12/28 20:57:38 mark: multi enc		c:4691490 t:30000.4ms
+
+NanoPi NEO OpenWRT
+arm5
+2019/01/01 15:37:21 mark: single enc	c:598780 t:30000.0ms
+2019/01/01 15:37:51 mark: multi enc		c:2174463 t:30000.4ms
+arm6
+2019/01/01 15:39:24 mark: single enc	c:729607 t:30000.0ms
+2019/01/01 15:39:54 mark: multi enc		c:2572255 t:30000.3ms
 
 i7-7500U debian
 amd64
 2018/12/28 22:17:20 mark: single enc	c:17078423 t:30000.0ms
 2018/12/28 22:17:50 mark: multi enc		c:32936586 t:30000.0ms
+i386
+2019/01/01 16:53:42 mark: single enc	c:7954930 t:30000.0ms
+2019/01/01 16:54:12 mark: multi enc		c:18893605 t:30000.0ms
 */

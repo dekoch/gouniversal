@@ -16,25 +16,32 @@ var (
 
 func LoadConfig() {
 
-	if global.Config.GetUpdInterval() != 0 {
-
-		go run()
-		go job()
-	}
+	go run()
+	go job()
 }
 
 func job() {
 
-	timer := time.NewTimer(global.Config.GetUpdInterval())
+	intvl := global.Config.GetUpdInterval()
+	timer := time.NewTimer(intvl)
 
 	for {
-		select {
-		case <-timer.C:
-			timer.Stop()
-			chanStart <- true
 
-		case <-chanFinish:
-			timer.Reset(global.Config.GetUpdInterval())
+		if intvl != 0 {
+
+			select {
+			case <-timer.C:
+				timer.Stop()
+				chanStart <- true
+
+			case <-chanFinish:
+				intvl = global.Config.GetUpdInterval()
+				timer.Reset(intvl)
+			}
+		} else {
+			// wait until enabled
+			time.Sleep(1 * time.Minute)
+			intvl = global.Config.GetUpdInterval()
 		}
 	}
 }

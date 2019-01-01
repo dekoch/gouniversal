@@ -134,6 +134,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 	if build.ModuleMediaDownloader {
 		mediadownloader.RegisterPage(page, nav)
 	}
+
+	if build.ModuleIPTracker {
+		iptracker.RegisterPage(page, nav)
+	}
 }
 
 // Render UI page
@@ -193,6 +197,13 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		if nav.IsNext("MediaDownloader") {
 
 			mediadownloader.Render(page, nav, r)
+		}
+	}
+
+	if build.ModuleIPTracker {
+		if nav.IsNext("IPTracker") {
+
+			iptracker.Render(page, nav, r)
 		}
 	}
 }
