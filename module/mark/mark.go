@@ -2,6 +2,7 @@ package mark
 
 import (
 	"fmt"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/console"
 )
 
-const sender = "mark"
+const sender = "mark v1.1"
 const testtime = 30.0 // seconds
 
 var (
@@ -22,11 +23,11 @@ func LoadConfig() {
 
 	console.Log("start", sender)
 
-	singleEnc()
-	multiEnc()
+	singleAesEnc()
+	multiAesEnc()
 }
 
-func singleEnc() {
+func singleAesEnc() {
 
 	key, err := aes.NewKey(32)
 	if err != nil {
@@ -43,7 +44,7 @@ func singleEnc() {
 
 	for elapsed() == false {
 
-		enc(key)
+		aesEnc(key)
 
 		mut.Lock()
 		c++
@@ -52,10 +53,10 @@ func singleEnc() {
 
 	tEnd = time.Now()
 
-	console.Log("single enc\tc:"+strconv.Itoa(c)+" t:"+getTime(), sender)
+	console.Log("AES single enc"+log(c), sender)
 }
 
-func multiEnc() {
+func multiAesEnc() {
 
 	key, err := aes.NewKey(32)
 	if err != nil {
@@ -71,7 +72,7 @@ func multiEnc() {
 
 	tStart = time.Now()
 
-	for i := 0; i < 20; i++ {
+	for i := 0; i < runtime.NumCPU(); i++ {
 
 		wg.Add(1)
 
@@ -79,7 +80,7 @@ func multiEnc() {
 
 			for elapsed() == false {
 
-				enc(key)
+				aesEnc(key)
 
 				mut.Lock()
 				c++
@@ -94,10 +95,10 @@ func multiEnc() {
 
 	tEnd = time.Now()
 
-	console.Log("multi enc\tc:"+strconv.Itoa(c)+" t:"+getTime(), sender)
+	console.Log("AES multi enc"+log(c), sender)
 }
 
-func enc(key []byte) {
+func aesEnc(key []byte) {
 
 	_, err := aes.Encrypt(key, string(key))
 	if err != nil {
@@ -117,11 +118,15 @@ func elapsed() bool {
 	return true
 }
 
-func getTime() string {
+func log(c int) string {
 
 	elapsed := tEnd.Sub(tStart)
-	f := elapsed.Seconds() * 1000.0
-	return strconv.FormatFloat(f, 'f', 1, 64) + "ms"
+	t := elapsed.Seconds()
+
+	count := float64(c) / 1000.0
+	count = count / t
+
+	return "\t" + strconv.FormatFloat(count, 'f', 3, 64) + " KC/s"
 }
 
 /*
