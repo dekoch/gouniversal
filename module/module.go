@@ -6,6 +6,7 @@ import (
 	"github.com/dekoch/gouniversal/build"
 	"github.com/dekoch/gouniversal/module/console"
 	"github.com/dekoch/gouniversal/module/fileshare"
+	"github.com/dekoch/gouniversal/module/gpsnav"
 	"github.com/dekoch/gouniversal/module/heatingmath"
 	"github.com/dekoch/gouniversal/module/homepage"
 	"github.com/dekoch/gouniversal/module/iptracker"
@@ -78,6 +79,11 @@ func LoadConfig() {
 		iptracker.LoadConfig()
 	}
 
+	if build.ModuleNav {
+		sharedConsole.Log("GPSNav enabled", "Module")
+		gpsnav.LoadConfig()
+	}
+
 	if build.ModuleModbusTest {
 		sharedConsole.Log("ModbusTest enabled", "Module")
 		modbustest.LoadConfig()
@@ -137,6 +143,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	if build.ModuleIPTracker {
 		iptracker.RegisterPage(page, nav)
+	}
+
+	if build.ModuleNav {
+		gpsnav.RegisterPage(page, nav)
 	}
 }
 
@@ -206,6 +216,13 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 			iptracker.Render(page, nav, r)
 		}
 	}
+
+	if build.ModuleNav {
+		if nav.IsNext("GPSNav") {
+
+			gpsnav.Render(page, nav, r)
+		}
+	}
 }
 
 // Exit is called before program exit
@@ -241,6 +258,10 @@ func Exit() {
 
 	if build.ModuleIPTracker {
 		iptracker.Exit()
+	}
+
+	if build.ModuleNav {
+		gpsnav.Exit()
 	}
 
 	if build.ModuleLogViewer {

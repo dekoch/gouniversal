@@ -14,6 +14,7 @@ const ModuleMessenger = false
 const ModuleMeshFS = true
 const ModuleMediaDownloader = true
 const ModuleIPTracker = true
+const ModuleNav = false
 const ModuleModbusTest = false
 const ModuleHeatingMath = false
 const ModuleMark = false
