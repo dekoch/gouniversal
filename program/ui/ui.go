@@ -132,6 +132,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		MenuLeft  template.HTML
 		MenuRight template.HTML
 		UUID      template.HTML
+		Token     template.HTML
 		Content   template.HTML
 	}
 	var c content
@@ -278,6 +279,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	c.MenuLeft = template.HTML(htmlMenuLeft)
 	c.MenuRight = template.HTML(htmlMenuRight)
 	c.UUID = template.HTML(nav.User.UUID)
+	c.Token = template.HTML(alert.Tokens.New(nav.User.UUID))
 	c.Content = template.HTML(page.Content)
 
 	p, err := functions.PageToString(global.UIConfig.ProgramFileRoot+"program.html", c)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/console/global"
@@ -12,6 +13,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/stringarray"
+	token "github.com/dekoch/gouniversal/shared/token"
 )
 
 // SSE writes Server-Sent Events to an HTTP client.
@@ -23,8 +25,10 @@ type consoleMessage struct {
 }
 
 var (
+	mut           sync.Mutex
 	messages      = make(chan consoleMessage)
 	clients       stringarray.StringArray
+	mytoken       token.Token
 	streamEnabled bool
 )
 
@@ -43,11 +47,13 @@ func RegisterPage(page *typeconsole.Page, nav *navigation.Navigation) {
 func Render(page *typeconsole.Page, nav *navigation.Navigation, r *http.Request) {
 
 	type content struct {
-		UUID template.HTML
+		UUID  template.HTML
+		Token template.HTML
 	}
 	var c content
 
 	c.UUID = template.HTML(nav.User.UUID)
+	c.Token = template.HTML(mytoken.New(nav.User.UUID))
 
 	p, err := functions.PageToString(global.Config.UIFileRoot+"console.html", c)
 	if err == nil {
@@ -56,12 +62,7 @@ func Render(page *typeconsole.Page, nav *navigation.Navigation, r *http.Request)
 		nav.RedirectPath("404", true)
 	}
 
-	if streamEnabled == false {
-
-		streamEnabled = true
-
-		stream()
-	}
+	stream()
 }
 
 func (s *sse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +83,26 @@ func (s *sse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := r.FormValue("uuid")
-	//fmt.Println("new " + id)
+
+	if functions.IsEmpty(id) {
+		fmt.Fprintf(w, "error: UUID not set")
+		f.Flush()
+		return
+	}
+
+	tok := r.FormValue("token")
+
+	if functions.IsEmpty(tok) {
+		fmt.Fprintf(w, "error: token not set")
+		f.Flush()
+		return
+	}
+
+	if mytoken.Check(id, tok) == false {
+		fmt.Fprintf(w, "error: invalid token")
+		f.Flush()
+		return
+	}
 
 	clients.Add(id)
 
@@ -104,6 +124,15 @@ func (s *sse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func stream() {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	if streamEnabled {
+		return
+	}
+
+	streamEnabled = true
 
 	go func() {
 

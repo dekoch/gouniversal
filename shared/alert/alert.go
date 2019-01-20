@@ -3,12 +3,15 @@ package alert
 import (
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
+
+	"github.com/dekoch/gouniversal/shared/counter"
+	"github.com/dekoch/gouniversal/shared/functions"
+	token "github.com/dekoch/gouniversal/shared/token"
 )
 
 // SSE writes Server-Sent Events to an HTTP client.
-type sSE struct{}
+type sse struct{}
 
 type alertType int
 
@@ -27,11 +30,18 @@ type alertMessage struct {
 
 var (
 	messages = make(chan alertMessage)
-	mut      sync.RWMutex
-	clients  int
+	clients  counter.Counter
+	Tokens   token.Token
 )
 
-func (s *sSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func Start() {
+
+	clients.Reset()
+
+	http.Handle("/alert/", &sse{})
+}
+
+func (s *sse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, "cannot stream", http.StatusInternalServerError)
@@ -49,18 +59,33 @@ func (s *sSE) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := r.FormValue("uuid")
-	//fmt.Println("new " + id)
 
-	mut.Lock()
-	clients += 1
-	mut.Unlock()
+	if functions.IsEmpty(id) {
+		fmt.Fprintf(w, "error: UUID not set")
+		f.Flush()
+		return
+	}
+
+	tok := r.FormValue("token")
+
+	if functions.IsEmpty(tok) {
+		fmt.Fprintf(w, "error: token not set")
+		f.Flush()
+		return
+	}
+
+	if Tokens.Check(id, tok) == false {
+		fmt.Fprintf(w, "error: invalid token")
+		f.Flush()
+		return
+	}
+
+	clients.Add()
 
 	for {
 		select {
 		case <-cn.CloseNotify():
-			mut.Lock()
-			clients -= 1
-			mut.Unlock()
+			clients.Remove()
 			//fmt.Println("done: closed connection")
 			return
 		case am := <-messages:
@@ -115,21 +140,10 @@ func Message(t alertType, title string, message interface{}, sender string, clie
 		am.ClientUUID = clientuuid
 		am.Content = alert
 
-		mut.RLock()
-		c := clients
-		mut.RUnlock()
-
-		// send alert to all waiting clients
-		for i := 0; i < c; i++ {
+		// send message to all waiting clients
+		for i := 0; i < clients.GetCount(); i++ {
 
 			messages <- am
 		}
 	}()
-}
-
-func Start() {
-
-	clients = 0
-
-	http.Handle("/alert/", &sSE{})
 }

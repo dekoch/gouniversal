@@ -2,7 +2,7 @@
     <p id="console"></p>
     <script type="text/javascript">
         // Create a new HTML5 EventSource
-        var sourceConsole = new EventSource('/console/?uuid={{.UUID}}');
+        var sourceConsole = new EventSource('/console/?uuid={{.UUID}}&token={{.Token}}');
         // Create a callback for when a new message is received.
         sourceConsole.onmessage = function(c) {
             // Append the `data` attribute of the message to the DOM.
