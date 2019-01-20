@@ -42,14 +42,14 @@ gouniversal/
 open-source Manager for IoT Devices
  - SimpleSwitch v1.0
 
-Device Firmware: [https://github.com/dekoch/GOopenESPM](https://github.com/dekoch/GOopenESPM)
+Device Firmware: [github.com/dekoch/GOopenESPM](https://github.com/dekoch/GOopenESPM)
 
 ## Fileshare
 Up/Download, Manage and Share your Files.
 
 ## Homepage
 Auto generate Menu entries for your html Files.
-Demo: [https://dekoch.net](https://dekoch.net)
+Demo: [dekoch.net](https://dekoch.net)
 
 ## MeshFileSync
 Sync files over a mesh network
@@ -74,11 +74,21 @@ goroutine demo
 Benchmark module
 
 # used packages
-github.com/asaskevich/govalidator
-github.com/goburrow/modbus
-github.com/goburrow/serial
-github.com/google/uuid
-github.com/gorilla/context
-github.com/gorilla/securecookie
-github.com/gorilla/sessions
-github.com/tevino/abool
+
+[github.com/adrianmo/go-nmea](https://github.com/adrianmo/go-nmea)
+
+[github.com/asaskevich/govalidator](https://github.com/asaskevich/govalidator)
+
+[github.com/goburrow/modbus](https://github.com/goburrow/modbus)
+
+[github.com/google/uuid](https://github.com/google/uuid)
+
+[github.com/gorilla/securecookie](https://github.com/gorilla/securecookie)
+
+[github.com/gorilla/sessions](https://github.com/gorilla/sessions)
+
+[github.com/StefanSchroeder/Golang-Ellipsoid/ellipsoid](https://github.com/StefanSchroeder/Golang-Ellipsoid/ellipsoid)
+
+[github.com/tarm/serial](https://github.com/tarm/serial)
+
+[github.com/twpayne/go-gpx](https://github.com/twpayne/go-gpx)
