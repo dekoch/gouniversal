@@ -16,8 +16,8 @@ import (
 	"github.com/dekoch/gouniversal/module/mesh/typemesh"
 	"github.com/dekoch/gouniversal/shared/aes"
 	"github.com/dekoch/gouniversal/shared/console"
+	"github.com/dekoch/gouniversal/shared/sbool"
 	"github.com/google/uuid"
-	"github.com/tevino/abool"
 
 	meshFSServer "github.com/dekoch/gouniversal/module/meshfilesync/server"
 )
@@ -27,16 +27,13 @@ const debug = false
 type Server struct{}
 
 var ln net.Listener
-var started *abool.AtomicBool
-var restart *abool.AtomicBool
+var started sbool.Sbool
+var restart sbool.Sbool
 
 func LoadConfig() {
 
-	restart = abool.New()
-	restart.UnSet()
-
-	started = abool.New()
 	started.UnSet()
+	restart.UnSet()
 
 	go start()
 }

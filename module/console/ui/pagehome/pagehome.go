@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/console/global"
@@ -12,6 +11,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/sbool"
 	"github.com/dekoch/gouniversal/shared/stringarray"
 	token "github.com/dekoch/gouniversal/shared/token"
 )
@@ -25,11 +25,10 @@ type consoleMessage struct {
 }
 
 var (
-	mut           sync.Mutex
 	messages      = make(chan consoleMessage)
 	clients       stringarray.StringArray
 	mytoken       token.Token
-	streamEnabled bool
+	streamEnabled sbool.Sbool
 )
 
 func LoadConfig() {
@@ -125,14 +124,11 @@ func (s *sse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func stream() {
 
-	mut.Lock()
-	defer mut.Unlock()
-
-	if streamEnabled {
+	if streamEnabled.IsSet() {
 		return
 	}
 
-	streamEnabled = true
+	streamEnabled.Set()
 
 	go func() {
 
