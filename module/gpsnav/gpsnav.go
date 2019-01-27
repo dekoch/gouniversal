@@ -38,3 +38,23 @@ func Exit() {
 	core.Exit()
 	global.Config.SaveConfig()
 }
+
+func Start(startWaypoint int) error {
+
+	return core.Start(startWaypoint)
+}
+
+func Stop() error {
+
+	return core.Stop()
+}
+
+func GetState() int {
+
+	return core.GetState()
+}
+
+func GetBearing() (float64, error) {
+
+	return core.GetBearing()
+}

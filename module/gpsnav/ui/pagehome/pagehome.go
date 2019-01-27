@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/dekoch/gouniversal/module/gpsnav/core"
 	"github.com/dekoch/gouniversal/module/gpsnav/global"
 	"github.com/dekoch/gouniversal/module/gpsnav/lang"
 	"github.com/dekoch/gouniversal/module/gpsnav/typenav"
+	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
 )
@@ -31,7 +33,18 @@ func Render(page *typenav.Page, nav *navigation.Navigation, r *http.Request) {
 
 	c.Lang = page.Lang.Home
 
-	bearing, _ := global.Geo.GetTargetBearing()
+	switch r.FormValue("edit") {
+	case "start":
+		core.Start(0)
+
+	case "stop":
+		core.Stop()
+	}
+
+	bearing, err := core.GetBearing()
+	if err != nil {
+		alert.Message(alert.INFO, "bearing", err, "nav", nav.User.UUID)
+	}
 
 	c.Bearing = template.HTML(strconv.FormatFloat(bearing, 'f', 1, 64))
 	c.Path = path(bearing)
@@ -75,7 +88,7 @@ func path(bearing float64) template.HTML {
 		// target direction
 		context.rotate(` + strconv.Itoa(intBearing) + ` * Math.PI / 180);
 		context.beginPath();
-		context.moveTo(0, -50);
+		context.moveTo(0, -70);
 		context.lineTo(0, 0);
 		context.strokeStyle = 'green';
 		context.stroke();

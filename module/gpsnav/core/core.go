@@ -2,30 +2,38 @@ package core
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/adrianmo/go-nmea"
 
+	"github.com/dekoch/gouniversal/module/gpsnav/geo"
 	"github.com/dekoch/gouniversal/module/gpsnav/global"
 	"github.com/dekoch/gouniversal/module/gpsnav/gps"
 	"github.com/dekoch/gouniversal/module/gpsnav/route"
 	"github.com/dekoch/gouniversal/module/gpsnav/tracker"
 	"github.com/dekoch/gouniversal/module/gpsnav/typenav"
 	"github.com/dekoch/gouniversal/shared/console"
+	"github.com/dekoch/gouniversal/shared/sbool"
+	"github.com/dekoch/gouniversal/shared/sint"
+	"github.com/dekoch/gouniversal/shared/timeout"
 )
 
 var (
-	mut   sync.RWMutex
-	delay time.Duration
-	step  typenav.StepType
-	mygps gps.Gps
+	mut          sync.RWMutex
+	delay        time.Duration
+	step         typenav.StepType
+	mygps        gps.Gps
+	stop         sbool.Sbool
+	state        sint.Sint
+	watchdog     timeout.TimeOut
+	lastWaypoint sint.Sint
+	bearing      geo.Geo
 )
 
 func LoadConfig() {
 
-	err := mygps.OpenPort(global.Config.GetGPSPort(), global.Config.GetGPSBaud())
+	err := mygps.OpenPort(global.Config.GetGPSPort(), global.Config.GetGPSBaud(), global.Config.GetGPSTimeOut())
 	if err != nil {
 		console.Log(err, "")
 		return
@@ -33,8 +41,9 @@ func LoadConfig() {
 
 	mygps.LoadConfig()
 
-	go run()
-	//go job()
+	state.Set(typenav.STOPPED)
+
+	go job()
 }
 
 func Exit() {
@@ -42,20 +51,72 @@ func Exit() {
 	mygps.ClosePort()
 }
 
+func Start(startWaypoint int) error {
+
+	if state.Get() == typenav.STOPPED {
+
+		stop.UnSet()
+		state.Set(typenav.RUNNING)
+
+		watchdog.SetTimeOut(10000)
+		watchdog.Enable(true)
+		watchdog.Reset()
+
+		go run(startWaypoint)
+
+		return nil
+	}
+
+	return errors.New("nav already running")
+}
+
+func Stop() error {
+
+	if state.Get() == typenav.RUNNING {
+
+		stop.Set()
+
+		return nil
+	}
+
+	return errors.New("nav not running")
+}
+
+func GetState() int {
+
+	return state.Get()
+}
+
+func GetBearing() (float64, error) {
+
+	if state.Get() != typenav.RUNNING {
+		return 0.0, errors.New("nav not running")
+	}
+
+	return bearing.GetBearing()
+}
+
 func job() {
 
-	tStepLog := time.NewTicker(time.Duration(30) * time.Second)
+	tCheckWatchdog := time.NewTicker(time.Duration(2) * time.Second)
 
 	for {
-
 		select {
-		case <-tStepLog.C:
-			console.Log("step "+string(getStep()), "core")
+		case <-tCheckWatchdog.C:
+			if state.Get() == typenav.RUNNING &&
+				watchdog.Elapsed() {
+
+				console.Log("error: watchog", "nav")
+				state.Set(typenav.STOPPED)
+				Start(lastWaypoint.Get())
+			}
 		}
 	}
 }
 
-func run() {
+func run(startWaypoint int) {
+
+	console.Log("started", "nav")
 
 	var (
 		err    error
@@ -72,6 +133,13 @@ func run() {
 	}
 
 	rt.StartRoute()
+	err = rt.SetWaypoint(startWaypoint)
+	if err != nil {
+		console.Log(err, "")
+		return
+	}
+
+	lastWaypoint.Set(startWaypoint)
 	nextwpt, _ := rt.GetNextWaypoint()
 	console.Log(nextwpt.Name, "nav")
 
@@ -84,8 +152,8 @@ func run() {
 	tr.Init(global.Config.GetGPXRoot()+fileName, global.Config.GetGPXTrackDist(), true)
 	tr.Enable(true)
 
-	nextStep(typenav.StepInit, 0)
-	oldStep := typenav.StepInit
+	nextStep(typenav.StepInit, 0, true)
+	//oldStep := typenav.StepInit
 
 	for {
 
@@ -98,9 +166,9 @@ func run() {
 			switch getStep() {
 			case typenav.StepInit:
 
-				nextStep(typenav.StepWaitForGPSFix, 200)
-
 				mygps.ResetTimeOut()
+
+				nextStep(typenav.StepWaitForGPSFix, global.Config.GetGPSTimeOut()*2, true)
 
 			case typenav.StepWaitForGPSFix:
 
@@ -111,21 +179,16 @@ func run() {
 				fix := curPos.Fix
 
 				if fix != nmea.GPS {
-
-					if len(fix) > 0 {
-						fmt.Println(fix)
-					}
-
 					return
 				}
 
-				nextStep(typenav.StepGPSFix, 0)
+				nextStep(typenav.StepGPSFix, 0, true)
 
 			case typenav.StepGPSFix:
 
-				global.Geo.SetStartPos(curPos)
+				bearing.SetStartPos(curPos)
 
-				nextStep(typenav.StepCheckGPS, 0)
+				nextStep(typenav.StepCheckGPS, 0, true)
 
 			case typenav.StepCheckGPS:
 
@@ -139,11 +202,11 @@ func run() {
 					return
 				}
 
-				nextStep(typenav.StepNavigate, 0)
+				nextStep(typenav.StepNavigate, 0, false)
 
 			case typenav.StepNavigate:
 
-				nextStep(typenav.StepTrack, 0)
+				nextStep(typenav.StepTrack, 0, false)
 
 				onwpt, err := rt.OnWaypoint(curPos, global.Config.GetRouteWptMaxDist())
 				if err != nil {
@@ -165,8 +228,9 @@ func run() {
 					}
 
 					rt.NextWaypoint()
+					lastWaypoint.Set(rt.GetWaypointNo())
 
-					global.Geo.SetStartPos(curPos)
+					bearing.SetStartPos(curPos)
 
 					nextwpt, _ := rt.GetNextWaypoint()
 					console.Log(nextwpt.Name, "nav")
@@ -177,52 +241,65 @@ func run() {
 					return
 				}
 
-				global.Geo.SetTargetPos(nextwpt)
-				global.Geo.SetCurrentPos(curPos)
+				bearing.SetTargetPos(nextwpt)
+				bearing.SetCurrentPos(curPos)
 
-				//bearing, err := global.Geo.GetTargetBearing()
+				//bearing, _ := bearing.GetTargetBearing()
 				//fmt.Println(bearing)
 
 			case typenav.StepTrack:
 
-				nextStep(typenav.StepEnd, 0)
+				nextStep(typenav.StepEnd, 0, false)
 
 				go func(p typenav.Pos) {
 					tr.CheckPos(p)
 				}(curPos)
 
 			case typenav.StepEnd:
-				nextStep(typenav.StepCheckGPS, 200)
+				nextStep(typenav.StepCheckGPS, 200, false)
 
 			default:
-				nextStep(typenav.StepInit, 0)
+				nextStep(typenav.StepInit, 0, true)
 			}
 		}()
 
 		if err != nil {
 
-			console.Log("error: step "+string(getStep())+" "+err.Error(), "core")
+			console.Log("error: step "+string(getStep())+" "+err.Error(), "nav")
 
-			nextStep(typenav.StepInit, 0)
+			nextStep(typenav.StepInit, 0, true)
 		}
 
-		if getStep() != oldStep {
+		/*if getStep() != oldStep {
 			oldStep = getStep()
 
-			//fmt.Printf("step %v\n", oldStep)
+			fmt.Printf("step %v\n", oldStep)
+		}*/
+
+		if stop.IsSet() {
+
+			console.Log("stopped", "nav")
+			state.Set(typenav.STOPPED)
+			return
 		}
+
+		watchdog.Reset()
 
 		time.Sleep(getDelay())
 	}
 }
 
-func nextStep(s typenav.StepType, m int) {
+func nextStep(s typenav.StepType, m int, log bool) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
 	step = s
 	delay = time.Duration(m) * time.Millisecond
+
+	if log {
+		console.Log("step "+string(step), "nav")
+	}
 }
 
 func getStep() typenav.StepType {

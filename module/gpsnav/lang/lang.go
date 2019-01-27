@@ -8,6 +8,8 @@ type Home struct {
 	Menu    string
 	Title   string
 	Bearing string
+	Start   string
+	Stop    string
 }
 
 type Alert struct {
@@ -32,6 +34,8 @@ func DefaultEn() LangFile {
 	l.Home.Menu = "Tools"
 	l.Home.Title = "GPSNav"
 	l.Home.Bearing = "Bearing"
+	l.Home.Start = "Start"
+	l.Home.Stop = "Stop"
 
 	l.Alert.Success = "Success"
 	l.Alert.Info = "Info"

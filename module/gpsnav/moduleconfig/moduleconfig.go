@@ -14,8 +14,9 @@ import (
 const configFilePath = "data/config/gpsnav/"
 
 type gps struct {
-	Port string
-	Baud int
+	Port    string
+	Baud    int
+	TimeOut int // millisecond
 }
 
 type gpx struct {
@@ -58,6 +59,7 @@ func (hc *ModuleConfig) loadDefaults() {
 
 	hc.Gps.Port = "/dev/ttyACM0"
 	hc.Gps.Baud = 19200
+	hc.Gps.TimeOut = 500
 
 	hc.Gpx.FileRoot = "data/gpsnav/gpx/"
 	hc.Gpx.TrackDistance = 1.0
@@ -149,6 +151,22 @@ func (hc *ModuleConfig) GetGPSBaud() int {
 	defer mut.RUnlock()
 
 	return hc.Gps.Baud
+}
+
+func (hc *ModuleConfig) SetGPSTimeOut(m int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.Gps.TimeOut = m
+}
+
+func (hc *ModuleConfig) GetGPSTimeOut() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.Gps.TimeOut
 }
 
 func (hc *ModuleConfig) GetGPXRoot() string {

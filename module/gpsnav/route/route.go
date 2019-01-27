@@ -70,6 +70,20 @@ func (rt *Route) StartRoute() {
 	rt.nextWpt = 0
 }
 
+func (rt *Route) SetWaypoint(no int) error {
+
+	if no < 0 ||
+		no >= len(rt.wpt) {
+		return errors.New("invalid no")
+	}
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	rt.nextWpt = no
+	return nil
+}
+
 func (rt *Route) NextWaypoint() {
 
 	mut.Lock()
@@ -84,6 +98,14 @@ func (rt *Route) GetNextWaypoint() (typenav.Pos, error) {
 	defer mut.RUnlock()
 
 	return rt.getWaypoint(rt.nextWpt)
+}
+
+func (rt *Route) GetWaypointNo() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return rt.nextWpt
 }
 
 func (rt *Route) GetWaypoint(no int) (typenav.Pos, error) {

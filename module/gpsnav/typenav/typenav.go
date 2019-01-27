@@ -6,6 +6,11 @@ import (
 	"github.com/dekoch/gouniversal/module/gpsnav/lang"
 )
 
+const (
+	STOPPED int = 1 + iota
+	RUNNING
+)
+
 type StepType string
 
 const (

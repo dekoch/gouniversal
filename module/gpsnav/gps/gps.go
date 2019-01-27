@@ -6,10 +6,11 @@ import (
 	"sync"
 	"time"
 
-	nmea "github.com/adrianmo/go-nmea"
 	"github.com/dekoch/gouniversal/module/gpsnav/typenav"
 	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/timeout"
 
+	nmea "github.com/adrianmo/go-nmea"
 	"github.com/tarm/serial"
 )
 
@@ -21,12 +22,11 @@ type Gps struct {
 	sp         serial.Port
 	nmea       []string
 	pos        typenav.Pos
-	timeOut    time.Time
+	watchdog   timeout.TimeOut
 }
 
 var (
-	mut      sync.RWMutex
-	dTimeOut time.Duration
+	mut sync.RWMutex
 )
 
 func (gps *Gps) LoadConfig() {
@@ -38,13 +38,17 @@ func (gps *Gps) LoadConfig() {
 	go gps.job()
 }
 
-func (gps *Gps) OpenPort(port string, baud int) error {
+func (gps *Gps) OpenPort(port string, baud int, timeout int) error {
 
 	mut.Lock()
 	defer mut.Unlock()
 
 	gps.port = port
 	gps.baud = baud
+
+	gps.watchdog.SetTimeOut(timeout)
+	gps.watchdog.Enable(true)
+	gps.watchdog.Reset()
 
 	return gps.openPort()
 }
@@ -125,14 +129,14 @@ func (gps *Gps) readPort() {
 				for _, l := range lines {
 
 					if functions.IsEmpty(l) {
-						return
+						continue
 					}
 
 					l = strings.TrimSpace(l)
 
 					if validGPGGA("$" + l) {
 
-						gps.ResetTimeOut()
+						gps.watchdog.Reset()
 
 						last = ""
 						gps.parse("$" + l)
@@ -189,6 +193,9 @@ func (gps *Gps) parse(sentence string) {
 			return
 		}
 
+		mut.Lock()
+		defer mut.Unlock()
+
 		t := time.Now()
 		gps.pos.Time = time.Date(t.Year(), t.Month(), t.Day(), g.Time.Hour, g.Time.Minute, g.Time.Second, g.Time.Millisecond, time.UTC)
 		gps.pos.Lat = g.Latitude
@@ -203,23 +210,12 @@ func (gps *Gps) parse(sentence string) {
 
 func (gps *Gps) ResetTimeOut() {
 
-	mut.Lock()
-	defer mut.Unlock()
-
-	gps.timeOut = time.Now()
+	gps.watchdog.Reset()
 }
 
 func (gps *Gps) GetTimeOut() bool {
 
-	mut.RLock()
-	defer mut.RUnlock()
-
-	t := time.Since(gps.timeOut)
-	if t > time.Duration(1000)*time.Millisecond {
-		return true
-	}
-
-	return false
+	return gps.watchdog.Elapsed()
 }
 
 func (gps *Gps) GetPos() typenav.Pos {
