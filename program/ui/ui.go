@@ -345,7 +345,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	if newPath != "" {
 		nav.NavigatePath(newPath)
 
-		console.Output(newPath, "handleApp()")
+		console.Output(newPath, "app")
 	}
 
 	// select first allowed page
@@ -530,7 +530,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	t := time.Now()
 	elapsed := t.Sub(start)
 	f := elapsed.Seconds() * 1000.0
-	console.Output(nav.Path+" "+strconv.FormatFloat(f, 'f', 1, 64)+"ms", "handleApp()")
+	console.Output(nav.Path+" "+strconv.FormatFloat(f, 'f', 1, 64)+"ms", "app")
 }
 
 func handleRecovery(w http.ResponseWriter, r *http.Request) {

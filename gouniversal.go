@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"os"
+	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -52,6 +54,15 @@ func main() {
 			case "help":
 				printHelp()
 
+			case "gover":
+				console.Output(runtime.Version(), " ")
+
+			case "gocpu":
+				console.Output(strconv.Itoa(runtime.NumCPU()), " ")
+
+			case "gonum":
+				console.Output(strconv.Itoa(runtime.NumGoroutine()), " ")
+
 			case "exit":
 				exitApp = true
 
@@ -81,6 +92,9 @@ func printHelp() {
 	console.Output("Command\t\tMeaning", " ")
 	console.Output("", " ")
 	console.Output("help\t\tShow this help text", " ")
+	console.Output("gover\t\tReturns the Go tree's version string.", " ")
+	console.Output("gocpu\t\tReturns the number of logical CPUs usable by the current process.", " ")
+	console.Output("gonum\t\tReturns the number of goroutines that currently exist.", " ")
 	console.Output("exit\t\tExit this program", " ")
 }
 
