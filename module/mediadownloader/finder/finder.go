@@ -40,9 +40,7 @@ func findExtension(ur, raw, extension string) ([]typemd.DownloadFile, error) {
 	var ret []typemd.DownloadFile
 
 	raw = strings.Replace(raw, "'", "\"", -1)
-
-	files := strings.Split(raw, "href=\"")
-	files = append(strings.Split(raw, "src=\""), files...)
+	files := strings.Split(raw, "\"")
 
 	for _, f := range files {
 

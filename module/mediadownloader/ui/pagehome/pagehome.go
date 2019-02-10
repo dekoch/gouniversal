@@ -128,8 +128,12 @@ func find(ur string, download bool, page *typemd.Page, nav *navigation.Navigatio
 				}
 
 			case 3:
-				if strings.Contains(resp.Header.Get("Content-Type"), "text/html") == false {
-					err = errors.New(page.Lang.Home.NotSupportedContentType + ": " + resp.Header.Get("Content-Type"))
+				ct := resp.Header.Get("Content-Type")
+
+				if ct != "" {
+					if strings.Contains(ct, "text/html") == false {
+						err = errors.New(page.Lang.Home.NotSupportedContentType + ": " + ct)
+					}
 				}
 
 			case 4:
