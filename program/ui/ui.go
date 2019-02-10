@@ -293,10 +293,23 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 
-	if r.URL.Path == "/" {
+	newPath := r.URL.Query().Get("path")
+
+	if r.URL.Path == "/" ||
+		newPath != "" {
+
 		session, _ := store.Get(r, cookieName)
 		if session.IsNew {
 			initCookies(w, r)
+		}
+
+		// set new path to cookie
+		if newPath != "" {
+			nav := new(navigation.Navigation)
+			getSession(nav, w, r)
+			nav.NavigatePath(newPath)
+			setSession(nav, w, r)
+			console.Output(newPath, "app")
 		}
 
 		// redirect to HTTPS if enabled
