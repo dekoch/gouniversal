@@ -1,0 +1,33 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>{{.Lang.Name}}:</th>
+                <td><input type="text" class="form-control" name="Name" value="{{.Name}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.Company}}:</th>
+                <td><input type="text" class="form-control" name="Company" value="{{.Company}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.Street}}:</th>
+                <td><input type="text" class="form-control" name="Street" value="{{.Street}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.City}}:</th>
+                <td><input type="text" class="form-control" name="City" value="{{.City}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.URL}}:</th>
+                <td><input type="text" class="form-control" name="Url" value="{{.URL}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.UUID}}:</th>
+                <td>{{.UUID}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+    <button class="btn btn-danger fa fa-trash" type="submit" name="edit" value="delete" title="{{.Lang.Delete}}"></button>
+</form>

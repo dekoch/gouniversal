@@ -65,6 +65,7 @@ func CheckFormInput(key string, r *http.Request) (string, error) {
 	inputCheck = strings.Replace(inputCheck, ":", "", -1)
 	inputCheck = strings.Replace(inputCheck, ",", "", -1)
 	inputCheck = strings.Replace(inputCheck, ";", "", -1)
+	inputCheck = strings.Replace(inputCheck, "/", "", -1)
 
 	if govalidator.IsUTFLetterNumeric(inputCheck) {
 		return input, nil

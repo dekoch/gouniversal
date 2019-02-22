@@ -7,18 +7,18 @@ import (
 	"github.com/dekoch/gouniversal/shared/functions"
 )
 
-func AddRow(fname string, row []string) error {
+func AddRow(filepath string, row []string) error {
 
-	err := functions.CreateDir(fname)
+	err := functions.CreateDir(filepath)
 	if err != nil {
 		return err
 	}
 
 	var rows [][]string
 
-	if _, err = os.Stat(fname); os.IsNotExist(err) == false {
+	if _, err = os.Stat(filepath); os.IsNotExist(err) == false {
 		// read the file
-		f, err := os.Open(fname)
+		f, err := os.Open(filepath)
 		if err != nil {
 			return err
 		}
@@ -35,7 +35,7 @@ func AddRow(fname string, row []string) error {
 	rows = append(rows, row)
 
 	// write the file
-	f, err := os.Create(fname)
+	f, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
@@ -45,4 +45,27 @@ func AddRow(fname string, row []string) error {
 		return err
 	}
 	return f.Close()
+}
+
+func ReadAll(filepath string) ([][]string, error) {
+
+	var ret [][]string
+
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		return ret, err
+	}
+
+	// read the file
+	f, err := os.Open(filepath)
+	if err != nil {
+		return ret, err
+	}
+
+	r := csv.NewReader(f)
+	ret, err = r.ReadAll()
+	if err != nil {
+		return ret, err
+	}
+
+	return ret, f.Close()
 }

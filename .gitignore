@@ -21,10 +21,12 @@ i386
 .glide/
 
 # Project data
+data/config/gasprice/
 data/config/mesh/mesh
 data/config/mesh/network
 data/config/mesh/network.key
 data/config/meshfilesync/meshfilesync
+data/gasprice/
 data/homepage/dekoch.net/static/
 data/log/
 data/meshfilesync/

@@ -57,6 +57,9 @@ Sync files over a mesh network
 ## MediaDownloader
 Download Link Creator
 
+## GasPrice
+Track Gas Prices
+
 ## Console
 Live Console output with HTML5 SSE.
 
