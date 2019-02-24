@@ -20,6 +20,7 @@ import (
 func main() {
 	console.LoadConfig()
 	console.Log("App starting...", " ")
+	console.Log("Build: "+build.BuildTime, " ")
 	console.Input("")
 
 	en := lang.DefaultEn()
@@ -53,6 +54,9 @@ func main() {
 			switch s {
 			case "help":
 				printHelp()
+
+			case "build":
+				console.Output(build.BuildTime, " ")
 
 			case "gover":
 				console.Output(runtime.Version(), " ")
@@ -92,6 +96,7 @@ func printHelp() {
 	console.Output("Command\t\tMeaning", " ")
 	console.Output("", " ")
 	console.Output("help\t\tShow this help text", " ")
+	console.Output("build\t\tReturns the build timestamp.", " ")
 	console.Output("gover\t\tReturns the Go tree's version string.", " ")
 	console.Output("gocpu\t\tReturns the number of logical CPUs usable by the current process.", " ")
 	console.Output("gonum\t\tReturns the number of goroutines that currently exist.", " ")
