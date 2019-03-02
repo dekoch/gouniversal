@@ -3,6 +3,7 @@ package downloader
 import (
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/dekoch/gouniversal/module/mediadownloader/global"
 	"github.com/dekoch/gouniversal/module/mediadownloader/typemd"
@@ -23,4 +24,17 @@ func Download(f typemd.DownloadFile) error {
 	}
 
 	return file.WriteFile(global.Config.FileRoot+f.Filename, b)
+}
+
+func DownloadTest() {
+
+	var f typemd.DownloadFile
+
+	for i := 1; i <= 100; i++ {
+
+		f.Filename = strconv.Itoa(i) + ""
+		f.Url = "" + strconv.Itoa(i) + ""
+
+		Download(f)
+	}
 }

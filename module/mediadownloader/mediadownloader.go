@@ -17,6 +17,8 @@ func LoadConfig() {
 
 	en := lang.DefaultEn()
 	global.Lang = language.New(global.Config.LangFileRoot, en, "en")
+
+	//downloader.DownloadTest()
 }
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
