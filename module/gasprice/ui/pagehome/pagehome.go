@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/gasprice/csv"
@@ -116,7 +117,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	fileName := time.Now().Format("2006")
 	fileName += ".csv"
 
-	pl, err := csv.Import(global.Config.FileRoot+fileName, id, gasType, from, t)
+	pl, err := csv.Import(global.Config.FileRoot+fileName, id, gasType, from)
 	if err != nil {
 		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
 	}
@@ -127,7 +128,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 
 		sort.Slice(prices, func(i, j int) bool { return prices[i].Date.Unix() < prices[j].Date.Unix() })
 
-		c.CurrentPrice = template.HTML(strconv.FormatFloat(prices[0].Price, 'f', 3, 64) + " " + prices[0].Currency)
+		c.CurrentPrice = template.HTML(strconv.FormatFloat(prices[len(prices)-1].Price, 'f', 3, 64) + " " + prices[0].Currency)
 
 		c.Currency = template.JS(prices[0].Currency)
 
@@ -137,17 +138,25 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 
 				switch edit {
 				default:
-					labels += "\"" + price.AcquireDate.Format("15:04:05") + "\","
+					labels += "\"" + price.Date.Format("15:04:05") + "\","
 
 				case "7days":
-					labels += "\"" + price.AcquireDate.Format("2006-01-02 Mon") + "\","
+					labels += "\"" + price.Date.Format("2006-01-02 Mon") + "\","
 
 				case "30days":
-					labels += "\"" + price.AcquireDate.Format("2006-01-02") + "\","
+					labels += "\"" + price.Date.Format("2006-01-02") + "\","
 				}
 
 				datasets += "\"" + strconv.FormatFloat(price.Price, 'f', 3, 64) + "\","
 			}
+		}
+
+		if strings.HasSuffix(labels, ",") {
+			labels = strings.TrimRight(labels, ",")
+		}
+
+		if strings.HasSuffix(datasets, ",") {
+			datasets = strings.TrimRight(datasets, ",")
 		}
 	}
 

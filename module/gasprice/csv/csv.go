@@ -34,7 +34,7 @@ func Export(filepath string, pr price.Price) error {
 	return csv.AddRow(filepath, row)
 }
 
-func Import(filepath, uid, gastype string, from, to time.Time) (price.PriceList, error) {
+func Import(filepath, uid, gastype string, from time.Time) (price.PriceList, error) {
 
 	var (
 		err error
@@ -123,7 +123,6 @@ func Import(filepath, uid, gastype string, from, to time.Time) (price.PriceList,
 			}
 
 			if pr.Date.Before(from) ||
-				pr.Date.After(to) ||
 				pr.Station != uid ||
 				pr.Type != gastype {
 
