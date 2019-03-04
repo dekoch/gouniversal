@@ -12,10 +12,25 @@ type TimeOut struct {
 	enabled bool
 }
 
+func (to *TimeOut) Start(millis int) {
+
+	to.mut.Lock()
+	defer to.mut.Unlock()
+
+	to.setTimeOut(millis)
+	to.enable(true)
+	to.reset()
+}
+
 func (to *TimeOut) SetTimeOut(millis int) {
 
 	to.mut.Lock()
 	defer to.mut.Unlock()
+
+	to.setTimeOut(millis)
+}
+
+func (to *TimeOut) setTimeOut(millis int) {
 
 	to.max = time.Duration(millis) * time.Millisecond
 }
@@ -25,6 +40,11 @@ func (to *TimeOut) Enable(b bool) {
 	to.mut.Lock()
 	defer to.mut.Unlock()
 
+	to.enable(b)
+}
+
+func (to *TimeOut) enable(b bool) {
+
 	to.enabled = b
 }
 
@@ -32,6 +52,11 @@ func (to *TimeOut) Reset() {
 
 	to.mut.Lock()
 	defer to.mut.Unlock()
+
+	to.reset()
+}
+
+func (to *TimeOut) reset() {
 
 	to.t = time.Now()
 }
@@ -51,4 +76,18 @@ func (to *TimeOut) Elapsed() bool {
 	}
 
 	return true
+}
+
+func (to *TimeOut) ElapsedMillis() float64 {
+
+	to.mut.RLock()
+	defer to.mut.RUnlock()
+
+	if to.enabled == false {
+		return 0.0
+	}
+
+	t := time.Since(to.t)
+
+	return t.Seconds() * 1000.0
 }

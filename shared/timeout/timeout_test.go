@@ -55,12 +55,35 @@ func TestEnable(t *testing.T) {
 		to.SetTimeOut(1)
 		to.Reset()
 
-		time.Sleep(time.Duration(1) * time.Millisecond)
+		time.Sleep(time.Duration(2) * time.Millisecond)
 
 		got := to.Elapsed()
 
 		if got != tt.want {
 			t.Errorf("Enable() test %d: got %t, want %t", i, got, tt.want)
 		}
+	}
+}
+
+func TestStartElapsedMillis(t *testing.T) {
+
+	var to TimeOut
+	to.Start(1000)
+
+	time.Sleep(10 * time.Millisecond)
+
+	got := to.ElapsedMillis()
+
+	if got < 9.5 ||
+		got > 10.5 {
+		t.Errorf("StartElapsedMillis() got %f, want 9.5..10.5", got)
+	}
+
+	to.Enable(false)
+
+	got = to.ElapsedMillis()
+
+	if got != 0.0 {
+		t.Errorf("StartElapsedMillis() got %f, want 0.0", got)
 	}
 }
