@@ -102,39 +102,39 @@ func (s *sse) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func Message(t alertType, title string, message interface{}, sender string, clientuuid string) {
 
-	m := fmt.Sprintf("%v", message)
-
 	if t == NONE {
 		return
 	}
 
 	go func() {
 
-		time.Sleep(500 * time.Millisecond)
-
+		m := fmt.Sprintf("%v", message)
+		ti := time.Now().Format("15:04:05")
 		alert := ""
 
 		if t == SUCCESS {
 			alert += "<div class=\"alert alert-success alert-dismissible\">"
 			alert += "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>"
-			alert += "<strong>" + title + "</strong> " + m
+			alert += ti + " <strong>" + title + ":</strong> " + m
 			alert += "</div>"
 		} else if t == INFO {
 			alert += "<div class=\"alert alert-info alert-dismissible\">"
 			alert += "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>"
-			alert += "<strong>" + title + "</strong> " + m
+			alert += ti + " <strong>" + title + ":</strong> " + m
 			alert += "</div>"
 		} else if t == WARNING {
 			alert += "<div class=\"alert alert-warning alert-dismissible\">"
 			alert += "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>"
-			alert += "<strong>" + title + "</strong> " + m
+			alert += ti + " <strong>" + title + ":</strong> " + m
 			alert += "</div>"
 		} else {
 			alert += "<div class=\"alert alert-danger alert-dismissible\">"
 			alert += "<a href=\"#\" class=\"close\" data-dismiss=\"alert\" aria-label=\"close\">&times;</a>"
-			alert += "<strong>" + title + "</strong> " + m
+			alert += ti + " <strong>" + title + ":</strong> " + m
 			alert += "</div>"
 		}
+
+		time.Sleep(500 * time.Millisecond)
 
 		var am alertMessage
 		am.ClientUUID = clientuuid
