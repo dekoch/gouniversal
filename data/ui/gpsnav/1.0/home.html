@@ -1,8 +1,131 @@
-<form method="post">
-    {{.Lang.Bearing}}: {{.Bearing}}°<br>
-    <canvas id="myCanvas" width="200" height="200"></canvas>
-    {{.Path}}
-    <br>
-    <button class="btn btn-default fas fa-play" type="submit" name="edit" value="start" title="{{.Lang.Start}}"></button>
-    <button class="btn btn-default fas fa-stop" type="submit" name="edit" value="stop" title="{{.Lang.Stop}}"></button>
+<table class="table">
+    <tr>
+        <td>{{.Lang.Time}}:</td>
+        <td class="text-left" id="time"></td>
+    </tr>
+    <tr>
+        <td>{{.Lang.State}}:</td>
+        <td class="text-left" id="state"></td>
+    </tr>
+    <tr>
+        <td>{{.Lang.Step}}:</td>
+        <td class="text-left" id="step"></td>
+    </tr>
+    <tr>
+        <td>{{.Lang.CurrentPos}}:</td>
+        <td class="text-left" id="currentpos"></td>
+    </tr>
+    <tr>
+        <td>{{.Lang.NextWaypoint}}:</td>
+        <td class="text-left" id="nextwpt"></td>
+    </tr>
+    <tr>
+        <td>{{.Lang.Waypoint}}:</td>
+        <td class="text-left" id="wpt"></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>
+            <form method="post">
+                <button class="btn btn-default fas fa-play" type="submit" name="edit" value="start" title="{{.Lang.Start}}"></button>
+                <button class="btn btn-default fas fa-stop" type="submit" name="edit" value="stop" title="{{.Lang.Stop}}"></button>
+            </form>
+        </td>
+    </tr>
+</table>
+<br>
+<canvas id="myCanvas" width="300" height="300"></canvas>
+<br>
+<form enctype="multipart/form-data" action="/gpsnav/upload/" method="post">
+    <input type="file" name="uploadfile" />
+    <input type="hidden" name="uuid" value="{{.UUID}}" />
+    <input type="hidden" name="token" value="{{.Token}}" />
+    <button class="btn btn-outline-secondary fa fa-upload" type="submit" value="upload" title="{{.Lang.Upload}}"></button>
 </form>
+
+<script type="text/javascript">
+    // Create a new HTML5 EventSource
+    var sourceConsole = new EventSource('/gpsnav/sse/?uuid={{.UUID}}&token={{.Token}}');
+
+    var canvas = document.getElementById('myCanvas');
+    var context = canvas.getContext('2d');
+    // translate context to center of canvas
+    context.translate(canvas.width / 2, canvas.height / 2);
+
+    // Create a callback for when a new message is received.
+    sourceConsole.onmessage = function (c) {
+
+        var obj = JSON.parse(c.data);
+
+        // Append the `data` attribute of the message to the DOM.
+        document.getElementById("time").innerHTML = obj.Time;
+        document.getElementById("state").innerHTML = obj.State;
+        document.getElementById("step").innerHTML = obj.Step;
+        document.getElementById("currentpos").innerHTML = obj.CurrentPos;
+        document.getElementById("nextwpt").innerHTML = obj.NextWaypoint;
+        document.getElementById("wpt").innerHTML = obj.Wpt;
+
+        ctx = context
+        ctx.clearRect(-canvas.width, -canvas.height, canvas.width * 2, canvas.height * 2);
+
+        // arc
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "black";
+        ctx.beginPath();
+        ctx.arc(0, 0, 55, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // target direction
+        ctx.save();
+        ctx.rotate(obj.Bearing * Math.PI / 180);
+        // arrow
+        ctx.beginPath();
+        ctx.moveTo(0, -80);
+        ctx.lineTo(5, -60);
+        ctx.lineTo(-5, -60);
+        ctx.lineTo(0, -80);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "green";
+        ctx.fillStyle = "green";
+        ctx.fill();
+        ctx.stroke();
+        // line
+        ctx.beginPath();
+        ctx.moveTo(0, -60);
+        ctx.lineTo(0, -56);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "green";
+        ctx.stroke();
+        // text distance
+        ctx.font = "16px Georgia";
+        ctx.fillStyle = "green";
+        ctx.textAlign = "center";
+        ctx.fillText(obj.Distance + "m", 0, -100);
+        // text bearing
+        ctx.font = "16px Georgia";
+        ctx.fillStyle = "green";
+        ctx.textAlign = "center"; 
+        ctx.fillText(obj.Bearing + "°", 0, -85);
+        ctx.restore();
+
+        // current direction
+        // arrow
+        ctx.beginPath();
+        ctx.moveTo(0, -50);
+        ctx.lineTo(5, -30);
+        ctx.lineTo(-5, -30);
+        ctx.lineTo(0, -50);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "blue";
+        ctx.fillStyle = "blue";
+        ctx.fill();
+        ctx.stroke();
+        // line
+        ctx.beginPath();
+        ctx.moveTo(0, -30);
+        ctx.lineTo(0, 50);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "blue";
+        ctx.stroke();
+    };
+</script>

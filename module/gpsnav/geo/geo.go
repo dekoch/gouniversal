@@ -40,6 +40,14 @@ func (geo *Geo) SetCurrentPos(p typenav.Pos) {
 	geo.current = p
 }
 
+func (geo *Geo) GetCurrentPos() typenav.Pos {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return geo.current
+}
+
 func (geo *Geo) IsStartPosValid() bool {
 
 	mut.RLock()

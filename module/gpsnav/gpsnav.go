@@ -7,6 +7,7 @@ import (
 	"github.com/dekoch/gouniversal/module/gpsnav/global"
 	"github.com/dekoch/gouniversal/module/gpsnav/lang"
 	"github.com/dekoch/gouniversal/module/gpsnav/ui"
+	"github.com/dekoch/gouniversal/module/gpsnav/upload"
 	"github.com/dekoch/gouniversal/shared/language"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
@@ -19,6 +20,7 @@ func LoadConfig() {
 
 	global.Config.LoadConfig()
 	core.LoadConfig()
+	upload.LoadConfig()
 
 	ui.LoadConfig()
 }

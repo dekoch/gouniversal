@@ -33,6 +33,9 @@ func (rt *Route) ReadFile() error {
 	mut.Lock()
 	defer mut.Unlock()
 
+	var w []typenav.Pos
+	rt.wpt = w
+
 	b, err := file.ReadFile(rt.filePath)
 	if err != nil {
 		return err
@@ -106,6 +109,14 @@ func (rt *Route) GetWaypointNo() int {
 	defer mut.RUnlock()
 
 	return rt.nextWpt
+}
+
+func (rt *Route) GetWaypointCnt() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return len(rt.wpt)
 }
 
 func (rt *Route) GetWaypoint(no int) (typenav.Pos, error) {

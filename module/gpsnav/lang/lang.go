@@ -5,11 +5,17 @@ import (
 )
 
 type Home struct {
-	Menu    string
-	Title   string
-	Bearing string
-	Start   string
-	Stop    string
+	Menu         string
+	Title        string
+	Time         string
+	State        string
+	Step         string
+	CurrentPos   string
+	NextWaypoint string
+	Waypoint     string
+	Start        string
+	Stop         string
+	Upload       string
 }
 
 type Alert struct {
@@ -33,9 +39,15 @@ func DefaultEn() LangFile {
 
 	l.Home.Menu = "Tools"
 	l.Home.Title = "GPSNav"
-	l.Home.Bearing = "Bearing"
+	l.Home.Time = "Time"
+	l.Home.State = "State"
+	l.Home.Step = "Step"
+	l.Home.CurrentPos = "Current Position"
+	l.Home.NextWaypoint = "Next Waypoint"
+	l.Home.Waypoint = "Waypoint"
 	l.Home.Start = "Start"
 	l.Home.Stop = "Stop"
+	l.Home.Upload = "Upload"
 
 	l.Alert.Success = "Success"
 	l.Alert.Info = "Info"

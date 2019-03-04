@@ -13,6 +13,7 @@ import (
 	"github.com/dekoch/gouniversal/module/gpsnav/route"
 	"github.com/dekoch/gouniversal/module/gpsnav/tracker"
 	"github.com/dekoch/gouniversal/module/gpsnav/typenav"
+	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/sbool"
 	"github.com/dekoch/gouniversal/shared/sint"
@@ -29,6 +30,7 @@ var (
 	watchdog     timeout.TimeOut
 	lastWaypoint sint.Sint
 	bearing      geo.Geo
+	rt           route.Route
 )
 
 func LoadConfig() {
@@ -56,11 +58,6 @@ func Start(startWaypoint int) error {
 	if state.Get() == typenav.STOPPED {
 
 		stop.UnSet()
-		state.Set(typenav.RUNNING)
-
-		watchdog.SetTimeOut(10000)
-		watchdog.Enable(true)
-		watchdog.Reset()
 
 		go run(startWaypoint)
 
@@ -87,6 +84,16 @@ func GetState() int {
 	return state.Get()
 }
 
+func GetStep() typenav.StepType {
+
+	return getStep()
+}
+
+func GetCurrentPos() typenav.Pos {
+
+	return bearing.GetCurrentPos()
+}
+
 func GetBearing() (float64, error) {
 
 	if state.Get() != typenav.RUNNING {
@@ -96,9 +103,29 @@ func GetBearing() (float64, error) {
 	return bearing.GetBearing()
 }
 
+func GetDistance() (float64, error) {
+
+	return bearing.GetDistance()
+}
+
+func GetNextWaypoint() (typenav.Pos, error) {
+
+	return rt.GetNextWaypoint()
+}
+
+func GetWaypointNo() int {
+
+	return rt.GetWaypointNo()
+}
+
+func GetWaypointCnt() int {
+
+	return rt.GetWaypointCnt()
+}
+
 func job() {
 
-	tCheckWatchdog := time.NewTicker(time.Duration(2) * time.Second)
+	tCheckWatchdog := time.NewTicker(time.Duration(200) * time.Millisecond)
 
 	for {
 		select {
@@ -106,7 +133,10 @@ func job() {
 			if state.Get() == typenav.RUNNING &&
 				watchdog.Elapsed() {
 
-				console.Log("error: watchog", "nav")
+				msg := "error: watchog"
+				console.Log(msg, "nav")
+				alert.Message(alert.ERROR, "GPSNav", msg, "", "all")
+
 				state.Set(typenav.STOPPED)
 				Start(lastWaypoint.Get())
 			}
@@ -121,7 +151,6 @@ func run(startWaypoint int) {
 	var (
 		err    error
 		tr     tracker.Tracker
-		rt     route.Route
 		curPos typenav.Pos
 	)
 
@@ -129,6 +158,7 @@ func run(startWaypoint int) {
 	err = rt.ReadFile()
 	if err != nil {
 		console.Log(err, "")
+		alert.Message(alert.ERROR, "GPSNav", err, "", "all")
 		return
 	}
 
@@ -136,11 +166,18 @@ func run(startWaypoint int) {
 	err = rt.SetWaypoint(startWaypoint)
 	if err != nil {
 		console.Log(err, "")
+		alert.Message(alert.ERROR, "GPSNav", err, "", "all")
 		return
 	}
 
 	lastWaypoint.Set(startWaypoint)
-	nextwpt, _ := rt.GetNextWaypoint()
+	nextwpt, err := rt.GetNextWaypoint()
+	if err != nil {
+		console.Log(err, "")
+		alert.Message(alert.ERROR, "GPSNav", err, "", "all")
+		return
+	}
+
 	console.Log(nextwpt.Name, "nav")
 
 	t := time.Now()
@@ -154,6 +191,9 @@ func run(startWaypoint int) {
 
 	nextStep(typenav.StepInit, 0, true)
 	//oldStep := typenav.StepInit
+
+	state.Set(typenav.RUNNING)
+	watchdog.Start(3000)
 
 	for {
 
@@ -265,7 +305,9 @@ func run(startWaypoint int) {
 
 		if err != nil {
 
-			console.Log("error: step "+string(getStep())+" "+err.Error(), "nav")
+			msg := "error: step " + string(getStep()) + " " + err.Error()
+			console.Log(msg, "nav")
+			alert.Message(alert.ERROR, "GPSNav", msg, "", "all")
 
 			nextStep(typenav.StepInit, 0, true)
 		}
@@ -279,6 +321,7 @@ func run(startWaypoint int) {
 		if stop.IsSet() {
 
 			console.Log("stopped", "nav")
+			nextStep(typenav.StepInit, 0, false)
 			state.Set(typenav.STOPPED)
 			return
 		}

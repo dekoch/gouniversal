@@ -85,7 +85,7 @@ func LoadConfig() {
 		gasprice.LoadConfig()
 	}
 
-	if build.ModuleNav {
+	if build.ModuleGPSNav {
 		sharedConsole.Log("GPSNav enabled", "Module")
 		gpsnav.LoadConfig()
 	}
@@ -155,7 +155,7 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 		gasprice.RegisterPage(page, nav)
 	}
 
-	if build.ModuleNav {
+	if build.ModuleGPSNav {
 		gpsnav.RegisterPage(page, nav)
 	}
 }
@@ -234,7 +234,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		}
 	}
 
-	if build.ModuleNav {
+	if build.ModuleGPSNav {
 		if nav.IsNext("GPSNav") {
 
 			gpsnav.Render(page, nav, r)
@@ -281,7 +281,7 @@ func Exit() {
 		gasprice.Exit()
 	}
 
-	if build.ModuleNav {
+	if build.ModuleGPSNav {
 		gpsnav.Exit()
 	}
 
