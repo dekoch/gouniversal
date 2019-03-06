@@ -14,8 +14,18 @@ type tokenContent struct {
 }
 
 type Token struct {
-	mut    sync.RWMutex
-	tokens []tokenContent
+	mut       sync.RWMutex
+	tokens    []tokenContent
+	maxTokens int
+}
+
+// SetMaxTokens restricts the count of new tokens
+func (t *Token) SetMaxTokens(n int) {
+
+	t.mut.Lock()
+	defer t.mut.Unlock()
+
+	t.maxTokens = n
 }
 
 // New returns and adds a unique token
@@ -36,6 +46,14 @@ func (t *Token) New(uid string) string {
 		if uid == t.tokens[i].uid {
 			t.tokens[i].token = ut
 			return ut
+		}
+	}
+
+	if t.maxTokens > 0 {
+		// if count exceeds maximum, remove the oldest
+		cnt := len(t.tokens)
+		if cnt > t.maxTokens {
+			t.tokens = t.tokens[1:cnt]
 		}
 	}
 

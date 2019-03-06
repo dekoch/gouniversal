@@ -1,6 +1,7 @@
 package token
 
 import (
+	"strconv"
 	"testing"
 )
 
@@ -113,6 +114,37 @@ func TestRemove(t *testing.T) {
 
 		if got != tt.want {
 			t.Errorf("Remove(): got %t, want %t", got, tt.want)
+		}
+	}
+}
+
+func TestSetMaxTokens(t *testing.T) {
+
+	tests := []struct {
+		in   int
+		want bool
+	}{
+		{0, true},
+		{4, true},
+		{3, false},
+	}
+
+	for i, tt := range tests {
+
+		var ut Token
+		ut.SetMaxTokens(tt.in)
+
+		l := make([]string, 0)
+
+		for i := 0; i < 5; i++ {
+
+			l = append(l, ut.New(strconv.Itoa(i)))
+		}
+
+		got := ut.Check("0", l[0])
+
+		if got != tt.want {
+			t.Errorf("SetMaxTokens(): test %d: got %t, want %t", i, got, tt.want)
 		}
 	}
 }
