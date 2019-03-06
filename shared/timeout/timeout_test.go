@@ -36,6 +36,37 @@ func TestElapsed(t *testing.T) {
 	}
 }
 
+func TestElapsedChan(t *testing.T) {
+
+	tests := []struct {
+		inMillis int
+		inEnable bool
+		want     float64
+	}{
+		{0, true, 0.0},
+		{86, true, 86.0},
+		{86, false, 0.0},
+		{132, true, 132.0},
+	}
+
+	var to TimeOut
+
+	for i, tt := range tests {
+
+		to.Start(tt.inMillis)
+		to.Enable(tt.inEnable)
+
+		<-to.ElapsedChan()
+
+		got := to.ElapsedMillis()
+
+		if got < tt.want-20.0 ||
+			got > tt.want+20.0 {
+			t.Errorf("ElapsedChan() test %d: got %f, want %f +-20.0", i, got, tt.want)
+		}
+	}
+}
+
 func TestEnable(t *testing.T) {
 
 	tests := []struct {

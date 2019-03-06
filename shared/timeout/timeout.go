@@ -78,6 +78,37 @@ func (to *TimeOut) Elapsed() bool {
 	return true
 }
 
+func (to *TimeOut) ElapsedChan() <-chan bool {
+
+	out := make(chan bool)
+
+	go func() {
+
+		defer close(out)
+
+		for {
+			to.mut.RLock()
+
+			if to.enabled == false {
+				to.mut.RUnlock()
+				return
+			}
+
+			t := time.Since(to.t)
+			if t > to.max {
+				to.mut.RUnlock()
+				return
+			}
+
+			to.mut.RUnlock()
+
+			time.Sleep(10 * time.Millisecond)
+		}
+	}()
+
+	return out
+}
+
 func (to *TimeOut) ElapsedMillis() float64 {
 
 	to.mut.RLock()
