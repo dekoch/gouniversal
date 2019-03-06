@@ -12,11 +12,9 @@ import (
 
 	"github.com/dekoch/gouniversal/module"
 	"github.com/dekoch/gouniversal/program/global"
-	"github.com/dekoch/gouniversal/program/guestmanagement"
 	"github.com/dekoch/gouniversal/program/ui/pagehome"
 	"github.com/dekoch/gouniversal/program/ui/pagelogin"
 	"github.com/dekoch/gouniversal/program/ui/settings"
-	"github.com/dekoch/gouniversal/program/ui/uifunc"
 	"github.com/dekoch/gouniversal/program/usermanagement"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/clientinfo"
@@ -40,7 +38,6 @@ type menuDropdown struct {
 var (
 	store      = new(sessions.CookieStore)
 	cookieName string
-	guest      guestmanagement.GuestManagement
 )
 
 func setCookie(parameter string, value string, w http.ResponseWriter, r *http.Request) {
@@ -96,12 +93,16 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 
 		if nav.User.State < 0 {
 			// if no user found
-			nav.User = guest.SelectGuest(uid)
+			nav.User = global.Guests.SelectGuest(uid)
 		}
 
 		if nav.User.State < 0 {
 			// if no guest found, create new
-			nav.User = guest.NewGuest()
+			u, err := global.UserConfig.GetWithState(0)
+			if err != nil {
+				console.Log(err, "")
+			}
+			nav.User = global.Guests.NewGuest(u, global.UIConfig.MaxGuests)
 		}
 	}
 
@@ -118,7 +119,12 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 func initCookies(w http.ResponseWriter, r *http.Request) {
 	nav := new(navigation.Navigation)
 	nav.Path = "init"
-	nav.User = guest.NewGuest()
+
+	u, err := global.UserConfig.GetWithState(0)
+	if err != nil {
+		console.Log(err, "")
+	}
+	nav.User = global.Guests.NewGuest(u, global.UIConfig.MaxGuests)
 	nav.GodMode = false
 
 	setSession(nav, w, r)
@@ -279,8 +285,10 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	c.MenuLeft = template.HTML(htmlMenuLeft)
 	c.MenuRight = template.HTML(htmlMenuRight)
 	c.UUID = template.HTML(nav.User.UUID)
-	c.Token = template.HTML(alert.Tokens.New(nav.User.UUID))
 	c.Content = template.HTML(page.Content)
+
+	alert.Tokens.SetMaxTokens(global.UserConfig.GetUserCnt() + global.UIConfig.MaxGuests)
+	c.Token = template.HTML(alert.Tokens.New(nav.User.UUID))
 
 	p, err := functions.PageToString(global.UIConfig.ProgramFileRoot+"program.html", c)
 	if err != nil {
@@ -417,60 +425,18 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 			if nav.IsNext("Login") {
 
-				var err error
-				name := ""
-				valid := true
-
-				for i := 0; i <= 3; i++ {
-					if valid == true {
-						switch i {
-						case 0:
-							name, err = functions.CheckFormInput("name", r)
-							if err != nil {
-								valid = false
-							}
-
-						case 1:
-							pwd := r.FormValue("pwd")
-
-							if uifunc.CheckLogin(name, pwd) == false {
-								valid = false
-							}
-
-						case 2:
-							if guest.MaxLoginAttempts(nav.User.UUID) {
-								valid = false
-							}
-
-						case 3:
-							// load user
-							nav.User, err = global.UserConfig.Get(uifunc.LoginNameToUUID(name))
-							if err != nil {
-								valid = false
-							}
-						}
-					}
-				}
-
-				if valid {
-
-					console.Log("\""+name+"\" logged in ("+clientinfo.String(r)+")", "Login")
-
-					nav.RedirectPath("Program:Home", false)
-				} else {
-
-					if functions.IsEmpty(name) == false {
-						console.Log("failed login with user \""+name+"\" ("+clientinfo.String(r)+")", "Login")
-					}
-
-					pagelogin.Render(page, nav, r)
-				}
+				pagelogin.Render(page, nav, r)
 
 			} else if nav.IsNext("Logout") {
 
 				console.Log("\""+nav.User.LoginName+"\" logged out", "Logout")
 
-				nav.User = guest.NewGuest()
+				u, err := global.UserConfig.GetWithState(0)
+				if err != nil {
+					console.Log(err, "")
+				}
+				nav.User = global.Guests.NewGuest(u, global.UIConfig.MaxGuests)
+
 				nav.RedirectPath("Account:Login", false)
 			} else {
 				nav.RedirectPath("404", true)

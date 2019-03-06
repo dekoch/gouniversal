@@ -209,7 +209,15 @@ func (c *UserConfig) GetWithState(state int) (User, error) {
 	var u User
 	u.State = -1
 	sState := strconv.Itoa(state)
-	return u, errors.New("GetWithState() user \"" + sState + "\" not found")
+	return u, errors.New("GetWithState() no user with state \"" + sState + "\" found")
+}
+
+func (c *UserConfig) GetUserCnt() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return len(c.User)
 }
 
 func (c *UserConfig) List() []User {

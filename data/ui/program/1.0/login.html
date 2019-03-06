@@ -7,5 +7,7 @@
     <label for="pwd">{{.Lang.Password}}:</label>
     <input type="password" class="form-control" name="pwd">
     </div>
-    <input class="btn btn-default" type="submit" value="{{.Lang.Login}}">
+    <input type="hidden" name="uuid" value="{{.UUID}}" />
+    <input type="hidden" name="token" value="{{.Token}}" />
+    <button class="btn btn-default fa" type="submit" name="edit" value="login">{{.Lang.Login}}</button>
 </form>
