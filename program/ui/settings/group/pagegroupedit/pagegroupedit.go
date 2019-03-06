@@ -11,11 +11,11 @@ import (
 	"github.com/dekoch/gouniversal/program/groupconfig"
 	"github.com/dekoch/gouniversal/program/groupmanagement"
 	"github.com/dekoch/gouniversal/program/lang"
+	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 )
 
@@ -26,7 +26,7 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	button := r.FormValue("edit")
+	var err error
 
 	type content struct {
 		Lang     lang.SettingsGroupEdit
@@ -41,31 +41,40 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	// Form input
 	id := nav.Parameter("UUID")
 
-	if button == "" {
+	if id == "new" {
 
-		if id == "new" {
-
-			id = newGroup()
+		id, err = newGroup()
+		if err == nil {
 			nav.RedirectPath(strings.Replace(nav.Path, "UUID=new", "UUID="+id, 1), false)
-		}
-	} else if button == "apply" {
-
-		err := editGroup(r, id)
-		if err == nil {
-			nav.RedirectPath("Program:Settings:Group:List", false)
-		}
-
-	} else if button == "delete" {
-
-		err := deleteGroup(id)
-		if err == nil {
-			nav.RedirectPath("Program:Settings:Group:List", false)
+			return
 		}
 	}
 
+	switch r.FormValue("edit") {
+	case "apply":
+		err = editGroup(r, id)
+		if err == nil {
+			nav.RedirectPath("Program:Settings:Group:List", false)
+			return
+		}
+
+	case "delete":
+		err = deleteGroup(id)
+		if err == nil {
+			nav.RedirectPath("Program:Settings:Group:List", false)
+			return
+		}
+	}
+
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+	}
+
 	// copy group from array
-	var err error
 	c.Group, err = global.GroupConfig.Get(id)
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+	}
 
 	// combobox State
 	cmbState := "<select name=\"state\">"
@@ -119,7 +128,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 }
 
-func newGroup() string {
+func newGroup() (string, error) {
 
 	u := uuid.Must(uuid.NewRandom())
 
@@ -130,50 +139,77 @@ func newGroup() string {
 
 	global.GroupConfig.Add(newGroup)
 
-	global.GroupConfig.SaveConfig()
+	err := global.GroupConfig.SaveConfig()
 
-	return u.String()
+	return u.String(), err
 }
 
 func editGroup(r *http.Request, uid string) error {
 
-	name, _ := functions.CheckFormInput("name", r)
-	state, _ := functions.CheckFormInput("state", r)
-	comment, errComment := functions.CheckFormInput("comment", r)
+	var (
+		err      error
+		name     string
+		strState string
+		intState int
+		comment  string
+		g        groupconfig.Group
+	)
 
-	// check input
-	if functions.IsEmpty(name) ||
-		functions.IsEmpty(state) ||
-		govalidator.IsNumeric(state) == false ||
-		// content not required
-		errComment != nil {
+	func() {
 
-		return errors.New("bad input")
-	}
+		for i := 0; i <= 9; i++ {
 
-	intState, err := strconv.Atoi(state)
-	if err != nil {
-		return err
-	}
+			switch i {
+			case 0:
+				name, err = functions.CheckFormInput("name", r)
 
-	selpages := r.Form["selectedpages"]
+			case 1:
+				strState, err = functions.CheckFormInput("state", r)
 
-	g, err := global.GroupConfig.Get(uid)
-	if err != nil {
-		return err
-	}
+			case 2:
+				comment, err = functions.CheckFormInput("comment", r)
 
-	g.Name = name
-	g.State = intState
-	g.Comment = comment
-	g.AllowedPages = selpages
+			case 3:
+				// check input
+				if functions.IsEmpty(name) ||
+					functions.IsEmpty(strState) {
 
-	err = global.GroupConfig.Edit(g)
-	if err != nil {
-		return err
-	}
+					err = errors.New("bad input")
+				}
 
-	return global.GroupConfig.SaveConfig()
+			case 4:
+				intState, err = strconv.Atoi(strState)
+
+			case 5:
+				if intState < 1 ||
+					intState > 2 {
+
+					err = errors.New("bad input")
+				}
+
+			case 6:
+				g, err = global.GroupConfig.Get(uid)
+
+			case 7:
+				g.Name = name
+				g.State = intState
+				g.Comment = comment
+				g.AllowedPages = r.Form["selectedpages"]
+
+			case 8:
+				err = global.GroupConfig.Edit(g)
+
+			case 9:
+				err = global.GroupConfig.SaveConfig()
+			}
+
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	return err
 }
 
 func deleteGroup(uid string) error {

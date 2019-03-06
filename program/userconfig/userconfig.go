@@ -133,11 +133,7 @@ func (c *UserConfig) Add(u User) {
 	mut.Lock()
 	defer mut.Unlock()
 
-	newUser := make([]User, 1)
-
-	newUser[0] = u
-
-	c.User = append(c.User, newUser...)
+	c.User = append(c.User, u)
 }
 
 func (c *UserConfig) Edit(u User) error {
@@ -234,15 +230,12 @@ func (c *UserConfig) Delete(uid string) {
 	defer mut.Unlock()
 
 	var l []User
-	n := make([]User, 1)
 
 	for i := 0; i < len(c.User); i++ {
 
 		if uid != c.User[i].UUID {
 
-			n[0] = c.User[i]
-
-			l = append(l, n...)
+			l = append(l, c.User[i])
 		}
 	}
 

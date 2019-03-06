@@ -116,11 +116,7 @@ func (c *GroupConfig) Add(g Group) {
 	mut.Lock()
 	defer mut.Unlock()
 
-	newGroup := make([]Group, 1)
-
-	newGroup[0] = g
-
-	c.Group = append(c.Group, newGroup...)
+	c.Group = append(c.Group, g)
 }
 
 func (c *GroupConfig) Edit(g Group) error {
@@ -172,15 +168,12 @@ func (c *GroupConfig) Delete(uid string) {
 	defer mut.Unlock()
 
 	var l []Group
-	n := make([]Group, 1)
 
 	for i := 0; i < len(c.Group); i++ {
 
 		if uid != c.Group[i].UUID {
 
-			n[0] = c.Group[i]
-
-			l = append(l, n...)
+			l = append(l, c.Group[i])
 		}
 	}
 

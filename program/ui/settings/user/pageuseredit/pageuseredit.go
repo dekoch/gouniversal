@@ -12,11 +12,11 @@ import (
 	"github.com/dekoch/gouniversal/program/ui/uifunc"
 	"github.com/dekoch/gouniversal/program/userconfig"
 	"github.com/dekoch/gouniversal/program/usermanagement"
+	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/google/uuid"
 )
 
@@ -27,7 +27,7 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	button := r.FormValue("edit")
+	var err error
 
 	type content struct {
 		Lang     lang.SettingsUserEdit
@@ -43,31 +43,40 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	// Form input
 	id := nav.Parameter("UUID")
 
-	if button == "" {
+	if id == "new" {
 
-		if id == "new" {
-
-			id = newUser()
+		id, err = newUser()
+		if err == nil {
 			nav.RedirectPath(strings.Replace(nav.Path, "UUID=new", "UUID="+id, 1), false)
-		}
-	} else if button == "apply" {
-
-		err := editUser(r, id)
-		if err == nil {
-			nav.RedirectPath("Program:Settings:User:List", false)
-		}
-
-	} else if button == "delete" {
-
-		err := deleteUser(id)
-		if err == nil {
-			nav.RedirectPath("Program:Settings:User:List", false)
+			return
 		}
 	}
 
+	switch r.FormValue("edit") {
+	case "apply":
+		err = editUser(r, id)
+		if err == nil {
+			nav.RedirectPath("Program:Settings:User:List", false)
+			return
+		}
+
+	case "delete":
+		err = deleteUser(id)
+		if err == nil {
+			nav.RedirectPath("Program:Settings:User:List", false)
+			return
+		}
+	}
+
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+	}
+
 	// copy user from array
-	var err error
 	c.User, err = global.UserConfig.Get(id)
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+	}
 
 	// combobox Language
 	cmbLang := "<select name=\"language\">"
@@ -147,7 +156,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 }
 
-func newUser() string {
+func newUser() (string, error) {
 
 	u := uuid.Must(uuid.NewRandom())
 
@@ -159,74 +168,99 @@ func newUser() string {
 
 	global.UserConfig.Add(newUser)
 
-	global.UserConfig.SaveConfig()
+	err := global.UserConfig.SaveConfig()
 
-	return u.String()
+	return u.String(), err
 }
 
 func editUser(r *http.Request, uid string) error {
 
-	loginName, _ := functions.CheckFormInput("loginname", r)
-	name, errName := functions.CheckFormInput("name", r)
-	state, _ := functions.CheckFormInput("state", r)
-	sellang := r.FormValue("language")
-	comment, errComment := functions.CheckFormInput("comment", r)
+	var (
+		err       error
+		loginName string
+		name      string
+		strState  string
+		intState  int
+		selLang   string
+		comment   string
+		u         userconfig.User
+	)
 
-	// check input
-	if functions.IsEmpty(loginName) ||
-		functions.IsEmpty(state) ||
-		govalidator.IsNumeric(state) == false ||
-		functions.IsEmpty(sellang) ||
-		// content not required
-		errName != nil ||
-		errComment != nil {
+	func() {
 
-		return errors.New("bad input")
-	}
+		for i := 0; i <= 12; i++ {
 
-	iState, err := strconv.Atoi(state)
-	if err != nil {
-		return err
-	}
+			switch i {
+			case 0:
+				loginName, err = functions.CheckFormInput("loginname", r)
 
-	selgroups := r.Form["selectedgroups"]
+			case 1:
+				name, err = functions.CheckFormInput("name", r)
 
-	u, err := global.UserConfig.Get(uid)
-	if err != nil {
-		return err
-	}
+			case 2:
+				strState, err = functions.CheckFormInput("state", r)
 
-	u.LoginName = loginName
-	u.Name = name
-	u.State = iState
-	u.Lang = sellang
-	u.Comment = comment
-	u.Groups = selgroups
+			case 3:
+				selLang = r.FormValue("language")
 
-	pwd := r.FormValue("pwd")
+			case 4:
+				comment, err = functions.CheckFormInput("comment", r)
 
-	if pwd != "" {
+			case 5:
+				// check input
+				if functions.IsEmpty(loginName) ||
+					functions.IsEmpty(strState) ||
+					functions.IsEmpty(selLang) {
 
-		if functions.IsEmpty(pwd) {
+					err = errors.New("bad input")
+				}
 
-			u.PWDHash = ""
-		} else {
+			case 6:
+				intState, err = strconv.Atoi(strState)
 
-			hash, err := uifunc.HashPassword(pwd)
-			if err == nil {
-				u.PWDHash = hash
-			} else {
-				return err
+			case 7:
+				if intState < 0 ||
+					intState > 2 {
+
+					err = errors.New("bad input")
+				}
+
+			case 8:
+				u, err = global.UserConfig.Get(uid)
+
+			case 9:
+				u.LoginName = loginName
+				u.Name = name
+				u.State = intState
+				u.Lang = selLang
+				u.Comment = comment
+				u.Groups = r.Form["selectedgroups"]
+
+			case 10:
+				pwd := r.FormValue("pwd")
+
+				if functions.IsEmpty(pwd) == false {
+
+					hash, err := uifunc.HashPassword(pwd)
+					if err == nil {
+						u.PWDHash = hash
+					}
+				}
+
+			case 11:
+				err = global.UserConfig.Edit(u)
+
+			case 12:
+				err = global.UserConfig.SaveConfig()
+			}
+
+			if err != nil {
+				return
 			}
 		}
-	}
+	}()
 
-	err = global.UserConfig.Edit(u)
-	if err != nil {
-		return err
-	}
-
-	return global.UserConfig.SaveConfig()
+	return err
 }
 
 func deleteUser(uid string) error {
