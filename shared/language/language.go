@@ -24,6 +24,7 @@ type Language struct {
 
 var mut sync.RWMutex
 
+// New creates a new language instance and adds all existing language files from a given path
 func New(dir string, def interface{}, defname string) Language {
 
 	var lf Language
@@ -37,7 +38,6 @@ func New(dir string, def interface{}, defname string) Language {
 	} else {
 
 		if _, err = os.Stat(lf.langDir + defname); os.IsNotExist(err) {
-
 			// if nothing found, create default file
 			lf.SaveLang(def, defname)
 		}
@@ -48,7 +48,8 @@ func New(dir string, def interface{}, defname string) Language {
 	return lf
 }
 
-func (l *Language) SaveLang(lf interface{}, n string) error {
+// SaveLang saves a language struct as file
+func (l *Language) SaveLang(lf interface{}, name string) error {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -58,17 +59,17 @@ func (l *Language) SaveLang(lf interface{}, n string) error {
 		console.Log(err, "")
 	}
 
-	err = file.WriteFile(l.langDir+n, b)
+	err = file.WriteFile(l.langDir+name, b)
 
 	return err
 }
 
-func (l *Language) loadLang(n string) (lang, error) {
+func (l *Language) loadLang(name string) (lang, error) {
 
 	var lf lang
 	var err error
 
-	lf.name = n
+	lf.name = name
 
 	lf.file, err = file.ReadFile(l.langDir + lf.name)
 	if err != nil {
@@ -92,15 +93,12 @@ func (l *Language) loadLangFiles() {
 
 		lf, err := l.loadLang(fl.Name())
 		if err == nil {
-
-			la := make([]lang, 1)
-			la[0] = lf
-
-			l.files = append(l.files, la...)
+			l.files = append(l.files, lf)
 		}
 	}
 }
 
+// LoadLangFiles adds all existing language files from a given path
 func (l *Language) LoadLangFiles() {
 	mut.Lock()
 	defer mut.Unlock()
@@ -116,14 +114,15 @@ func fileToStruct(lf lang, s interface{}) {
 	}
 }
 
-func (l *Language) SelectLang(n string, s interface{}) {
+// SelectLang parses a language file to struct
+func (l *Language) SelectLang(name string, s interface{}) {
 
 	mut.RLock()
 
 	// search lang
 	for i := 0; i < len(l.files); i++ {
 
-		if n == l.files[i].name {
+		if name == l.files[i].name {
 
 			fileToStruct(l.files[i], s)
 
@@ -143,7 +142,7 @@ func (l *Language) SelectLang(n string, s interface{}) {
 	// search lang
 	for i := 0; i < len(l.files); i++ {
 
-		if n == l.files[i].name {
+		if name == l.files[i].name {
 
 			fileToStruct(l.files[i], s)
 			return
@@ -162,18 +161,17 @@ func (l *Language) SelectLang(n string, s interface{}) {
 	}
 }
 
+// ListNames returns a list of all language files
 func (l *Language) ListNames() []string {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
 	fl := make([]string, 0)
-	newName := make([]string, 1)
 
 	for i := 0; i < len(l.files); i++ {
 
-		newName[0] = l.files[i].name
-		fl = append(fl, newName...)
+		fl = append(fl, l.files[i].name)
 	}
 
 	return fl

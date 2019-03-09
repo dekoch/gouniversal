@@ -80,3 +80,15 @@ func Checksum(path string) ([]byte, error) {
 
 	return h.Sum(nil), nil
 }
+
+func Remove(path string) error {
+
+	// directory from path
+	dir := filepath.Dir(path)
+
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return nil
+	}
+
+	return os.RemoveAll(path)
+}
