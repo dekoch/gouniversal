@@ -2,39 +2,45 @@ package file
 
 import (
 	"crypto/sha256"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/dekoch/gouniversal/shared/console"
+	"github.com/dekoch/gouniversal/shared/functions"
 )
 
+// ReadFile reads the file and returns the contents
 func ReadFile(path string) ([]byte, error) {
 
+	var ret []byte
+
+	if functions.IsEmpty(path) {
+		return ret, errors.New("invalid path")
+	}
+
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		b := make([]byte, 0)
-		return b, err
+		return ret, err
 	}
 
 	file, err := os.Open(path)
 	defer file.Close()
 	if err != nil {
-		console.Log(err, "ReadFile()")
-	} else {
-		content, err := ioutil.ReadFile(path)
-		if err != nil {
-			console.Log(err, "ReadFile()")
-		} else {
-			return content, err
-		}
+		return ret, err
 	}
 
-	b := make([]byte, 0)
-	return b, err
+	ret, err = ioutil.ReadFile(path)
+
+	return ret, err
 }
 
+// WriteFile writes the contents to file
 func WriteFile(path string, content []byte) error {
+
+	if functions.IsEmpty(path) {
+		return errors.New("invalid path")
+	}
 
 	// directory from path
 	dir := filepath.Dir(path)
@@ -43,7 +49,6 @@ func WriteFile(path string, content []byte) error {
 		// if not found, create dir
 		err = os.MkdirAll(dir, os.ModePerm)
 		if err != nil {
-			console.Log(err, "WriteFile()")
 			return err
 		}
 	}
@@ -51,37 +56,45 @@ func WriteFile(path string, content []byte) error {
 	file, err := os.Create(path)
 	defer file.Close()
 	if err != nil {
-		console.Log(err, "WriteFile()")
 		return err
 	}
 
 	_, err = file.Write(content)
-	if err != nil {
-		console.Log(err, "WriteFile()")
-	}
 
 	return err
 }
 
+// Checksum returns the checksum of a file
 func Checksum(path string) ([]byte, error) {
 
-	f, err := os.Open(path)
-	if err != nil {
-		var e []byte
-		return e, err
+	var ret []byte
+
+	if functions.IsEmpty(path) {
+		return ret, errors.New("invalid path")
 	}
-	defer f.Close()
+
+	file, err := os.Open(path)
+	defer file.Close()
+	if err != nil {
+		return ret, err
+	}
 
 	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		var e []byte
-		return e, err
+
+	_, err = io.Copy(h, file)
+	if err != nil {
+		return ret, err
 	}
 
 	return h.Sum(nil), nil
 }
 
+// Remove removes path and any children it contains
 func Remove(path string) error {
+
+	if functions.IsEmpty(path) {
+		return errors.New("invalid path")
+	}
 
 	// directory from path
 	dir := filepath.Dir(path)
