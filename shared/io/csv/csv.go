@@ -2,32 +2,37 @@ package csv
 
 import (
 	"encoding/csv"
+	"errors"
 	"os"
 
 	"github.com/dekoch/gouniversal/shared/functions"
 )
 
-func AddRow(filepath string, row []string) error {
+// AddRow adds a new row of data to a csv file
+func AddRow(path string, row []string) error {
 
-	err := functions.CreateDir(filepath)
+	err := functions.CreateDir(path)
 	if err != nil {
 		return err
 	}
 
 	var rows [][]string
 
-	if _, err = os.Stat(filepath); os.IsNotExist(err) == false {
+	if _, err = os.Stat(path); os.IsNotExist(err) == false {
 		// read the file
-		f, err := os.Open(filepath)
+		file, err := os.Open(path)
 		if err != nil {
 			return err
 		}
-		r := csv.NewReader(f)
+
+		r := csv.NewReader(file)
 		rows, err = r.ReadAll()
 		if err != nil {
 			return err
 		}
-		if err = f.Close(); err != nil {
+
+		err = file.Close()
+		if err != nil {
 			return err
 		}
 	}
@@ -35,37 +40,45 @@ func AddRow(filepath string, row []string) error {
 	rows = append(rows, row)
 
 	// write the file
-	f, err := os.Create(filepath)
+	file, err := os.Create(path)
 	if err != nil {
 		return err
 	}
-	w := csv.NewWriter(f)
-	if err = w.WriteAll(rows); err != nil {
-		f.Close()
+
+	w := csv.NewWriter(file)
+	err = w.WriteAll(rows)
+	if err != nil {
+		file.Close()
 		return err
 	}
-	return f.Close()
+
+	return file.Close()
 }
 
-func ReadAll(filepath string) ([][]string, error) {
+// ReadAll returns the content of a csv file
+func ReadAll(path string) ([][]string, error) {
 
 	var ret [][]string
 
-	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+	if functions.IsEmpty(path) {
+		return ret, errors.New("invalid path")
+	}
+
+	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return ret, err
 	}
 
 	// read the file
-	f, err := os.Open(filepath)
+	file, err := os.Open(path)
 	if err != nil {
 		return ret, err
 	}
 
-	r := csv.NewReader(f)
+	r := csv.NewReader(file)
 	ret, err = r.ReadAll()
 	if err != nil {
 		return ret, err
 	}
 
-	return ret, f.Close()
+	return ret, file.Close()
 }

@@ -125,6 +125,10 @@ func Round(val float64, roundOn float64, places int) (newVal float64) {
 // CreateDir creates a missing directory
 func CreateDir(path string) error {
 
+	if IsEmpty(path) {
+		return errors.New("invalid path")
+	}
+
 	// dir from path
 	dir := filepath.Dir(path)
 

@@ -38,19 +38,9 @@ func ReadFile(path string) ([]byte, error) {
 // WriteFile writes the contents to file
 func WriteFile(path string, content []byte) error {
 
-	if functions.IsEmpty(path) {
-		return errors.New("invalid path")
-	}
-
-	// directory from path
-	dir := filepath.Dir(path)
-
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		// if not found, create dir
-		err = os.MkdirAll(dir, os.ModePerm)
-		if err != nil {
-			return err
-		}
+	err := functions.CreateDir(path)
+	if err != nil {
+		return err
 	}
 
 	file, err := os.Create(path)
