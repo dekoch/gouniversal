@@ -163,83 +163,78 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 // Render UI page
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
-	if build.ModuleConsole {
-		if nav.IsNext("Console") {
-
+	switch nav.GetNextPage() {
+	case "Console":
+		if build.ModuleConsole {
 			console.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleLogViewer {
-		if nav.IsNext("LogViewer") {
-
+	case "LogViewer":
+		if build.ModuleLogViewer {
 			logviewer.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleOpenESPM {
-		if nav.IsNext("openESPM") {
-
+	case "openESPM":
+		if build.ModuleOpenESPM {
 			openespm.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleFileshare {
-		if nav.IsNext("Fileshare") {
-
+	case "Fileshare":
+		if build.ModuleFileshare {
 			fileshare.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleHomepage {
-		if nav.IsNext("Homepage") {
-
+	case "Homepage":
+		if build.ModuleHomepage {
 			homepage.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleMeshFS {
-
-		if nav.IsNext("MeshFS") {
-
+	case "MeshFS":
+		if build.ModuleMeshFS {
 			meshfilesync.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleMesh || build.ModuleMessenger || build.ModuleMeshFS {
-		if nav.IsNext("Mesh") {
+	case "Mesh":
+		if build.ModuleMesh ||
+			build.ModuleMessenger ||
+			build.ModuleMeshFS {
 
 			mesh.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleMediaDownloader {
-		if nav.IsNext("MediaDownloader") {
-
+	case "MediaDownloader":
+		if build.ModuleMediaDownloader {
 			mediadownloader.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleIPTracker {
-		if nav.IsNext("IPTracker") {
-
+	case "IPTracker":
+		if build.ModuleIPTracker {
 			iptracker.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleGasPrice {
-		if nav.IsNext("GasPrice") {
-
+	case "GasPrice":
+		if build.ModuleGasPrice {
 			gasprice.Render(page, nav, r)
+			return
 		}
-	}
 
-	if build.ModuleGPSNav {
-		if nav.IsNext("GPSNav") {
-
+	case "GPSNav":
+		if build.ModuleGPSNav {
 			gpsnav.Render(page, nav, r)
+			return
 		}
 	}
+
+	nav.RedirectPath("404", true)
 }
 
 // Exit is called before program exit

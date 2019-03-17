@@ -27,7 +27,6 @@ func main() {
 	global.Lang = language.New("data/lang/program/", en, "en")
 
 	if build.UIEnabled {
-
 		global.UIConfig.LoadConfig()
 	}
 

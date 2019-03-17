@@ -3,6 +3,7 @@ package pagegrouplist
 import (
 	"html/template"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/dekoch/gouniversal/program/global"
@@ -27,21 +28,16 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	c.Lang = page.Lang.Settings.Group.GroupList
 
-	var tbody string
-	tbody = ""
-	var intIndex int
-	intIndex = 0
+	tbody := ""
 
 	groups := global.GroupConfig.List()
 
-	for i := 0; i < len(groups); i++ {
+	sort.Slice(groups, func(i, j int) bool { return groups[i].Name < groups[j].Name })
 
-		g := groups[i]
-
-		intIndex += 1
+	for i, g := range groups {
 
 		tbody += "<tr>"
-		tbody += "<th scope='row'>" + strconv.Itoa(intIndex) + "</th>"
+		tbody += "<th scope='row'>" + strconv.Itoa(i+1) + "</th>"
 		tbody += "<td>" + g.Name + "</td>"
 		tbody += "<td>" + g.Comment + "</td>"
 		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"Program:Settings:Group:Edit$UUID=" + g.UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"

@@ -9,50 +9,41 @@ import (
 )
 
 type Navigation struct {
-	Path           string
-	CurrentPath    string
-	LastPath       string
-	Redirect       string
-	PathAfterLogin string
-	Home           string
-	User           userconfig.User
-	Guest          bool
-	GodMode        bool
-	Sitemap        sitemap.Sitemap
+	Path        string
+	CurrentPath string
+	LastPath    string
+	Redirect    string
+	User        userconfig.User
+	Guest       bool
+	GodMode     bool
+	Sitemap     sitemap.Sitemap
 }
 
-func (nav Navigation) CanGoBack() bool {
+func (nav *Navigation) GetNextPage() string {
 
-	if strings.Count(nav.CurrentPath, ":") > 0 {
-		return true
+	ret := strings.Replace(nav.Path, nav.CurrentPath, "", 1)
+	// remove prefix ":" from :Module:Settings
+	if strings.HasPrefix(ret, ":") {
+		ret = ret[1:]
 	}
-
-	return false
-}
-
-func (nav *Navigation) GoBack() {
-
-	if nav.CanGoBack() {
-
-		index := strings.LastIndex(nav.Path, ":")
-
-		cnt := len(nav.Path)
-
-		if cnt > 0 {
-			nav.Path = nav.Path[:index]
+	// remove all after ":" or "$"
+	index := strings.Index(ret, ":")
+	if index >= 0 {
+		ret = ret[:index]
+	} else {
+		index = strings.Index(ret, "$")
+		if index >= 0 {
+			ret = ret[:index]
 		}
 	}
-}
-
-func (nav *Navigation) Navigate(page string) {
-
-	if len(page) > 0 {
-
-		if strings.HasSuffix(nav.Path, ":"+page) == false {
-
-			nav.Path += ":" + page
-		}
+	// remember current path
+	if len(nav.CurrentPath) == 0 {
+		nav.CurrentPath = ret
+	} else {
+		nav.CurrentPath += ":" + ret
 	}
+
+	return ret
 }
 
 func (nav *Navigation) IsNext(page string) bool {
@@ -99,52 +90,39 @@ func (nav *Navigation) NavigatePath(path string) {
 
 func (nav *Navigation) RedirectPath(path string, overwrite bool) {
 
+	if len(path) == 0 {
+		return
+	}
+
 	nav.LastPath = nav.Path
 
 	if overwrite {
-
-		if len(path) > 0 {
-			nav.Redirect = path
-		}
+		nav.Redirect = path
 	} else {
-
-		if len(nav.Redirect) == 0 && len(path) > 0 {
-
+		if len(nav.Redirect) == 0 {
 			nav.Redirect = path
 		}
 	}
-}
-
-func (nav *Navigation) AfterLogin(path string) {
-
-	if len(path) > 0 {
-		nav.PathAfterLogin = path
-	}
-}
-
-func (nav *Navigation) NavigateHome() {
-	nav.NavigatePath(nav.Home)
 }
 
 // Parameter returns value from page parameter
+// $Parametername=<value>
 func (nav *Navigation) Parameter(name string) string {
 
-	par := ""
+	name = "$" + name + "="
 
-	name += "="
-
-	index := strings.LastIndex(nav.Path, name)
-	if index < 0 {
+	startIndex := strings.Index(nav.Path, name)
+	if startIndex < 0 {
 		return ""
 	}
 
-	cnt := len(nav.Path)
+	ret := nav.Path[startIndex:]
+	ret = strings.Replace(ret, name, "", 1)
 
-	if cnt > 0 {
-		par = nav.Path[index:]
-
-		par = strings.Replace(par, name, "", 1)
+	endIndex := strings.Index(ret, "$")
+	if endIndex >= 0 {
+		ret = ret[:endIndex]
 	}
 
-	return par
+	return ret
 }

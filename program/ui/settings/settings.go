@@ -21,14 +21,14 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		nav.NavigatePath("Program:Settings:General")
 	}
 
-	if nav.IsNext("User") {
-
+	switch nav.GetNextPage() {
+	case "User":
 		user.Render(page, nav, r)
 
-	} else if nav.IsNext("Group") {
-
+	case "Group":
 		group.Render(page, nav, r)
-	} else {
+
+	default:
 		nav.RedirectPath("404", true)
 	}
 }

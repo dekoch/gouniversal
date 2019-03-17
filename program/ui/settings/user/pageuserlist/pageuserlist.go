@@ -3,6 +3,7 @@ package pageuserlist
 import (
 	"html/template"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/dekoch/gouniversal/program/global"
@@ -27,21 +28,16 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	c.Lang = page.Lang.Settings.User.UserList
 
-	var tbody string
-	tbody = ""
-	var intIndex int
-	intIndex = 0
+	tbody := ""
 
 	user := global.UserConfig.List()
 
-	for i := 0; i < len(user); i++ {
+	sort.Slice(user, func(i, j int) bool { return user[i].LoginName < user[j].LoginName })
 
-		u := user[i]
-
-		intIndex += 1
+	for i, u := range user {
 
 		tbody += "<tr>"
-		tbody += "<th scope='row'>" + strconv.Itoa(intIndex) + "</th>"
+		tbody += "<th scope='row'>" + strconv.Itoa(i+1) + "</th>"
 		tbody += "<td>" + u.LoginName + "</td>"
 		tbody += "<td>" + u.Name + "</td>"
 		tbody += "<td><button class=\"btn btn-default fa fa-wrench\" type=\"submit\" name=\"navigation\" value=\"Program:Settings:User:Edit$UUID=" + u.UUID + "\" title=\"" + c.Lang.Edit + "\"></button></td>"

@@ -403,32 +403,31 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 		// Program:Settings
 		// Program:Settings:User
 		// Program:Settings:User:List
-		if nav.IsNext("Program") {
-
-			if nav.IsNext("Home") {
-
+		switch nav.GetNextPage() {
+		case "Program":
+			switch nav.GetNextPage() {
+			case "Home":
 				pagehome.Render(page, nav, r)
 
-			} else if nav.IsNext("Settings") {
-
+			case "Settings":
 				settings.Render(page, nav, r)
 
-			} else if nav.IsNext("Exit") {
-			} else {
+			case "Exit":
+				// do nothing
+
+			default:
 				nav.RedirectPath("404", true)
 			}
-		} else if nav.IsNext("App") {
 
+		case "App":
 			module.Render(page, nav, r)
 
-		} else if nav.IsNext("Account") {
-
-			if nav.IsNext("Login") {
-
+		case "Account":
+			switch nav.GetNextPage() {
+			case "Login":
 				pagelogin.Render(page, nav, r)
 
-			} else if nav.IsNext("Logout") {
-
+			case "Logout":
 				console.Log("\""+nav.User.LoginName+"\" logged out", "Logout")
 
 				u, err := global.UserConfig.GetWithState(0)
@@ -438,27 +437,30 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 				nav.User = global.Guests.NewGuest(u, global.UIConfig.MaxGuests)
 
 				nav.RedirectPath("Account:Login", false)
-			} else {
+
+			default:
 				nav.RedirectPath("404", true)
 			}
 
-		} else if nav.Path == "400" {
-			// Bad Request
-			console.Log("400 \""+nav.LastPath+"\"", "")
-			page.Content = "<h1>400</h1><br>"
-			page.Content += page.Lang.Error.CE400BadRequest
-		} else if nav.Path == "404" {
-			// NotFound404
-			console.Log("404 \""+nav.LastPath+"\"", "")
-			page.Content = "<h1>404</h1><br>"
-			page.Content += page.Lang.Error.CE404NotFound
-		} else if nav.Path == "508" {
-			// LoopDetected508
-			console.Log("508 \""+nav.Path+"\" ("+nav.LastPath+")", "")
-			page.Content = "<h1>508</h1><br>"
-			page.Content += page.Lang.Error.SE508LoopDetected
-		} else {
-			nav.RedirectPath("404", true)
+		default:
+			if nav.Path == "400" {
+				// Bad Request
+				console.Log("400 \""+nav.LastPath+"\"", "")
+				page.Content = "<h1>400</h1><br>"
+				page.Content += page.Lang.Error.CE400BadRequest
+			} else if nav.Path == "404" {
+				// NotFound404
+				console.Log("404 \""+nav.LastPath+"\"", "")
+				page.Content = "<h1>404</h1><br>"
+				page.Content += page.Lang.Error.CE404NotFound
+			} else if nav.Path == "508" {
+				// LoopDetected508
+				console.Log("508 \""+nav.Path+"\" ("+nav.LastPath+")", "")
+				page.Content = "<h1>508</h1><br>"
+				page.Content += page.Lang.Error.SE508LoopDetected
+			} else {
+				nav.RedirectPath("404", true)
+			}
 		}
 
 		if loopDetection >= 5 {

@@ -22,14 +22,14 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 		nav.NavigatePath("Program:Settings:User:List")
 	}
 
-	if nav.IsNext("List") {
-
+	switch nav.GetNextPage() {
+	case "List":
 		pageuserlist.Render(page, nav, r)
 
-	} else if nav.IsNext("Edit") {
-
+	case "Edit":
 		pageuseredit.Render(page, nav, r)
-	} else {
+
+	default:
 		nav.RedirectPath("404", true)
 	}
 }
