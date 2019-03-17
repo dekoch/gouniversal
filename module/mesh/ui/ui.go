@@ -26,13 +26,14 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	appPage.Content = page.Content
 	global.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
-	if nav.IsNext("Server") {
-
+	switch nav.GetNextPage() {
+	case "Server":
 		pageserver.Render(appPage, nav, r)
-	} else if nav.IsNext("Network") {
 
+	case "Network":
 		pagenetwork.Render(appPage, nav, r)
-	} else {
+
+	default:
 		nav.RedirectPath("404", true)
 	}
 

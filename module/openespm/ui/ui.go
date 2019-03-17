@@ -38,12 +38,11 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	appPage.Content = page.Content
 	global.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
-	if nav.IsNext("Settings") {
-
+	switch nav.GetNextPage() {
+	case "Settings":
 		settings.Render(appPage, nav, r)
 
-	} else if nav.IsNext("App") {
-
+	case "App":
 		// load config for selected app
 		err := loadAppConfig(appPage, nav)
 		if err == nil {
@@ -55,7 +54,8 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 			// save config to file
 			global.AppConfig.SaveConfig()
 		}
-	} else {
+
+	default:
 		nav.RedirectPath("404", true)
 	}
 

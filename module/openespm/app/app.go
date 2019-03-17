@@ -9,7 +9,6 @@ import (
 	"github.com/dekoch/gouniversal/module/openespm/app/temphumv1x0/temphumv1x0request"
 	"github.com/dekoch/gouniversal/module/openespm/app/temphumv1x0/temphumv1x0ui"
 	"github.com/dekoch/gouniversal/module/openespm/typeoespm"
-	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/navigation"
 )
 
@@ -34,15 +33,14 @@ func Request(resp *typeoespm.Response, req *typeoespm.Request) {
 
 func Render(page *typeoespm.Page, nav *navigation.Navigation, r *http.Request) {
 
-	if nav.IsNext("SimpleSwitchV1x0") {
-
+	switch nav.GetNextPage() {
+	case "SimpleSwitchV1x0":
 		simpleswitchv1x0ui.Render(page, nav, r)
 
-	} else if nav.IsNext("TempHumV1x0") {
-
+	case "TempHumV1x0":
 		temphumv1x0ui.Render(page, nav, r)
 
-	} else {
-		alert.Message(alert.ERROR, page.Lang.Alert.Error, "Render() "+nav.CurrentPath, nav.CurrentPath, nav.User.UUID)
+	default:
+		nav.RedirectPath("404", true)
 	}
 }

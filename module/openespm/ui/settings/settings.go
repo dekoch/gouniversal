@@ -21,12 +21,14 @@ func Render(page *typeoespm.Page, nav *navigation.Navigation, r *http.Request) {
 		nav.NavigatePath("App:openESPM:Settings:App")
 	}
 
-	if nav.IsNext("App") {
-
+	switch nav.GetNextPage() {
+	case "App":
 		app.Render(page, nav, r)
 
-	} else if nav.IsNext("Device") {
-
+	case "Device":
 		device.Render(page, nav, r)
+
+	default:
+		nav.RedirectPath("404", true)
 	}
 }

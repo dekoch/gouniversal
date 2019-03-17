@@ -19,11 +19,11 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 		nav.NavigatePath("App:GasPrice:Station")
 	}
 
-	if nav.IsNext("Station") {
-
+	switch nav.GetNextPage() {
+	case "Station":
 		station.Render(page, nav, r)
 
-	} else {
+	default:
 		nav.RedirectPath("404", true)
 	}
 }

@@ -32,15 +32,14 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	appPage.Content = page.Content
 	global.Lang.SelectLang(nav.User.Lang, &appPage.Lang)
 
-	if nav.IsNext("Home") {
-
+	switch nav.GetNextPage() {
+	case "Home":
 		pagehome.Render(appPage, nav, r)
 
-	} else if nav.IsNext("Settings") {
-
+	case "Settings":
 		settings.Render(appPage, nav, r)
 
-	} else {
+	default:
 		nav.RedirectPath("404", true)
 	}
 
