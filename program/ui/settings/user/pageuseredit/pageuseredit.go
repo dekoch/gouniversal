@@ -130,9 +130,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	groups := global.GroupConfig.List()
 
-	for i := 0; i < len(groups); i++ {
-
-		g := groups[i]
+	for _, g := range groups {
 
 		grouplist += "<tr>"
 		grouplist += "<td>" + g.Name + "</td>"

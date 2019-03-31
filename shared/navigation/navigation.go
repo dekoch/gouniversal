@@ -3,10 +3,16 @@ package navigation
 import (
 	"strings"
 
+	"github.com/dekoch/gouniversal/program/uiconfig"
 	"github.com/dekoch/gouniversal/program/userconfig"
 	"github.com/dekoch/gouniversal/program/usermanagement"
 	"github.com/dekoch/gouniversal/shared/sitemap"
 )
+
+type Server struct {
+	Host    string
+	URLPath string
+}
 
 type Navigation struct {
 	Path        string
@@ -17,6 +23,8 @@ type Navigation struct {
 	Guest       bool
 	GodMode     bool
 	Sitemap     sitemap.Sitemap
+	UIConfig    uiconfig.UIConfig
+	Server      Server
 }
 
 func (nav *Navigation) GetNextPage() string {

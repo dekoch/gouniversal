@@ -351,6 +351,11 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	page := new(types.Page)
 	nav := new(navigation.Navigation)
 
+	nav.UIConfig = global.UIConfig
+
+	nav.Server.Host = r.Host
+	nav.Server.URLPath = r.URL.Path
+
 	getSession(nav, w, r)
 
 	global.Lang.SelectLang(nav.User.Lang, &page.Lang)
@@ -477,6 +482,9 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 				nav.Path = nav.Redirect
 			} else {
+				// prevent redirect loops through form input
+				var f http.Request
+				r = &f
 				nav.NavigatePath(nav.Redirect)
 			}
 		}
