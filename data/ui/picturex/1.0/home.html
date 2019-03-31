@@ -1,0 +1,196 @@
+<div id="accordion">
+    <div class="card">
+        <div class="card-header">
+            <a class="card-link" data-toggle="collapse" href="#collapseShareLink">
+                {{.Lang.ShareLink.Title}}
+            </a>
+        </div>
+        <div id="collapseShareLink" class="collapse {{.ShowShareLink}}" data-parent="#accordion">
+            <div class="card-body">
+                <table align="center">
+                    <tr>
+                        <th>
+                            {{.Lang.ShareLink.Step1}}
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <table align="center">
+                                <tr>
+                                    <th>
+                                        <form method="post">
+                                            <button class="btn btn-outline-secondary fa fa-sync" type="submit" name="edit" value="newpair"> {{.Lang.ShareLink.NewPair}}</button>
+                                        </form>
+                                    </th>
+                                    <th>
+                                        <input type="text" value="{{.Link}}" id="link">
+                                        <button class="btn btn-outline-secondary fas fa-external-link-alt" onclick="copyLink()"> {{.Lang.ShareLink.CopyLink}}</button>
+                                    </th>
+                                </tr>
+                            </table>
+                            <hr>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            {{.Lang.ShareLink.Step2}}
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <form enctype="multipart/form-data" action="/picturex/upload/" method="post">
+                                <input type="file" name="uploadfile" accept="image/*"/>
+                                <input type="hidden" name="uuid" value="{{.UUID}}" />
+                                <input type="hidden" name="token" value="{{.Token}}" />
+                                <input type="hidden" name="pair" value="{{.Pair}}" />
+                                <button class="btn btn-outline-secondary fa fa-upload" type="submit" value="upload"> {{.Lang.ShareLink.Upload}}</button>
+                            </form>
+                            <hr>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            {{.Lang.ShareLink.Step3}}
+                            <hr>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            {{.Lang.ShareLink.Step4}}
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <form method="post">
+                                <button class="btn btn-outline-secondary fa fa-lock-open" type="submit" name="edit" value="unlock"> {{.Lang.ShareLink.Unlock}}</button>
+                            </form>
+                            <hr>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            {{.Lang.ShareLink.Step5}}
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <form method="post">
+                                <button class="btn btn-outline-secondary fa fa-trash" type="submit" name="edit" value="deletepair"> {{.Lang.LinkReceived.DeletePair}}</button>
+                            </form>
+                        </th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <a class="card-link" data-toggle="collapse" href="#collapseLinkReceived">
+                {{.Lang.LinkReceived.Title}}
+            </a>
+        </div>
+        <div id="collapseLinkReceived" class="collapse {{.ShowLinkReceived}}" data-parent="#accordion">
+            <div class="card-body">
+                <table align="center">
+                    <tr>
+                        <th>
+                            {{.Lang.LinkReceived.Step1}}
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <form enctype="multipart/form-data" action="/picturex/upload/" method="post">
+                                <input type="file" name="uploadfile" accept="image/*"/>
+                                <input type="hidden" name="uuid" value="{{.UUID}}" />
+                                <input type="hidden" name="token" value="{{.Token}}" />
+                                <input type="hidden" name="pair" value="{{.Pair}}" />
+                                <button class="btn btn-outline-secondary fa fa-upload" type="submit" value="upload"> {{.Lang.LinkReceived.Upload}}</button>
+                            </form>
+                            <hr>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            {{.Lang.LinkReceived.Step2}}
+                            <hr>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            {{.Lang.LinkReceived.Step3}}
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <form method="post">
+                                <button class="btn btn-outline-secondary fa fa-lock-open" type="submit" name="edit" value="unlock"> {{.Lang.LinkReceived.Unlock}}</button>
+                            </form>
+                            <hr>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            {{.Lang.LinkReceived.Step4}}
+                        </th>
+                    </tr>
+                    <tr>
+                        <th>
+                            <form method="post">
+                                <button class="btn btn-outline-secondary fa fa-trash" type="submit" name="edit" value="deletepair"> {{.Lang.LinkReceived.DeletePair}}</button>
+                            </form>
+                        </th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+<table align="center">
+    <tr>
+        {{.Lang.FirstPicture}}
+    </tr>
+    <tr>
+        <div id="firstpicture"></div>
+    </tr>
+    <tr>
+        {{.Lang.SecondPicture}}
+    </tr>
+    <tr>
+        <div id="secondpicture"></div>
+    </tr>
+</table>
+
+<script type="text/javascript">
+
+    function copyLink() {
+      
+        var copyText = document.getElementById("link");
+        copyText.select();
+
+        document.execCommand("copy");
+    }
+
+    // Create a new HTML5 EventSource
+    var sourceConsole = new EventSource('/picturex/sse/?uuid={{.UUID}}&token={{.Token}}&pair={{.Pair}}');
+
+    var imgFirst = document.createElement("img");
+    imgFirst.style.width = "100%";
+
+    var imgSecond = document.createElement("img");
+    imgSecond.style.width = "100%";
+
+    // Create a callback for when a new message is received.
+    sourceConsole.onmessage = function (c) {
+
+        var obj = JSON.parse(c.data);
+
+        imgFirst.src = obj.First;
+        var srcFirst = document.getElementById("firstpicture");
+        srcFirst.appendChild(imgFirst);
+        
+        imgSecond.src = obj.Second;
+        var srcSecond = document.getElementById("secondpicture");
+        srcSecond.appendChild(imgSecond);
+    };
+</script>

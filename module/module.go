@@ -19,6 +19,7 @@ import (
 	"github.com/dekoch/gouniversal/module/messenger"
 	"github.com/dekoch/gouniversal/module/modbustest"
 	"github.com/dekoch/gouniversal/module/openespm"
+	"github.com/dekoch/gouniversal/module/picturex"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 
@@ -83,6 +84,11 @@ func LoadConfig() {
 	if build.ModuleGasPrice {
 		sharedConsole.Log("GasPrice enabled", "Module")
 		gasprice.LoadConfig()
+	}
+
+	if build.ModulePictureX {
+		sharedConsole.Log("PictureX enabled", "Module")
+		picturex.LoadConfig()
 	}
 
 	if build.ModuleGPSNav {
@@ -153,6 +159,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	if build.ModuleGasPrice {
 		gasprice.RegisterPage(page, nav)
+	}
+
+	if build.ModulePictureX {
+		picturex.RegisterPage(page, nav)
 	}
 
 	if build.ModuleGPSNav {
@@ -227,6 +237,12 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 			return
 		}
 
+	case "PictureX":
+		if build.ModulePictureX {
+			picturex.Render(page, nav, r)
+			return
+		}
+
 	case "GPSNav":
 		if build.ModuleGPSNav {
 			gpsnav.Render(page, nav, r)
@@ -274,6 +290,10 @@ func Exit() {
 
 	if build.ModuleGasPrice {
 		gasprice.Exit()
+	}
+
+	if build.ModulePictureX {
+		picturex.Exit()
 	}
 
 	if build.ModuleGPSNav {
