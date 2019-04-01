@@ -1,7 +1,9 @@
 package guestmanagement
 
 import (
+	"sort"
 	"sync"
+	"time"
 
 	"github.com/dekoch/gouniversal/program/userconfig"
 
@@ -9,52 +11,60 @@ import (
 )
 
 type guestUser struct {
-	User          userconfig.User
-	LoginAttempts int
+	user          userconfig.User
+	loginAttempts int
+	timeStamp     time.Time
 }
 
 type GuestManagement struct {
-	User []guestUser
+	user []guestUser
 }
 
-var mut sync.RWMutex
+var mut sync.Mutex
 
 func (c *GuestManagement) NewGuest(user userconfig.User, maxuser int) userconfig.User {
 
 	var newGuest guestUser
-	newGuest.User = user
-	newGuest.LoginAttempts = 0
+	newGuest.user = user
+	newGuest.loginAttempts = 0
 
 	// set new uuid for guest
 	u := uuid.Must(uuid.NewRandom())
-	newGuest.User.UUID = u.String()
+	newGuest.user.UUID = u.String()
+
+	newGuest.timeStamp = time.Now()
 
 	// add new guest to list
 	mut.Lock()
 	defer mut.Unlock()
 
-	guests := len(c.User)
+	guests := len(c.user)
 	// if number of guests exceeds maximum, remove the oldest
 	if guests > maxuser {
-		c.User = c.User[1:guests]
+
+		sort.Slice(c.user, func(i, j int) bool { return c.user[i].timeStamp.Unix() < c.user[j].timeStamp.Unix() })
+
+		c.user = c.user[1:guests]
 	}
 
-	c.User = append(c.User, newGuest)
+	c.user = append(c.user, newGuest)
 
-	return newGuest.User
+	return newGuest.user
 }
 
 func (c *GuestManagement) SelectGuest(uid string) userconfig.User {
 
-	mut.RLock()
-	defer mut.RUnlock()
+	mut.Lock()
+	defer mut.Unlock()
 
-	for u := 0; u < len(c.User); u++ {
+	for u := 0; u < len(c.user); u++ {
 
 		// search guest with UUID
-		if uid == c.User[u].User.UUID {
+		if uid == c.user[u].user.UUID {
 
-			return c.User[u].User
+			c.user[u].timeStamp = time.Now()
+
+			return c.user[u].user
 		}
 	}
 
@@ -68,14 +78,14 @@ func (c *GuestManagement) MaxLoginAttempts(uid string, maxattempts int) bool {
 	mut.Lock()
 	defer mut.Unlock()
 
-	for u := 0; u < len(c.User); u++ {
+	for u := 0; u < len(c.user); u++ {
 
 		// search guest with UUID
-		if uid == c.User[u].User.UUID {
+		if uid == c.user[u].user.UUID {
 
-			c.User[u].LoginAttempts++
+			c.user[u].loginAttempts++
 
-			if c.User[u].LoginAttempts > maxattempts {
+			if c.user[u].loginAttempts > maxattempts {
 				return true
 			}
 
