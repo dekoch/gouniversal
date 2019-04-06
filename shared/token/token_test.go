@@ -46,6 +46,41 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestGet(t *testing.T) {
+
+	tests := []struct {
+		inNew    string
+		inGet    string
+		wantEror bool
+	}{
+		{"1234", "1234", false},
+		{"1234", "", true},
+		{"1234", "12", true},
+	}
+
+	var ut Token
+
+	for _, tt := range tests {
+
+		gotError := false
+
+		tokenNew := ut.New(tt.inNew)
+
+		tokenGet, err := ut.Get(tt.inGet)
+		if err == nil {
+			if tokenNew != tokenGet {
+				t.Errorf("Get(): got token %v, want token %v", tokenGet, tokenNew)
+			}
+		} else {
+			gotError = true
+		}
+
+		if gotError != tt.wantEror {
+			t.Errorf("Get(): got %v, want %t", gotError, tt.wantEror)
+		}
+	}
+}
+
 func TestCheck(t *testing.T) {
 
 	tests := []struct {

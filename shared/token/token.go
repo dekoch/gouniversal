@@ -1,6 +1,7 @@
 package token
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/dekoch/gouniversal/shared/functions"
@@ -64,6 +65,26 @@ func (t *Token) New(uid string) string {
 	t.tokens = append(t.tokens, newToken)
 
 	return ut
+}
+
+// Get returns the token from the given UUID
+func (t *Token) Get(uid string) (string, error) {
+
+	if functions.IsEmpty(uid) {
+		return "", errors.New("UUID not set")
+	}
+
+	t.mut.RLock()
+	defer t.mut.RUnlock()
+
+	for i := 0; i < len(t.tokens); i++ {
+
+		if uid == t.tokens[i].uid {
+			return t.tokens[i].token, nil
+		}
+	}
+
+	return "", errors.New("UUID not found")
 }
 
 // Check returns true, if the UUID and token match with items inside list
