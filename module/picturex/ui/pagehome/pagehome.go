@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/picturex/global"
@@ -39,6 +41,8 @@ var (
 
 func LoadConfig() {
 
+	rand.Seed(time.Now().UnixNano())
+
 	clients.RemoveAll()
 
 	http.Handle("/picturex/sse/", &sse{})
@@ -72,21 +76,25 @@ func Render(page *typemo.Page, nav *navigation.Navigation, r *http.Request) {
 	c.Lang = page.Lang.Home
 
 	var (
-		err         error
-		redirect    bool
-		isFirstUser bool
-		ssej        sseJSON
-		ssem        sseMessage
-		firstPic    string
-		secondPic   string
-		b           []byte
+		err          error
+		redirect     bool
+		isFirstUser  bool
+		ssej         sseJSON
+		ssem         sseMessage
+		firstPic     string
+		secondPic    string
+		uid          string
+		partnerToken string
+		b            []byte
 	)
 
 	pair := nav.Parameter("Pair")
 	token := global.Tokens.New(nav.User.UUID)
+	// need random to change urls, because we update pictures
+	ra := strconv.Itoa(rand.Int())
 
 	func() {
-		for i := 0; i <= 8; i++ {
+		for i := 0; i <= 15; i++ {
 
 			switch i {
 			case 0:
@@ -133,17 +141,18 @@ func Render(page *typemo.Page, nav *navigation.Navigation, r *http.Request) {
 
 			case 6:
 				if firstPic != "" {
-					ssej.First = "/picturex/req/?uuid=" + nav.User.UUID + "&token=" + token + "&name=" + firstPic
+					ssej.First = "/picturex/req/?uuid=" + nav.User.UUID + "&token=" + token + "&name=" + firstPic + "&random=" + ra
 				}
 
 				if secondPic != "" {
-					ssej.Second = "/picturex/req/?uuid=" + nav.User.UUID + "&token=" + token + "&name=" + secondPic
+					ssej.Second = "/picturex/req/?uuid=" + nav.User.UUID + "&token=" + token + "&name=" + secondPic + "&random=" + ra
 				}
 
 			case 7:
 				b, err = json.Marshal(ssej)
 
 			case 8:
+				ssem.ClientUUID = nav.User.UUID
 				ssem.PairUUID = pair
 				ssem.Content = string(b)
 
@@ -154,10 +163,54 @@ func Render(page *typemo.Page, nav *navigation.Navigation, r *http.Request) {
 					cl := clients.List()
 					// send message to all waiting clients
 					for i := 0; i < len(cl); i++ {
+						messages <- message
+					}
+				}(ssem)
 
-						ssem.ClientUUID = cl[i]
+			case 9:
+				// send update to parter
+				if isFirstUser {
+					uid, err = global.PairList.GetSecondUser(pair)
+				} else {
+					uid, err = global.PairList.GetFirstUser(pair)
+				}
 
-						messages <- ssem
+				if uid == "" {
+					return
+				}
+
+			case 10:
+				partnerToken, err = global.Tokens.Get(uid)
+
+			case 11:
+				firstPic, err = global.PairList.GetFirstPicture(pair, uid)
+
+			case 12:
+				secondPic, err = global.PairList.GetSecondPicture(pair, uid)
+
+			case 13:
+				if firstPic != "" {
+					ssej.First = "/picturex/req/?uuid=" + uid + "&token=" + partnerToken + "&name=" + firstPic + "&random=" + ra
+				}
+
+				if secondPic != "" {
+					ssej.Second = "/picturex/req/?uuid=" + uid + "&token=" + partnerToken + "&name=" + secondPic + "&random=" + ra
+				}
+
+			case 14:
+				b, err = json.Marshal(ssej)
+
+			case 15:
+				ssem.ClientUUID = uid
+				ssem.PairUUID = pair
+				ssem.Content = string(b)
+
+				go func(message sseMessage) {
+
+					cl := clients.List()
+					// send message to all waiting clients
+					for i := 0; i < len(cl); i++ {
+						messages <- message
 					}
 				}(ssem)
 			}

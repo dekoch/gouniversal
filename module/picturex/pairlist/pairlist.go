@@ -145,6 +145,21 @@ func (pl *PairList) IsFirstUser(p, user string) (bool, error) {
 	return false, errors.New("pair not found")
 }
 
+func (pl *PairList) GetFirstUser(p string) (string, error) {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	for i := 0; i < len(pl.Pairs); i++ {
+
+		if p == pl.Pairs[i].GetUUID() {
+			return pl.Pairs[i].GetFirstUser(), nil
+		}
+	}
+
+	return "", errors.New("pair not found")
+}
+
 func (pl *PairList) SetSecondUser(p, user string) error {
 
 	mut.Lock()
@@ -158,6 +173,21 @@ func (pl *PairList) SetSecondUser(p, user string) error {
 	}
 
 	return errors.New("pair not found")
+}
+
+func (pl *PairList) GetSecondUser(p string) (string, error) {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	for i := 0; i < len(pl.Pairs); i++ {
+
+		if p == pl.Pairs[i].GetUUID() {
+			return pl.Pairs[i].GetSecondUser(), nil
+		}
+	}
+
+	return "", errors.New("pair not found")
 }
 
 func (pl *PairList) SetPicture(p, user, name string) error {

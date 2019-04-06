@@ -102,6 +102,11 @@ func (pa *Pair) IsFirstUser(user string) bool {
 	return false
 }
 
+func (pa *Pair) GetFirstUser() string {
+
+	return pa.first.user
+}
+
 func (pa *Pair) IsSecondUser(user string) bool {
 
 	if user == pa.second.user {
@@ -109,6 +114,11 @@ func (pa *Pair) IsSecondUser(user string) bool {
 	}
 
 	return false
+}
+
+func (pa *Pair) GetSecondUser() string {
+
+	return pa.second.user
 }
 
 func (pa *Pair) SetSecondUser(user string) error {
