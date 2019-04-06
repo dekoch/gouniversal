@@ -5,13 +5,16 @@ import (
 	"errors"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/dekoch/gouniversal/shared/config"
 	"github.com/dekoch/gouniversal/shared/console"
+	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/io/file"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const configFilePath = "data/config/"
@@ -125,7 +128,25 @@ func (c *UserConfig) LoadConfig() error {
 		c.loadDefaults()
 	}
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	for i := range c.User {
+		// check password hash, if there is a plaintext password
+		if functions.IsEmpty(c.User[i].PWDHash) == false &&
+			strings.HasPrefix(c.User[i].PWDHash, "$") == false {
+
+			b, err = bcrypt.GenerateFromPassword([]byte(c.User[i].PWDHash), 14)
+			if err != nil {
+				return err
+			}
+
+			c.User[i].PWDHash = string(b)
+		}
+	}
+
+	return nil
 }
 
 func (c *UserConfig) Add(u User) {
