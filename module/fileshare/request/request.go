@@ -1,6 +1,7 @@
 package request
 
 import (
+	"errors"
 	"net/http"
 	"os"
 	"strconv"
@@ -38,24 +39,34 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 
 	resp.FilePath = global.Config.FileRoot + req.FilePath
 
-	/*for i := 0; i <= 6; i++ {
+	var fi os.FileInfo
+
+	for i := 0; i <= 1; i++ {
 		if resp.Err == nil {
 			switch i {
 			case 0:
-				if functions.IsEmpty(req.ID) {
-					resp.Err = errors.New("ID not set")
-					resp.Status = http.StatusForbidden
-				}
+				fi, resp.Err = os.Stat(resp.FilePath)
 
 			case 1:
-				if functions.IsEmpty(req.Key) {
-					resp.Err = errors.New("key not set")
+				if fi.IsDir() {
+					resp.Err = errors.New("path forbidden")
 					resp.Status = http.StatusForbidden
 				}
 
+				/*case 2:
+					if functions.IsEmpty(req.ID) {
+						resp.Err = errors.New("ID not set")
+						resp.Status = http.StatusForbidden
+					}
+
+				case 3:
+					if functions.IsEmpty(req.Key) {
+						resp.Err = errors.New("key not set")
+						resp.Status = http.StatusForbidden
+					}*/
 			}
 		}
-	}*/
+	}
 
 	if resp.Err != nil {
 		if resp.Status == http.StatusOK {
@@ -66,9 +77,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		console.Output(req.ID+"\t"+resp.Err.Error(), "")
 	} else {
 
-		if _, err := os.Stat(resp.FilePath); os.IsNotExist(err) == false {
-			http.ServeFile(w, r, resp.FilePath)
-		}
+		http.ServeFile(w, r, resp.FilePath)
 	}
 
 	t := time.Now()
