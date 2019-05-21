@@ -109,6 +109,9 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 
 	case "30days":
 		from = from.AddDate(0, 0, -30)
+
+	case "alldays":
+		from = from.AddDate(-999, 0, 0)
 	}
 
 	labels := ""
@@ -145,6 +148,9 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 
 				case "30days":
 					labels += "\"" + price.Date.Format("2006-01-02") + "\","
+
+				case "alldays":
+					labels += "\"" + price.Date.Format("2006-01") + "\","
 				}
 
 				datasets += "\"" + strconv.FormatFloat(price.Price, 'f', 3, 64) + "\","

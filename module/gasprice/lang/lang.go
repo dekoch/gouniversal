@@ -10,6 +10,7 @@ type Home struct {
 	ShowLastDay    string
 	ShowLast7Days  string
 	ShowLast30Days string
+	ShowAll        string
 }
 
 type StationList struct {
@@ -62,6 +63,7 @@ func DefaultEn() LangFile {
 	l.Home.ShowLastDay = "Last 24h"
 	l.Home.ShowLast7Days = "Last 7d"
 	l.Home.ShowLast30Days = "Last 30d"
+	l.Home.ShowAll = "All"
 
 	l.StationList.Menu = "GasPrice"
 	l.StationList.Title = "List"

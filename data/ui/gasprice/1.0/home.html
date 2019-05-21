@@ -3,9 +3,11 @@
 <form method="post">
     {{.CmbStation}}
     {{.CmbGasType}}
+    <br>
     <button class="btn btn-primary" type="submit" name="edit" value="1day">{{.Lang.ShowLastDay}}</button>
     <button class="btn btn-primary" type="submit" name="edit" value="7days">{{.Lang.ShowLast7Days}}</button>
     <button class="btn btn-primary" type="submit" name="edit" value="30days">{{.Lang.ShowLast30Days}}</button>
+    <button class="btn btn-primary" type="submit" name="edit" value="alldays">{{.Lang.ShowAll}}</button>
     <br>
     {{.CurrentPrice}}
 
