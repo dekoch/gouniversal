@@ -1,6 +1,8 @@
 package core
 
 import (
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/gasprice/csv"
@@ -15,6 +17,8 @@ var (
 )
 
 func LoadConfig() {
+
+	//splitLargeCSV()
 
 	go checkPrice()
 	go job()
@@ -53,7 +57,7 @@ func checkPrice() {
 	for {
 		<-chanCheckStart
 
-		fileName := time.Now().Format("2006")
+		fileName := time.Now().Format("2006-01-02")
 		fileName += ".csv"
 
 		for _, st := range global.Config.Stations.GetList() {
@@ -74,6 +78,25 @@ func checkPrice() {
 
 				csv.Export(global.Config.FileRoot+fileName, price)
 			}
+		}
+	}
+}
+
+func splitLargeCSV() {
+
+	fileName := time.Now().Format("2006")
+	fileName += ".csv"
+	// split large file into multiple files
+	if _, err := os.Stat(global.Config.FileRoot + fileName); os.IsNotExist(err) == false {
+
+		err := csv.Split(global.Config.FileRoot+fileName, global.Config.FileRoot)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		err = os.Rename(global.Config.FileRoot+fileName, global.Config.FileRoot+fileName+".old")
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 }

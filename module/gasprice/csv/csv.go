@@ -71,6 +71,10 @@ func Import(filepath, uid, gastype string, from time.Time) (price.PriceList, err
 						pr.Date = pr.Date.Add(time.Duration(t.Hour())*time.Hour +
 							time.Duration(t.Minute())*time.Minute +
 							time.Duration(t.Second())*time.Second)
+
+						if pr.Date.Before(from) {
+							return
+						}
 					}
 
 				case 2:
@@ -90,6 +94,11 @@ func Import(filepath, uid, gastype string, from time.Time) (price.PriceList, err
 					}
 
 				case 4:
+					// Station
+					if uid != val {
+						return
+					}
+
 					pr.Station = val
 
 				case 5:
@@ -108,6 +117,11 @@ func Import(filepath, uid, gastype string, from time.Time) (price.PriceList, err
 					pr.Source = val
 
 				case 10:
+					// Type
+					if gastype != val {
+						return
+					}
+
 					pr.Type = val
 
 				case 11:
@@ -122,16 +136,58 @@ func Import(filepath, uid, gastype string, from time.Time) (price.PriceList, err
 				}
 			}
 
-			if pr.Date.Before(from) ||
-				pr.Station != uid ||
-				pr.Type != gastype {
-
-				return
-			}
-
 			ret.Add(pr)
 		}()
 	}
 
 	return ret, nil
+}
+
+//Split large file into multiple files, once per day
+func Split(filepath, dest string) error {
+
+	var (
+		err     error
+		oldTime string
+		rows    [][]string
+	)
+
+	lines, err := csv.ReadAll(filepath)
+	if err != nil {
+		return err
+	}
+
+	for _, line := range lines {
+
+		if len(line) > 0 {
+			// date
+			val := line[0]
+
+			_, err = time.Parse("2006-01-02", val)
+			if err != nil {
+				return err
+			}
+
+			if oldTime == "" {
+				oldTime = val
+			}
+
+			if oldTime == val {
+
+				rows = append(rows, line)
+
+			} else {
+
+				err = csv.AddRows(dest+oldTime+".csv", rows)
+				if err != nil {
+					return err
+				}
+
+				oldTime = val
+				rows = make([][]string, 0)
+			}
+		}
+	}
+
+	return csv.AddRows(dest+oldTime+".csv", rows)
 }

@@ -1,20 +1,26 @@
 package pagehome
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/gasprice/csv"
 	"github.com/dekoch/gouniversal/module/gasprice/global"
 	"github.com/dekoch/gouniversal/module/gasprice/lang"
+	"github.com/dekoch/gouniversal/module/gasprice/price"
 	"github.com/dekoch/gouniversal/module/gasprice/typemd"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/io/fileInfo"
 	"github.com/dekoch/gouniversal/shared/navigation"
+	"github.com/dekoch/gouniversal/shared/timeout"
 )
 
 func RegisterPage(page *typemd.Page, nav *navigation.Navigation) {
@@ -114,18 +120,96 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 		from = from.AddDate(-999, 0, 0)
 	}
 
-	labels := ""
-	datasets := ""
+	var (
+		plAll   price.PriceList
+		fileCnt uint
+		wg      sync.WaitGroup
+		mut     sync.Mutex
+	)
 
-	fileName := time.Now().Format("2006")
-	fileName += ".csv"
-
-	pl, err := csv.Import(global.Config.FileRoot+fileName, id, gasType, from)
+	files, err := fileInfo.Get(global.Config.FileRoot)
 	if err != nil {
 		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
 	}
 
-	prices := pl.GetList()
+	var to timeout.TimeOut
+	to.Start(999)
+
+	numCPU := runtime.NumCPU()
+	chunkSize := (len(files) + numCPU - 1) / numCPU
+
+	for i := 0; i < len(files); i += chunkSize {
+		end := i + chunkSize
+
+		if end > len(files) {
+			end = len(files)
+		}
+
+		wg.Add(1)
+
+		go func(filesCore []fileInfo.FileInfo) {
+
+			var (
+				plCore  price.PriceList
+				cntCore uint
+			)
+
+			for _, f := range filesCore {
+
+				if strings.HasSuffix(f.Name, ".csv") == false {
+					continue
+				}
+
+				name := strings.Replace(f.Name, ".csv", "", -1)
+				l := len(name)
+				if l > 10 {
+					name = name[:10]
+				}
+
+				fDate, err := time.Parse("2006-01-02", name)
+				if err != nil {
+					continue
+				}
+
+				if fDate.Before(from.AddDate(0, 0, -1)) {
+					continue
+				}
+
+				cntCore++
+
+				plFile, err := csv.Import(global.Config.FileRoot+f.Name, id, gasType, from)
+				if err != nil {
+					alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+				}
+
+				plCore.AddList(plFile.GetList())
+			}
+
+			mut.Lock()
+			plAll.AddList(plCore.GetList())
+			fileCnt += cntCore
+			mut.Unlock()
+
+			wg.Done()
+
+		}(files[i:end])
+	}
+
+	wg.Wait()
+
+	fmt.Print(to.ElapsedMillis())
+	fmt.Print("ms @ ")
+	fmt.Print(numCPU)
+	fmt.Print(" cores (")
+	fmt.Print(fileCnt)
+	fmt.Print(",")
+	fmt.Print(len(plAll.GetList()))
+	fmt.Println(")")
+
+	labels := ""
+	datasets := ""
+
+	prices := plAll.GetList()
 
 	if len(prices) > 0 {
 

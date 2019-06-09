@@ -23,6 +23,11 @@ func (pl *PriceList) Add(pr Price) {
 	pl.Prices = append(pl.Prices, pr)
 }
 
+func (pl *PriceList) AddList(prs []Price) {
+
+	pl.Prices = append(pl.Prices, prs...)
+}
+
 func (pl *PriceList) GetStationUUIDs(gastype string) []string {
 
 	var (
