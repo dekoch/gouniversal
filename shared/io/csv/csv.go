@@ -11,6 +11,15 @@ import (
 // AddRow adds a new row of data to a csv file
 func AddRow(path string, row []string) error {
 
+	var rows [][]string
+	rows = append(rows, row)
+
+	return AddRows(path, rows)
+}
+
+// AddRows adds new rows of data to a csv file
+func AddRows(path string, row [][]string) error {
+
 	err := functions.CreateDir(path)
 	if err != nil {
 		return err
@@ -37,7 +46,7 @@ func AddRow(path string, row []string) error {
 		}
 	}
 
-	rows = append(rows, row)
+	rows = append(rows, row...)
 
 	// write the file
 	file, err := os.Create(path)
