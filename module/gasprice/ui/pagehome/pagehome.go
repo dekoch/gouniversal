@@ -3,6 +3,7 @@ package pagehome
 import (
 	"fmt"
 	"html/template"
+	"math/rand"
 	"net/http"
 	"runtime"
 	"sort"
@@ -135,10 +136,15 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	var to timeout.TimeOut
 	to.Start(999)
 
+	// shuffle the file list, to improve cpu usage
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(files), func(i, j int) { files[i], files[j] = files[j], files[i] })
+
 	numCPU := runtime.NumCPU()
 	chunkSize := (len(files) + numCPU - 1) / numCPU
-
+	// split file list into chunks and start parsing
 	for i := 0; i < len(files); i += chunkSize {
+
 		end := i + chunkSize
 
 		if end > len(files) {
