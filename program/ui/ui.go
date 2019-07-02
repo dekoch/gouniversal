@@ -15,6 +15,7 @@ import (
 	"github.com/dekoch/gouniversal/program/ui/pagehome"
 	"github.com/dekoch/gouniversal/program/ui/pagelogin"
 	"github.com/dekoch/gouniversal/program/ui/settings"
+	"github.com/dekoch/gouniversal/program/userconfig"
 	"github.com/dekoch/gouniversal/program/usermanagement"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/clientinfo"
@@ -91,14 +92,14 @@ func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Reque
 
 		nav.User, err = global.UserConfig.Get(uid)
 
-		if nav.User.State < 0 {
+		if nav.User.State < userconfig.StatePublic {
 			// if no user found
 			nav.User = global.Guests.SelectGuest(uid)
 		}
 
-		if nav.User.State < 0 {
+		if nav.User.State < userconfig.StatePublic {
 			// if no guest found, create new
-			u, err := global.UserConfig.GetWithState(0)
+			u, err := global.UserConfig.GetWithState(userconfig.StatePublic)
 			if err != nil {
 				console.Log(err, "")
 			}

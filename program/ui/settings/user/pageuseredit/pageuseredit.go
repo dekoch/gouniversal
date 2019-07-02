@@ -103,20 +103,24 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	cmbState := "<select name=\"state\">"
 	statetext := ""
 
+	var us userconfig.UserState
+
 	for i := 0; i <= 2; i++ {
 
-		switch i {
-		case 0:
+		us = userconfig.UserState(i)
+
+		switch us {
+		case userconfig.StatePublic:
 			statetext = page.Lang.Settings.User.UserEdit.States.Public
-		case 1:
+		case userconfig.StateActive:
 			statetext = page.Lang.Settings.User.UserEdit.States.Active
-		case 2:
+		case userconfig.StateInactive:
 			statetext = page.Lang.Settings.User.UserEdit.States.Inactive
 		}
 
 		cmbState += "<option value=\"" + strconv.Itoa(i) + "\""
 
-		if c.User.State == i {
+		if c.User.State == us {
 			cmbState += " selected"
 		}
 
@@ -229,7 +233,7 @@ func editUser(r *http.Request, uid string) error {
 			case 9:
 				u.LoginName = loginName
 				u.Name = name
-				u.State = intState
+				u.State = userconfig.UserState(intState)
 				u.Lang = selLang
 				u.Comment = comment
 				u.Groups = r.Form["selectedgroups"]

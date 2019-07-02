@@ -19,6 +19,14 @@ import (
 
 const configFilePath = "data/config/"
 
+type UserState int
+
+const (
+	StatePublic UserState = 0 + iota
+	StateActive
+	StateInactive
+)
+
 // User stores all information about a single user
 type User struct {
 	UUID      string
@@ -26,7 +34,7 @@ type User struct {
 	Name      string
 	PWDHash   string
 	Groups    []string
-	State     int
+	State     UserState
 	Lang      string
 	Comment   string
 }
@@ -210,7 +218,7 @@ func (c *UserConfig) GetWithName(name string) (User, error) {
 	return u, errors.New("GetWithName() user \"" + name + "\" not found")
 }
 
-func (c *UserConfig) GetWithState(state int) (User, error) {
+func (c *UserConfig) GetWithState(state UserState) (User, error) {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -225,8 +233,8 @@ func (c *UserConfig) GetWithState(state int) (User, error) {
 
 	var u User
 	u.State = -1
-	sState := strconv.Itoa(state)
-	return u, errors.New("GetWithState() no user with state \"" + sState + "\" found")
+
+	return u, errors.New("GetWithState() no user with state \"" + strconv.Itoa(int(state)) + "\" found")
 }
 
 func (c *UserConfig) GetUserCnt() int {
