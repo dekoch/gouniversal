@@ -2,6 +2,7 @@ package console
 
 import (
 	"fmt"
+	"html"
 	"log"
 	"os"
 	"runtime"
@@ -99,6 +100,9 @@ func caller() string {
 func consoleOutput(message interface{}, sender string) string {
 
 	m := fmt.Sprintf("%v", message)
+	// prevent XSS (/cms/index.php/"></a><script>alert('');</script>)
+	m = html.EscapeString(m)
+
 	s := m
 
 	if sender != "" {
@@ -125,7 +129,7 @@ func Output(message interface{}, sender string) {
 
 	appendOutput(s)
 
-	fmt.Println(s)
+	fmt.Println(html.UnescapeString(s))
 }
 
 func Log(message interface{}, sender string) {
@@ -137,7 +141,7 @@ func Log(message interface{}, sender string) {
 
 	appendOutput(s)
 
-	fmt.Println(s)
+	fmt.Println(html.UnescapeString(s))
 	logLogger.Println(s)
 }
 
