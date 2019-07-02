@@ -101,3 +101,9 @@ func (site *Sitemap) ShowMap() {
 		fmt.Println(site.Pages[i].Title)
 	}
 }
+
+// Clear removes all registered pages
+func (site *Sitemap) Clear() {
+
+	site.Pages = make([]Page, 0)
+}
