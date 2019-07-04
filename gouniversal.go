@@ -21,6 +21,7 @@ func main() {
 	console.LoadConfig()
 	console.Log("App starting...", " ")
 	console.Log("Build: "+build.BuildTime, " ")
+	console.Log("Commit: "+build.Commit, " ")
 	console.Input("")
 
 	en := lang.DefaultEn()
