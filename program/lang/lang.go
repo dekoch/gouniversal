@@ -123,6 +123,20 @@ type Logout struct {
 	Title string
 }
 
+type UserAccount struct {
+	Title             string
+	LoginName         string
+	Name              string
+	Language          string
+	SetNewPassword    string
+	OldPassword       string
+	NewPassword       string
+	ConfirmPassword   string
+	PasswordMismatch  string
+	IncorrectPassword string
+	Apply             string
+}
+
 type Exit struct {
 	Title string
 }
@@ -141,15 +155,16 @@ type Error struct {
 }
 
 type LangFile struct {
-	Header   config.FileHeader
-	Menu     Menu
-	Home     Home
-	Settings Settings
-	Login    Login
-	Logout   Logout
-	Exit     Exit
-	Alert    Alert
-	Error    Error
+	Header      config.FileHeader
+	Menu        Menu
+	Home        Home
+	Settings    Settings
+	Login       Login
+	Logout      Logout
+	UserAccount UserAccount
+	Exit        Exit
+	Alert       Alert
+	Error       Error
 }
 
 func DefaultEn() LangFile {
@@ -220,6 +235,18 @@ func DefaultEn() LangFile {
 	l.Login.Login = "Login"
 
 	l.Logout.Title = "Logout"
+
+	l.UserAccount.Title = "User Account"
+	l.UserAccount.LoginName = "Login name"
+	l.UserAccount.Name = "Name"
+	l.UserAccount.Language = "Language"
+	l.UserAccount.SetNewPassword = "Set new password"
+	l.UserAccount.OldPassword = "Old password"
+	l.UserAccount.NewPassword = "New password"
+	l.UserAccount.ConfirmPassword = "Confirm new password"
+	l.UserAccount.PasswordMismatch = "Password mismatch"
+	l.UserAccount.IncorrectPassword = "Incorrect password"
+	l.UserAccount.Apply = "Apply"
 
 	l.Exit.Title = "Exit"
 

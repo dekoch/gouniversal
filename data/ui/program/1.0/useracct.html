@@ -1,0 +1,54 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>{{.Lang.LoginName}}:</th>
+                <td><input type="text" class="form-control" name="loginname" value="{{.User.LoginName}}"></td>
+            </tr> 
+            <tr>
+                <th>{{.Lang.Name}}:</th>
+                <td><input type="text" class="form-control" name="name" value="{{.User.Name}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.Language}}:</th>
+                <td>{{.CmbLang}}</td>
+            </tr>
+            <tr>
+                <th>UUID:</th>
+                <td>{{.User.UUID}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <div id="accordion">
+        <div class="card">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapsePassword">
+                    {{.Lang.SetNewPassword}}
+                </a>
+            </div>
+            <div id="collapsePassword" class="collapse" data-parent="#accordion">
+                <div class="card-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th>{{.Lang.OldPassword}}:</th>
+                                <td><input type="password" class="form-control" name="oldpwd"></td>
+                            </tr>
+                            <tr>
+                                <th>{{.Lang.NewPassword}}:</th>
+                                <td><input type="password" class="form-control" name="newpwd"></td>
+                            </tr>
+                            <tr>
+                                <th>{{.Lang.ConfirmPassword}}:</th>
+                                <td><input type="password" class="form-control" name="confirmpwd"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+</form>

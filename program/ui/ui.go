@@ -14,6 +14,7 @@ import (
 	"github.com/dekoch/gouniversal/program/global"
 	"github.com/dekoch/gouniversal/program/ui/pagehome"
 	"github.com/dekoch/gouniversal/program/ui/pagelogin"
+	"github.com/dekoch/gouniversal/program/ui/pageuseracct"
 	"github.com/dekoch/gouniversal/program/ui/settings"
 	"github.com/dekoch/gouniversal/program/userconfig"
 	"github.com/dekoch/gouniversal/program/usermanagement"
@@ -249,7 +250,13 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 			alignRight = true
 
 			if nav.User.UUID != "" {
-				dropDownTitle = nav.User.LoginName
+
+				if functions.IsEmpty(nav.User.Name) == false {
+
+					dropDownTitle = nav.User.Name
+				} else {
+					dropDownTitle = nav.User.LoginName
+				}
 			} else {
 				dropDownTitle = page.Lang.Menu.Account.Title
 			}
@@ -359,36 +366,12 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 	getSession(nav, w, r)
 
-	global.Lang.SelectLang(nav.User.Lang, &page.Lang)
-
-	pagehome.RegisterPage(page, nav)
-	module.RegisterPage(page, nav)
-	settings.RegisterPage(page, nav)
-	nav.Sitemap.Register("Program", "Program:Exit", page.Lang.Exit.Title)
-	pagelogin.RegisterPage(page, nav)
-
 	newPath := r.FormValue("navigation")
 
 	if newPath != "" {
 		nav.NavigatePath(newPath)
 
 		console.Output(newPath, "app")
-	}
-
-	// select first allowed page
-	if nav.Path == "init" {
-
-		for _, p := range nav.Sitemap.Pages {
-
-			if p.Menu != "" && nav.Path == "init" {
-
-				if usermanagement.IsPageAllowed(p.Path, nav.User) ||
-					nav.GodMode {
-
-					nav.Path = p.Path
-				}
-			}
-		}
 	}
 
 	nav.Redirect = "init"
@@ -401,6 +384,32 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 		nav.CurrentPath = ""
 		nav.Redirect = ""
 		page.Content = ""
+
+		global.Lang.SelectLang(nav.User.Lang, &page.Lang)
+
+		nav.Sitemap.Clear()
+		pagehome.RegisterPage(page, nav)
+		module.RegisterPage(page, nav)
+		settings.RegisterPage(page, nav)
+		nav.Sitemap.Register("Program", "Program:Exit", page.Lang.Exit.Title)
+		pagelogin.RegisterPage(page, nav)
+		pageuseracct.RegisterPage(page, nav)
+
+		// select first allowed page
+		if nav.Path == "init" {
+
+			for _, p := range nav.Sitemap.Pages {
+
+				if p.Menu != "" && nav.Path == "init" {
+
+					if usermanagement.IsPageAllowed(p.Path, nav.User) ||
+						nav.GodMode {
+
+						nav.Path = p.Path
+					}
+				}
+			}
+		}
 
 		// select next page
 		// e.g. nav.NavigatePath("Program:Settings:User:List")
@@ -436,13 +445,16 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 			case "Logout":
 				console.Log("\""+nav.User.LoginName+"\" logged out", "Logout")
 
-				u, err := global.UserConfig.GetWithState(0)
+				u, err := global.UserConfig.GetWithState(userconfig.StatePublic)
 				if err != nil {
 					console.Log(err, "")
 				}
 				nav.User = global.Guests.NewGuest(u, global.UIConfig.MaxGuests)
 
 				nav.RedirectPath("Account:Login", false)
+
+			case "UserAccount":
+				pageuseracct.Render(page, nav, r)
 
 			default:
 				nav.RedirectPath("404", true)
