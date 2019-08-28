@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	//_ "net/http/pprof"
+
 	"github.com/dekoch/gouniversal/build"
 	"github.com/dekoch/gouniversal/module"
 	"github.com/dekoch/gouniversal/program/global"
@@ -58,6 +60,9 @@ func main() {
 			case "build":
 				console.Output(build.BuildTime, " ")
 
+			case "commit":
+				console.Output(build.Commit, " ")
+
 			case "gover":
 				console.Output(runtime.Version(), " ")
 
@@ -97,6 +102,7 @@ func printHelp() {
 	console.Output("", " ")
 	console.Output("help\t\tShow this help text", " ")
 	console.Output("build\t\tReturns the build timestamp.", " ")
+	console.Output("commit\t\tReturns the commit ID.", " ")
 	console.Output("gover\t\tReturns the Go tree's version string.", " ")
 	console.Output("gocpu\t\tReturns the number of logical CPUs usable by the current process.", " ")
 	console.Output("gonum\t\tReturns the number of goroutines that currently exist.", " ")
