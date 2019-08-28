@@ -17,9 +17,13 @@ type Network struct {
 	Title            string
 	Apply            string
 	ID               string
+	Settings         string
 	AnnounceInterval string
 	HelloInterval    string
 	MaxClientAge     string
+	AddServer        string
+	Address          string
+	Port             string
 	Network          string
 	LastSeen         string
 }
@@ -57,9 +61,13 @@ func DefaultEn() LangFile {
 	l.Network.Title = "Network"
 	l.Network.Apply = "Apply"
 	l.Network.ID = "ID"
+	l.Network.Settings = "Settings"
 	l.Network.AnnounceInterval = "\"Announce\" Interval [s]"
 	l.Network.HelloInterval = "\"Hello\" Interval [s]"
 	l.Network.MaxClientAge = "Max Client Age [d]"
+	l.Network.AddServer = "Add Server"
+	l.Network.Address = "Address"
+	l.Network.Port = "Port"
 	l.Network.Network = "Network"
 	l.Network.LastSeen = "Last Seen"
 

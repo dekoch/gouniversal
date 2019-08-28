@@ -1,39 +1,83 @@
 <form method="post">
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>{{.Lang.AnnounceInterval}}:</th>
-                <td><input type="text" class="form-control" name="AnnounceInterval" value="{{.AnnounceInterval}}"></td>
-            </tr>
-            <tr>
-                <th>{{.Lang.HelloInterval}}:</th>
-                <td><input type="text" class="form-control" name="HelloInterval" value="{{.HelloInterval}}"></td>
-            </tr>
-            <tr>
-                <th>{{.Lang.MaxClientAge}}:</th>
-                <td><input type="text" class="form-control" name="MaxClientAge" value="{{.MaxClientAge}}"></td>
-            </tr>
-        </tbody>
-    </table>
-    <br>
-    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
-    <br>
-    <br>
-    <div class="card">
-        <div class="card-header">
-            {{.Lang.Network}}<br>
-            ({{.ID}})
+    <div id="accordion">
+        <div class="card">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapseAddServer">
+                    {{.Lang.AddServer}}
+                </a>
+            </div>
+            <div id="collapseAddServer" class="collapse show" data-parent="#accordion">
+                <div class="card-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th>{{.Lang.ID}}:</th>
+                                <td><input type="text" class="form-control" name="AddID"></td>
+                            </tr>
+                            <tr>
+                                <th>{{.Lang.Address}}:</th>
+                                <td><input type="text" class="form-control" name="AddAddress"></td>
+                            </tr>
+                            <tr>
+                                <th>{{.Lang.Port}}:</th>
+                                <td><input type="text" class="form-control" name="AddPort"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    <button class="btn btn-default fa fa-plus" type="submit" name="edit" value="addserver" title="{{.Lang.AddServer}}"></button>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <table class="table">
-                <tbody>
-                    <tr>
-                        <th>{{.Lang.ID}}</th>
-                        <th>{{.Lang.LastSeen}}</th>
-                    </tr>
-                    {{.ServerList}}
-                </tbody>
-            </table>
+        <div class="card">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapseSettings">
+                    {{.Lang.Settings}}
+                </a>
+            </div>
+            <div id="collapseSettings" class="collapse" data-parent="#accordion">
+                <div class="card-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th>{{.Lang.AnnounceInterval}}:</th>
+                                <td><input type="text" class="form-control" name="AnnounceInterval" value="{{.AnnounceInterval}}"></td>
+                            </tr>
+                            <tr>
+                                <th>{{.Lang.HelloInterval}}:</th>
+                                <td><input type="text" class="form-control" name="HelloInterval" value="{{.HelloInterval}}"></td>
+                            </tr>
+                            <tr>
+                                <th>{{.Lang.MaxClientAge}}:</th>
+                                <td><input type="text" class="form-control" name="MaxClientAge" value="{{.MaxClientAge}}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <br>
+                    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapseNetwork">
+                    {{.Lang.Network}}<br>
+                    ({{.ID}})
+                </a>
+            </div>
+            <div id="collapseNetwork" class="collapse" data-parent="#accordion">
+                <div class="card-body">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th>{{.Lang.ID}}</th>
+                                <th>{{.Lang.LastSeen}}</th>
+                            </tr>
+                            {{.ServerList}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </form>

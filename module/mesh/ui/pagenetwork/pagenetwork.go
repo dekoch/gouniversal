@@ -9,6 +9,7 @@ import (
 
 	"github.com/dekoch/gouniversal/module/mesh/global"
 	"github.com/dekoch/gouniversal/module/mesh/lang"
+	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
 	"github.com/dekoch/gouniversal/module/mesh/typemesh"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/console"
@@ -23,7 +24,7 @@ func RegisterPage(page *typemesh.Page, nav *navigation.Navigation) {
 
 func Render(page *typemesh.Page, nav *navigation.Navigation, r *http.Request) {
 
-	button := r.FormValue("edit")
+	var err error
 
 	type Content struct {
 		Lang             lang.Network
@@ -37,12 +38,16 @@ func Render(page *typemesh.Page, nav *navigation.Navigation, r *http.Request) {
 
 	c.Lang = page.Lang.Network
 
-	if button == "apply" {
+	switch r.FormValue("edit") {
+	case "apply":
+		err = edit(r)
 
-		err := edit(r)
-		if err != nil {
-			alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
-		}
+	case "addserver":
+		err = addServer(r)
+	}
+
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
 	}
 
 	c.ID = template.HTML(global.NetworkConfig.Network.GetID())
@@ -134,6 +139,69 @@ func edit(r *http.Request) error {
 				global.NetworkConfig.ServerList.SetMaxAge(fMaxClientAge)
 
 				err = global.NetworkConfig.SaveConfig()
+			}
+
+			if err != nil {
+				console.Log(err, "")
+				return
+			}
+		}
+	}()
+
+	return err
+}
+
+func addServer(r *http.Request) error {
+
+	var (
+		err     error
+		id      string
+		address string
+		sPort   string
+		iPort   int
+	)
+
+	func() {
+
+		for i := 0; i <= 6; i++ {
+
+			switch i {
+			case 0:
+				id, err = functions.CheckFormInput("AddID", r)
+
+			case 1:
+				address, err = functions.CheckFormInput("AddAddress", r)
+
+			case 2:
+				sPort, err = functions.CheckFormInput("AddPort", r)
+
+			case 3:
+				// check input
+				if functions.IsEmpty(id) ||
+					functions.IsEmpty(address) ||
+					functions.IsEmpty(sPort) {
+
+					err = errors.New("bad input")
+				}
+
+			case 4:
+				iPort, err = strconv.Atoi(sPort)
+
+			case 5:
+				// check converted input
+				if iPort < 1 ||
+					iPort > 65535 {
+
+					err = errors.New("bad input")
+				}
+
+			case 6:
+				var n serverinfo.ServerInfo
+				n.ID = id
+				n.AddAddress(address)
+				n.Port = iPort
+
+				global.NetworkConfig.Add(n)
 			}
 
 			if err != nil {

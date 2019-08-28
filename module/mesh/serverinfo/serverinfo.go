@@ -41,6 +41,16 @@ func (si *ServerInfo) SetID(id string) {
 	si.ID = id
 }
 
+func (si *ServerInfo) AddAddress(address string) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	si.TimeStamp = time.Now()
+
+	si.Address = append(si.Address, address)
+}
+
 func (si *ServerInfo) SetPort(port int) {
 
 	mut.Lock()
