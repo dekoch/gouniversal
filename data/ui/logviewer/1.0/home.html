@@ -1,26 +1,39 @@
 <form method="post">
-    <table class="table table-sm table-hover">
-        <thead>
-            <tr>
-                <th scope="col"></th>
-                <th scope="col">{{.Lang.Name}}</th>
-                <th scope="col">{{.Lang.Size}}</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{.List}}
-        </tbody>
-    </table>
-    <div class="card" {{.FileHidden}}>
-        <div class="card-header">
-            {{.FileName}}
+    <div id="accordion">
+        <div class="card">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapseLogfiles">
+                    {{.Lang.Logfiles}}
+                </a>
+            </div>
+            <div id="collapseLogfiles" class="collapse" data-parent="#accordion">
+                <div class="card-body">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col"></th>
+                                <th scope="col">{{.Lang.Name}}</th>
+                                <th scope="col">{{.Lang.Size}}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{.List}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="card-body text-left">
-            <table class="table table-sm">
-                <tbody>
-                    {{.FileContent}}
-                </tbody>
-            </table>
+        <div class="card">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapseFile">
+                    {{.FileName}}
+                </a>
+            </div>
+            <div id="collapseFile" class="collapse show" data-parent="#accordion">
+                <div class="card-body">
+                    <pre class="text-left">{{.FileContent}}</pre>
+                </div>
+            </div>
         </div>
     </div>
 </form>

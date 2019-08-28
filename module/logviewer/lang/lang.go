@@ -5,9 +5,10 @@ import (
 )
 
 type Home struct {
-	Title string
-	Name  string
-	Size  string
+	Title    string
+	Logfiles string
+	Name     string
+	Size     string
 }
 
 type Alert struct {
@@ -30,6 +31,7 @@ func DefaultEn() LangFile {
 	l.Header = config.BuildHeader("en", "LangLogViewer", 1.0, "Language File")
 
 	l.Home.Title = "LogViewer"
+	l.Home.Logfiles = "Logfiles"
 	l.Home.Name = "Name"
 	l.Home.Size = "Size"
 
