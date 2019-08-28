@@ -137,7 +137,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	for _, g := range groups {
 
 		grouplist += "<tr>"
-		grouplist += "<td>" + g.Name + "</td>"
+		grouplist += "<td><a href=\"/?path=Program:Settings:Group:Edit$UUID=" + g.UUID + "\">" + g.Name + "</a></td>"
 		grouplist += "<td><input type=\"checkbox\" name=\"selectedgroups\" value=\"" + g.UUID + "\""
 
 		if usermanagement.IsUserInGroup(g.UUID, c.User) {
