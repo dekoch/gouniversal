@@ -19,6 +19,7 @@ import (
 	"github.com/dekoch/gouniversal/module/messenger"
 	"github.com/dekoch/gouniversal/module/modbustest"
 	"github.com/dekoch/gouniversal/module/openespm"
+	"github.com/dekoch/gouniversal/module/paratest"
 	"github.com/dekoch/gouniversal/module/picturex"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
@@ -109,6 +110,11 @@ func LoadConfig() {
 	if build.ModuleMark {
 		sharedConsole.Log("Mark enabled", "Module")
 		mark.LoadConfig()
+	}
+
+	if build.ModuleParaTest {
+		sharedConsole.Log("ParaTest enabled", "Module")
+		paratest.LoadConfig()
 	}
 }
 
@@ -298,6 +304,10 @@ func Exit() {
 
 	if build.ModuleGPSNav {
 		gpsnav.Exit()
+	}
+
+	if build.ModuleParaTest {
+		paratest.Exit()
 	}
 
 	if build.ModuleLogViewer {

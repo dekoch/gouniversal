@@ -20,3 +20,4 @@ const ModuleGPSNav = false
 const ModuleModbusTest = false
 const ModuleHeatingMath = false
 const ModuleMark = false
+const ModuleParaTest = false
