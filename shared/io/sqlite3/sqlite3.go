@@ -20,6 +20,7 @@ const (
 	TypeINTEGER DataType = "INTEGER"
 	TypeREAL    DataType = "REAL"
 	TypeBLOB    DataType = "BLOB"
+	TypeDATE    DataType = "DATE"
 )
 
 type SQLite struct {
