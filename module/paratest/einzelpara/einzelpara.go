@@ -2,6 +2,8 @@ package einzelpara
 
 import (
 	"database/sql"
+
+	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 )
 
 const TableName = "einzelpara"
@@ -11,6 +13,18 @@ type EinzelPara struct {
 	UUID string
 	Name string
 	Wert string
+}
+
+func LoadConfig(dbconn *sqlite3.SQLite) error {
+
+	var lyt sqlite3.Layout
+	lyt.SetTableName(TableName)
+	lyt.AddField("id", sqlite3.TypeINTEGER, true, true)
+	lyt.AddField("uuid", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("name", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("wert", sqlite3.TypeTEXT, false, false)
+
+	return dbconn.CreateTableFromLayout(lyt)
 }
 
 func (ep *EinzelPara) Save(tx *sql.Tx) error {

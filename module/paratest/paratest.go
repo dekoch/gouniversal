@@ -2,14 +2,18 @@ package paratest
 
 // only proof of concept
 
+//SELECT id, uuid, name, wert FROM einzelpara WHERE uuid="5562cbd3-4000-4429-9405-d89d9baceb69" ORDER BY id DESC LIMIT 0, 1
+//SELECT id, uuid, name, wert FROM einzelpara WHERE uuid="5562cbd3-4000-4429-9405-d89d9baceb69" ORDER BY id ASC
+
 import (
 	"fmt"
 
+	"github.com/dekoch/gouniversal/module/paratest/auftrag"
 	"github.com/dekoch/gouniversal/module/paratest/einzelpara"
 	"github.com/dekoch/gouniversal/module/paratest/global"
+	"github.com/dekoch/gouniversal/module/paratest/parameter"
 	"github.com/dekoch/gouniversal/module/paratest/paraview"
 	"github.com/dekoch/gouniversal/shared/console"
-	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 	"github.com/dekoch/gouniversal/shared/timeout"
 )
 
@@ -17,53 +21,31 @@ const dbFilePath = "data/paratest/paratest.db"
 
 func LoadConfig() {
 
-	global.LytAuftrag.SetTableName("auftrag")
-	global.LytAuftrag.AddField("id", sqlite3.TypeINTEGER, true, true)
-	global.LytAuftrag.AddField("uuid", sqlite3.TypeTEXT, false, false)
-	global.LytAuftrag.AddField("name", sqlite3.TypeTEXT, false, false)
-	global.LytAuftrag.AddField("typuuid", sqlite3.TypeTEXT, false, false)
-	global.LytAuftrag.AddField("identuuid", sqlite3.TypeTEXT, false, false)
-
-	global.LytParameter.SetTableName("parameter")
-	global.LytParameter.AddField("id", sqlite3.TypeINTEGER, true, true)
-	global.LytParameter.AddField("uuid", sqlite3.TypeTEXT, false, false)
-	global.LytParameter.AddField("typ", sqlite3.TypeTEXT, false, false)
-	global.LytParameter.AddField("name", sqlite3.TypeTEXT, false, false)
-	global.LytParameter.AddField("prozess", sqlite3.TypeTEXT, false, false)
-	global.LytParameter.AddField("parameternr", sqlite3.TypeTEXT, false, false)
-	global.LytParameter.AddField("parameteruuid", sqlite3.TypeTEXT, false, false)
-
-	global.LytEinzelPara.SetTableName("einzelpara")
-	global.LytEinzelPara.AddField("id", sqlite3.TypeINTEGER, true, true)
-	global.LytEinzelPara.AddField("uuid", sqlite3.TypeTEXT, false, false)
-	global.LytEinzelPara.AddField("name", sqlite3.TypeTEXT, false, false)
-	global.LytEinzelPara.AddField("wert", sqlite3.TypeTEXT, false, false)
-
 	err := global.DBConn.Open(dbFilePath)
 	if err != nil {
 		console.Log(err, "")
 		return
 	}
 
-	err = global.DBConn.CreateTableFromLayout(global.LytAuftrag)
+	err = auftrag.LoadConfig(&global.DBConn)
 	if err != nil {
 		console.Log(err, "")
 		return
 	}
 
-	err = global.DBConn.CreateTableFromLayout(global.LytParameter)
+	err = parameter.LoadConfig(&global.DBConn)
 	if err != nil {
 		console.Log(err, "")
 		return
 	}
 
-	err = global.DBConn.CreateTableFromLayout(global.LytEinzelPara)
+	err = einzelpara.LoadConfig(&global.DBConn)
 	if err != nil {
 		console.Log(err, "")
 		return
 	}
 
-	err = test(true, true, "")
+	err = test(false, true, "")
 	if err != nil {
 		console.Log(err, "")
 		return

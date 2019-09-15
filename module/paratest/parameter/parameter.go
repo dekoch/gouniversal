@@ -2,6 +2,8 @@ package parameter
 
 import (
 	"database/sql"
+
+	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 )
 
 const TableName = "parameter"
@@ -14,6 +16,21 @@ type Parameter struct {
 	Prozess       string
 	ParameterNr   string
 	ParameterUUID string
+}
+
+func LoadConfig(dbconn *sqlite3.SQLite) error {
+
+	var lyt sqlite3.Layout
+	lyt.SetTableName(TableName)
+	lyt.AddField("id", sqlite3.TypeINTEGER, true, true)
+	lyt.AddField("uuid", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("typ", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("name", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("prozess", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("parameternr", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("parameteruuid", sqlite3.TypeTEXT, false, false)
+
+	return dbconn.CreateTableFromLayout(lyt)
 }
 
 func (ep *Parameter) Save(tx *sql.Tx) error {

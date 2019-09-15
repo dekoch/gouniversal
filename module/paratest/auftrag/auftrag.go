@@ -3,6 +3,7 @@ package auftrag
 import (
 	"database/sql"
 
+	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 	"github.com/google/uuid"
 )
 
@@ -14,6 +15,19 @@ type Auftrag struct {
 	Name      string
 	TypUUID   string
 	IdentUUID string
+}
+
+func LoadConfig(dbconn *sqlite3.SQLite) error {
+
+	var lyt sqlite3.Layout
+	lyt.SetTableName(TableName)
+	lyt.AddField("id", sqlite3.TypeINTEGER, true, true)
+	lyt.AddField("uuid", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("name", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("typuuid", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("identuuid", sqlite3.TypeTEXT, false, false)
+
+	return dbconn.CreateTableFromLayout(lyt)
 }
 
 func (ep *Auftrag) New(name string) string {
