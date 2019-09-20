@@ -1,8 +1,13 @@
 package price
 
 import (
+	"database/sql"
 	"time"
+
+	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 )
+
+const TableName = "price"
 
 type Price struct {
 	Date        time.Time
@@ -14,77 +19,69 @@ type Price struct {
 	Source      string
 }
 
-type PriceList struct {
-	Prices []Price
+func LoadConfig(dbconn *sqlite3.SQLite) error {
+
+	var lyt sqlite3.Layout
+	lyt.SetTableName(TableName)
+	lyt.AddField("id", sqlite3.TypeINTEGER, true, true)
+	lyt.AddField("date", sqlite3.TypeDATE, false, false)
+	lyt.AddField("acquiredate", sqlite3.TypeDATE, false, false)
+	lyt.AddField("station", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("type", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("price", sqlite3.TypeREAL, false, false)
+	lyt.AddField("currency", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("source", sqlite3.TypeTEXT, false, false)
+
+	return dbconn.CreateTableFromLayout(lyt)
 }
 
-func (pl *PriceList) Add(pr Price) {
+func (pr *Price) Save(tx *sql.Tx) error {
 
-	pl.Prices = append(pl.Prices, pr)
+	_, err := tx.Exec("INSERT OR REPLACE INTO `"+TableName+"` (date, acquiredate, station, type, price, currency, source) values(?,?,?,?,?,?,?)", pr.Date, pr.AcquireDate, pr.Station, pr.Type, pr.Price, pr.Currency, pr.Source)
+	return err
 }
 
-func (pl *PriceList) AddList(prs []Price) {
-
-	pl.Prices = append(pl.Prices, prs...)
-}
-
-func (pl *PriceList) GetStationUUIDs(gastype string) []string {
+func LoadList(station, gastype string, fromdate, todate time.Time, db *sql.DB) ([]Price, error) {
 
 	var (
-		ret     []string
-		missing bool
+		err error
+		ret []Price
+		pr  Price
 	)
-
-	for i := len(pl.Prices) - 1; i >= 0; i-- {
-
-		if pl.Prices[i].Type != gastype {
-			continue
-		}
-
-		missing = true
-
-		for r := len(ret) - 1; r >= 0; r-- {
-
-			if ret[r] == pl.Prices[i].Station {
-
-				missing = false
-			}
-		}
-
-		if missing {
-			ret = append(ret, pl.Prices[i].Station)
-		}
-	}
-
-	return ret
-}
-
-func (pl *PriceList) GetList() []Price {
-
-	return pl.Prices
-}
-
-func (pl *PriceList) GetFromTimeSpan(uid, gastype string, from, to time.Time) []Price {
-
-	var ret []Price
 
 	func() {
 
-		for i := len(pl.Prices) - 1; i >= 0; i-- {
+		var rows *sql.Rows
 
-			if pl.Prices[i].Station != uid ||
-				pl.Prices[i].Type != gastype {
+		for i := 0; i <= 2; i++ {
 
-				continue
+			switch i {
+			case 0:
+				rows, err = db.Query("SELECT date, type, price FROM `"+TableName+"` WHERE station=? AND type=? AND date BETWEEN ? AND ?", station, gastype, fromdate, todate)
+
+			case 1:
+				defer rows.Close()
+
+			case 2:
+				for rows.Next() {
+
+					err = rows.Scan(&pr.Date, &pr.Type, &pr.Price)
+					if err != nil {
+						return
+					}
+
+					ret = append(ret, pr)
+
+					/*fmt.Println(pr.Date)
+					fmt.Println(pr.Price)*/
+				}
 			}
 
-			if pl.Prices[i].Date.After(from) &&
-				pl.Prices[i].Date.Before(to) {
-
-				ret = append(ret, pl.Prices[i])
+			if err != nil {
+				return
 			}
 		}
 	}()
 
-	return ret
+	return ret, err
 }

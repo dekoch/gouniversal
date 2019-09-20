@@ -1,15 +1,21 @@
 package core
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/gasprice/csv"
 	"github.com/dekoch/gouniversal/module/gasprice/finder"
 	"github.com/dekoch/gouniversal/module/gasprice/global"
+	"github.com/dekoch/gouniversal/module/gasprice/price"
+	"github.com/dekoch/gouniversal/module/gasprice/pricelist"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/io/fileInfo"
+	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 )
 
 var (
@@ -20,10 +26,48 @@ func LoadConfig() {
 
 	//splitLargeCSV()
 
+	if global.Config.SaveToDB ||
+		global.Config.LoadFromDB ||
+		global.Config.ImportCSVtoDB {
+
+		var dbconn sqlite3.SQLite
+
+		err := dbconn.Open(global.Config.DBFile)
+		if err != nil {
+			console.Log(err, "")
+			return
+		}
+
+		defer dbconn.Close()
+
+		err = price.LoadConfig(&dbconn)
+		if err != nil {
+			console.Log(err, "")
+		}
+
+		if global.Config.ImportCSVtoDB {
+
+			err = importCSVtoDB(global.Config.FileRoot, dbconn.DB, dbconn.Tx)
+			if err != nil {
+				console.Log(err, "")
+				return
+			}
+
+			global.Config.ImportCSVtoDB = false
+			err = global.Config.SaveConfig()
+			if err != nil {
+				console.Log(err, "")
+				return
+			}
+		}
+	}
+
 	go checkPrice()
 	go job()
 
-	//chanCheckStart <- true
+	if global.Config.UpdInterv == -1 {
+		chanCheckStart <- true
+	}
 }
 
 func Exit() {
@@ -74,12 +118,136 @@ func checkPrice() {
 				continue
 			}
 
-			for _, price := range prices {
+			if global.Config.SaveToDB {
 
-				csv.Export(global.Config.FileRoot+fileName, price)
+				err = savePricesToDB(prices)
+				if err != nil {
+					console.Log(err, "checkPrice()")
+				}
+			}
+
+			if global.Config.SaveToCSV {
+
+				for _, price := range prices {
+
+					err = csv.Export(global.Config.FileRoot+fileName, price)
+					if err != nil {
+						console.Log(err, "checkPrice()")
+					}
+				}
 			}
 		}
 	}
+}
+
+func savePricesToDB(prices []price.Price) error {
+
+	var (
+		err    error
+		dbconn sqlite3.SQLite
+	)
+
+	func() {
+
+		for i := 0; i <= 4; i++ {
+
+			switch i {
+			case 0:
+				err = dbconn.Open(global.Config.DBFile)
+
+			case 1:
+				defer dbconn.Close()
+
+			case 2:
+				dbconn.Tx, err = dbconn.DB.Begin()
+
+			case 3:
+				// save
+				for _, price := range prices {
+
+					err = price.Save(dbconn.Tx)
+					if err != nil {
+						return
+					}
+				}
+
+			case 4:
+				err = dbconn.Tx.Commit()
+			}
+
+			if err != nil {
+				dbconn.Tx.Rollback()
+				return
+			}
+		}
+	}()
+
+	return err
+}
+
+func importCSVtoDB(fileroot string, db *sql.DB, tx *sql.Tx) error {
+
+	files, err := fileInfo.Get(fileroot)
+	if err != nil {
+		return err
+	}
+
+	for i := range files {
+
+		if strings.HasSuffix(files[i].Name, ".csv") == false {
+			continue
+		}
+
+		err = csvToDB(fileroot+files[i].Name, db, tx)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func csvToDB(filepath string, db *sql.DB, tx *sql.Tx) error {
+
+	var (
+		err error
+		pl  pricelist.PriceList
+	)
+
+	func() {
+
+		for i := 0; i <= 3; i++ {
+
+			switch i {
+			case 0:
+				from := time.Now().AddDate(-999, 0, 0)
+				pl, err = csv.Import(filepath, "*", "*", from)
+
+			case 1:
+				tx, err = db.Begin()
+
+			case 2:
+				// save
+				for _, pr := range pl.Prices {
+
+					err = pr.Save(tx)
+					if err != nil {
+						return
+					}
+				}
+
+			case 3:
+				err = tx.Commit()
+			}
+
+			if err != nil {
+				tx.Rollback()
+				return
+			}
+		}
+	}()
+
+	return err
 }
 
 func splitLargeCSV() {

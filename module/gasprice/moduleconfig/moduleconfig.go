@@ -21,7 +21,13 @@ type ModuleConfig struct {
 	StaticFileRoot string
 	LangFileRoot   string
 	FileRoot       string
+	DBFile         string
 	UpdInterv      int // minutes (0=disabled)
+	SaveToDB       bool
+	SaveToCSV      bool
+	LoadFromDB     bool
+	LoadFromCSV    bool
+	ImportCSVtoDB  bool
 	GasTypes       []string
 	Stations       station.StationList
 }
@@ -43,7 +49,13 @@ func (hc *ModuleConfig) loadDefaults() {
 	hc.StaticFileRoot = "data/ui/gasprice/1.0/static/"
 	hc.LangFileRoot = "data/lang/gasprice/"
 	hc.FileRoot = "data/gasprice/"
+	hc.DBFile = "data/gasprice/gasprice.db"
 	hc.UpdInterv = 0
+	hc.SaveToDB = false
+	hc.SaveToCSV = true
+	hc.LoadFromDB = false
+	hc.LoadFromCSV = true
+	hc.ImportCSVtoDB = false
 
 	gasTypes := make([]string, 3)
 	gasTypes[0] = "Diesel"

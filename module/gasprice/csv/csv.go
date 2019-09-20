@@ -6,6 +6,7 @@ import (
 
 	"github.com/dekoch/gouniversal/module/gasprice/global"
 	"github.com/dekoch/gouniversal/module/gasprice/price"
+	"github.com/dekoch/gouniversal/module/gasprice/pricelist"
 	"github.com/dekoch/gouniversal/shared/io/csv"
 )
 
@@ -34,11 +35,11 @@ func Export(filepath string, pr price.Price) error {
 	return csv.AddRow(filepath, row)
 }
 
-func Import(filepath, uid, gastype string, from time.Time) (price.PriceList, error) {
+func Import(filepath, uid, gastype string, from time.Time) (pricelist.PriceList, error) {
 
 	var (
 		err error
-		ret price.PriceList
+		ret pricelist.PriceList
 		pr  price.Price
 		t   time.Time
 	)
@@ -95,7 +96,7 @@ func Import(filepath, uid, gastype string, from time.Time) (price.PriceList, err
 
 				case 4:
 					// Station
-					if uid != val {
+					if uid != val && uid != "*" {
 						return
 					}
 
@@ -118,7 +119,7 @@ func Import(filepath, uid, gastype string, from time.Time) (price.PriceList, err
 
 				case 10:
 					// Type
-					if gastype != val {
+					if gastype != val && gastype != "*" {
 						return
 					}
 

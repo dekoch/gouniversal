@@ -16,10 +16,12 @@ import (
 	"github.com/dekoch/gouniversal/module/gasprice/global"
 	"github.com/dekoch/gouniversal/module/gasprice/lang"
 	"github.com/dekoch/gouniversal/module/gasprice/price"
+	"github.com/dekoch/gouniversal/module/gasprice/pricelist"
 	"github.com/dekoch/gouniversal/module/gasprice/typemd"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/io/fileInfo"
+	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/timeout"
 )
@@ -122,100 +124,25 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 
 	var (
-		plAll   price.PriceList
-		fileCnt uint
-		wg      sync.WaitGroup
-		mut     sync.Mutex
+		err    error
+		prices []price.Price
 	)
 
-	files, err := fileInfo.Get(global.Config.FileRoot)
+	if global.Config.LoadFromDB {
+		prices, err = loadFromDB(id, gasType, from, t)
+	}
+
+	if global.Config.LoadFromCSV {
+		prices, err = loadFromCSV(id, gasType, from, t)
+	}
+
 	if err != nil {
 		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+		return
 	}
-
-	var to timeout.TimeOut
-	to.Start(999)
-
-	// shuffle the file list, to improve cpu usage
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(files), func(i, j int) { files[i], files[j] = files[j], files[i] })
-
-	numCPU := runtime.NumCPU()
-	chunkSize := (len(files) + numCPU - 1) / numCPU
-	// split file list into chunks and start parsing
-	for i := 0; i < len(files); i += chunkSize {
-
-		end := i + chunkSize
-
-		if end > len(files) {
-			end = len(files)
-		}
-
-		wg.Add(1)
-
-		go func(filesCore []fileInfo.FileInfo) {
-
-			var (
-				plCore  price.PriceList
-				cntCore uint
-			)
-
-			for _, f := range filesCore {
-
-				if strings.HasSuffix(f.Name, ".csv") == false {
-					continue
-				}
-
-				name := strings.Replace(f.Name, ".csv", "", -1)
-				l := len(name)
-				if l > 10 {
-					name = name[:10]
-				}
-
-				fDate, err := time.Parse("2006-01-02", name)
-				if err != nil {
-					continue
-				}
-
-				if fDate.Before(from.AddDate(0, 0, -1)) {
-					continue
-				}
-
-				cntCore++
-
-				plFile, err := csv.Import(global.Config.FileRoot+f.Name, id, gasType, from)
-				if err != nil {
-					alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
-				}
-
-				plCore.AddList(plFile.GetList())
-			}
-
-			mut.Lock()
-			plAll.AddList(plCore.GetList())
-			fileCnt += cntCore
-			mut.Unlock()
-
-			wg.Done()
-
-		}(files[i:end])
-	}
-
-	wg.Wait()
-
-	fmt.Print(to.ElapsedMillis())
-	fmt.Print("ms @ ")
-	fmt.Print(numCPU)
-	fmt.Print(" cores (")
-	fmt.Print(fileCnt)
-	fmt.Print(",")
-	fmt.Print(len(plAll.GetList()))
-	fmt.Println(")")
 
 	labels := ""
 	datasets := ""
-
-	prices := plAll.GetList()
 
 	if len(prices) > 0 {
 
@@ -265,4 +192,137 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	} else {
 		nav.RedirectPath("404", true)
 	}
+}
+
+func loadFromDB(station, gastype string, fromdate, todate time.Time) ([]price.Price, error) {
+
+	var (
+		err    error
+		ret    []price.Price
+		dbconn sqlite3.SQLite
+		to     timeout.TimeOut
+	)
+
+	to.Start(999)
+
+	func() {
+
+		for i := 0; i <= 3; i++ {
+
+			switch i {
+			case 0:
+				err = dbconn.Open(global.Config.DBFile)
+
+			case 1:
+				defer dbconn.Close()
+
+			case 2:
+				err = price.LoadConfig(&dbconn)
+
+			case 3:
+				ret, err = price.LoadList(station, gastype, fromdate, todate, dbconn.DB)
+			}
+
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	fmt.Printf("DB: %fms\n", to.ElapsedMillis())
+
+	return ret, err
+}
+
+func loadFromCSV(station, gastype string, fromdate, todate time.Time) ([]price.Price, error) {
+
+	var (
+		err     error
+		ret     []price.Price
+		plAll   pricelist.PriceList
+		fileCnt uint
+		wg      sync.WaitGroup
+		mut     sync.Mutex
+		to      timeout.TimeOut
+	)
+
+	to.Start(999)
+
+	files, err := fileInfo.Get(global.Config.FileRoot)
+	if err != nil {
+		return ret, err
+	}
+
+	// shuffle the file list, to improve cpu usage
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(files), func(i, j int) { files[i], files[j] = files[j], files[i] })
+
+	numCPU := runtime.NumCPU()
+	chunkSize := (len(files) + numCPU - 1) / numCPU
+	// split file list into chunks and start parsing
+	for i := 0; i < len(files); i += chunkSize {
+
+		end := i + chunkSize
+
+		if end > len(files) {
+			end = len(files)
+		}
+
+		wg.Add(1)
+
+		go func(filesCore []fileInfo.FileInfo) {
+
+			var (
+				plCore  pricelist.PriceList
+				cntCore uint
+			)
+
+			for _, f := range filesCore {
+
+				if strings.HasSuffix(f.Name, ".csv") == false {
+					continue
+				}
+
+				name := strings.Replace(f.Name, ".csv", "", -1)
+				l := len(name)
+				if l > 10 {
+					name = name[:10]
+				}
+
+				fDate, err := time.Parse("2006-01-02", name)
+				if err != nil {
+					continue
+				}
+
+				if fDate.Before(fromdate.AddDate(0, 0, -1)) {
+					continue
+				}
+
+				cntCore++
+
+				plFile, err := csv.Import(global.Config.FileRoot+f.Name, station, gastype, fromdate)
+				if err != nil {
+					continue
+				}
+
+				plCore.AddList(plFile.GetList())
+			}
+
+			mut.Lock()
+			plAll.AddList(plCore.GetList())
+			fileCnt += cntCore
+			mut.Unlock()
+
+			wg.Done()
+
+		}(files[i:end])
+	}
+
+	wg.Wait()
+
+	ret = plAll.GetList()
+
+	fmt.Printf("CSV: %fms @ %d cores (%d,%d)\n", to.ElapsedMillis(), numCPU, fileCnt, len(plAll.GetList()))
+
+	return ret, err
 }
