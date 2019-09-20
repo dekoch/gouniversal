@@ -28,6 +28,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 
 	button := r.FormValue("edit")
 	ur := r.FormValue("url")
+	ur = strings.Trim(ur, " ")
 
 	type Content struct {
 		Lang                    lang.Home

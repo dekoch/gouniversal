@@ -1,11 +1,11 @@
 package finder
 
 import (
-	"errors"
 	"net/url"
 	"path"
 	"strings"
 
+	"github.com/dekoch/gouniversal/module/mediadownloader/finder/instagram"
 	"github.com/dekoch/gouniversal/module/mediadownloader/global"
 	"github.com/dekoch/gouniversal/module/mediadownloader/typemd"
 )
@@ -13,15 +13,15 @@ import (
 func Find(ur, raw string) ([]typemd.DownloadFile, error) {
 
 	var (
+		err error
 		ret []typemd.DownloadFile
 		n   []typemd.DownloadFile
-		err error
 	)
 
 	if strings.HasPrefix(ur, "https://www.instagram.com/") {
 
-		ret, err = findOnInstagram(raw)
-		if err == nil {
+		ret, err = instagram.Find(ur, raw)
+		if err != nil {
 			return ret, err
 		}
 	}
@@ -29,6 +29,10 @@ func Find(ur, raw string) ([]typemd.DownloadFile, error) {
 	for _, e := range global.Config.Extension {
 
 		n, err = findExtension(ur, raw, e)
+		if err != nil {
+			return ret, err
+		}
+
 		ret = append(ret, n...)
 	}
 
@@ -85,7 +89,7 @@ func findExtension(ur, raw, extension string) ([]typemd.DownloadFile, error) {
 				}
 
 				var n typemd.DownloadFile
-				n.Url = p
+				n.Url = strings.Replace(p, "\\u0026", "&", -1)
 
 				name := strings.SplitAfter(path.Base(p), extension)
 
@@ -111,58 +115,4 @@ func findExtension(ur, raw, extension string) ([]typemd.DownloadFile, error) {
 	}
 
 	return ret, nil
-}
-
-func findOnInstagram(raw string) ([]typemd.DownloadFile, error) {
-
-	var ret []typemd.DownloadFile
-
-	found, file, err := instagramMeta(raw, "video", ".mp4")
-	if err == nil {
-		if found {
-			ret = append(ret, file)
-		}
-	}
-
-	if found == false {
-
-		found, file, err = instagramMeta(raw, "image", ".jpg")
-		if err == nil {
-			if found {
-				ret = append(ret, file)
-			}
-		}
-	}
-
-	return ret, err
-}
-
-func instagramMeta(raw, property, extension string) (bool, typemd.DownloadFile, error) {
-
-	var ret typemd.DownloadFile
-
-	files := strings.Split(raw, "<meta property=\"og:"+property+"\" content=\"")
-
-	if len(files) == 2 {
-
-		paths := strings.SplitAfter(files[1], "\"")
-
-		if len(paths) > 1 {
-
-			if strings.Contains(strings.ToLower(paths[0]), extension) {
-
-				ret.Url = strings.Replace(paths[0], "\"", "", -1)
-
-				name := strings.SplitAfter(path.Base(ret.Url), extension)
-
-				if len(name) > 0 {
-					ret.Filename = name[0]
-				}
-
-				return true, ret, nil
-			}
-		}
-	}
-
-	return false, ret, errors.New("not found")
 }
