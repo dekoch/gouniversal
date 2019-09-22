@@ -113,7 +113,15 @@ func (fl *FileList) Scan() error {
 					fmt.Println("U: " + fl.Files[i].Path)
 				}
 
-				fl.Files[i].Update(fl.path)
+				updated, err := fl.Files[i].Update(fl.path)
+				if err != nil {
+					return err
+				}
+
+				if updated {
+					fmt.Println("U: " + fl.Files[i].Path)
+				}
+
 				fl.Files[i].AddSource(fl.serverID)
 			}
 		}
@@ -179,11 +187,14 @@ func (fl *FileList) Scan() error {
 
 				fl.Files[i].Deleted = true
 				fl.Files[i].DelTime = now
-				fl.Files[i].DeleteSource(fl.serverID)
 			} else if debug {
 
 				fmt.Println("D: " + fl.Files[i].Path)
 			}
+
+			fl.Files[i].Size = 0
+			fl.Files[i].ClearChecksum()
+			fl.Files[i].ClearSources()
 		}
 	}
 

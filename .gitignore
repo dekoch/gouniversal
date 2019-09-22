@@ -25,10 +25,11 @@ data/config/gasprice/
 data/config/mesh/mesh
 data/config/mesh/network
 data/config/mesh/network.key
-data/config/meshfilesync/meshfilesync
+data/config/meshfilesync/
 data/gasprice/
 data/homepage/dekoch.net/static/
 data/log/
+data/mediadownloader/
 data/meshfilesync/
 data/gpsnav/
 data/paratest/

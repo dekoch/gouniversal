@@ -1,6 +1,7 @@
 package syncfile
 
 import (
+	"bytes"
 	"errors"
 	"math/rand"
 	"os"
@@ -38,11 +39,12 @@ func (f *SyncFile) New(root string, path string) error {
 	f.ID = u.String()
 
 	f.Path = path
+	_, err := f.update(root)
 
-	return f.update(root)
+	return err
 }
 
-func (f *SyncFile) Update(root string) error {
+func (f *SyncFile) Update(root string) (bool, error) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -50,24 +52,36 @@ func (f *SyncFile) Update(root string) error {
 	return f.update(root)
 }
 
-func (f *SyncFile) update(root string) error {
+func (f *SyncFile) update(root string) (bool, error) {
+
+	var updated bool
 
 	sum, err := file.Checksum(root + f.Path)
 	if err != nil {
-		return err
+		return updated, err
 	}
 
-	f.Checksum = sum
+	if bytes.Equal(f.Checksum, sum) == false {
+		updated = true
+		f.Checksum = sum
+	}
 
 	fileInfo, err := os.Stat(root + f.Path)
 	if err != nil {
-		return err
+		return updated, err
 	}
 
-	f.Size = fileInfo.Size()
-	f.ModTime = fileInfo.ModTime()
+	if f.Size != fileInfo.Size() {
+		updated = true
+		f.Size = fileInfo.Size()
+	}
 
-	return nil
+	if f.ModTime != fileInfo.ModTime() {
+		updated = true
+		f.ModTime = fileInfo.ModTime()
+	}
+
+	return updated, nil
 }
 
 func (f *SyncFile) AddSource(id string) {
@@ -136,6 +150,15 @@ func (f *SyncFile) CleanSources(servers []serverinfo.ServerInfo) {
 	f.Sources = newList
 }
 
+func (f *SyncFile) ClearSources() {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	var n []string
+	f.Sources = n
+}
+
 func (f *SyncFile) GetSources() []string {
 
 	mut.Lock()
@@ -194,4 +217,13 @@ func (f *SyncFile) GetDestination() string {
 	defer mut.Unlock()
 
 	return f.destination
+}
+
+func (f *SyncFile) ClearChecksum() {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	var n []byte
+	f.Checksum = n
 }

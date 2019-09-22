@@ -262,7 +262,7 @@ func uploadFiles() {
 
 					case 2:
 						ft.FileInfo = missingFile
-						err = ft.FileInfo.Update(fileRoot)
+						_, err = ft.FileInfo.Update(fileRoot)
 
 					case 3:
 						msg.Version = 1.0
