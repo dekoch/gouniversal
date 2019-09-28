@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"html/template"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"os"
@@ -72,40 +71,6 @@ func CheckFormInput(key string, r *http.Request) (string, error) {
 	}
 
 	return "", errors.New("bad input")
-}
-
-// readDir is a helper for ReadDir()
-func readDir(dir string, maxdepth int, currdepth int) ([]os.FileInfo, error) {
-
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return files, err
-	}
-
-	for _, fl := range files {
-
-		if fl.IsDir() {
-
-			if currdepth < maxdepth {
-
-				var sub []os.FileInfo
-				sub, err = readDir(dir+fl.Name()+"/", maxdepth, currdepth+1)
-
-				if err == nil {
-					files = append(files, sub...)
-				}
-			}
-		}
-	}
-
-	return files, err
-}
-
-// ReadDir is the same as ioutil.ReadDir() but recursive
-// with a max depth option
-func ReadDir(dir string, maxdepth int) ([]os.FileInfo, error) {
-
-	return readDir(dir, maxdepth, 0)
 }
 
 func Round(val float64, roundOn float64, places int) (newVal float64) {

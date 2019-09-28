@@ -10,7 +10,7 @@ import (
 	"github.com/dekoch/gouniversal/module/logviewer/typelogviewer"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/io/file"
-	"github.com/dekoch/gouniversal/shared/io/fileInfo"
+	"github.com/dekoch/gouniversal/shared/io/fileinfo"
 	"github.com/dekoch/gouniversal/shared/navigation"
 )
 
@@ -70,7 +70,7 @@ func Render(page *typelogviewer.Page, nav *navigation.Navigation, r *http.Reques
 	}
 
 	// scan directory
-	list, err := fileInfo.Get(fileRoot + path)
+	list, err := fileinfo.Get(fileRoot+path, 0, true)
 
 	htmlFolders := ""
 	htmlFiles := ""

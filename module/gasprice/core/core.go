@@ -14,7 +14,7 @@ import (
 	"github.com/dekoch/gouniversal/module/gasprice/pricelist"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
-	"github.com/dekoch/gouniversal/shared/io/fileInfo"
+	"github.com/dekoch/gouniversal/shared/io/fileinfo"
 	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 )
 
@@ -187,7 +187,7 @@ func savePricesToDB(prices []price.Price) error {
 
 func importCSVtoDB(fileroot string, db *sql.DB, tx *sql.Tx) error {
 
-	files, err := fileInfo.Get(fileroot)
+	files, err := fileinfo.Get(fileroot, 0, false)
 	if err != nil {
 		return err
 	}

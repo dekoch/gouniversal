@@ -12,6 +12,7 @@ import (
 	"github.com/dekoch/gouniversal/module/homepage/global"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
+	"github.com/dekoch/gouniversal/shared/io/fileinfo"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 )
@@ -52,48 +53,62 @@ func getNameAndOrder(s string) (string, int) {
 	return name, order
 }
 
-func registerMenuItems(menu string, filepath string, navpath string, nav *navigation.Navigation) {
+func registerMenuItems(menu string, filepath string, navpath string, nav *navigation.Navigation) error {
 
-	menuItems, _ := functions.ReadDir(filepath, 0)
+	menuItems, err := fileinfo.Get(filepath, 0, true)
+	if err != nil {
+		return err
+	}
 
 	for _, i := range menuItems {
 
-		if i.IsDir() {
+		if i.IsDir {
 
-			registerMenuItems(menu, filepath+i.Name()+"/", navpath+":"+i.Name(), nav)
+			err = registerMenuItems(menu, filepath+i.Name+"/", navpath+":"+i.Name, nav)
+			if err != nil {
+				return err
+			}
 		} else {
 
-			if strings.HasSuffix(i.Name(), ".html") {
+			if strings.HasSuffix(i.Name, ".html") {
 
 				menuName, menuOrder := getNameAndOrder(menu)
 
-				file := strings.Replace(i.Name(), ".html", "", -1)
+				file := strings.Replace(i.Name, ".html", "", -1)
 				fileName, fileOrder := getNameAndOrder(file)
 
-				nav.Sitemap.RegisterWithOrder(menuName, menuOrder, navpath+":"+i.Name(), fileName, fileOrder)
+				nav.Sitemap.RegisterWithOrder(menuName, menuOrder, navpath+":"+i.Name, fileName, fileOrder)
 			}
 		}
 	}
+
+	return nil
 }
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 	// autogenerate menu entries from folders and files in module UIFileRoot
-	menuFolders, _ := functions.ReadDir(global.Config.UIFileRoot, 0)
+	menuFolders, err := fileinfo.Get(global.Config.UIFileRoot, 0, true)
+	if err != nil {
+		return
+	}
 
 	for _, f := range menuFolders {
 
-		if f.IsDir() {
+		if f.IsDir {
 
-			registerMenuItems(f.Name(), global.Config.UIFileRoot+f.Name()+"/", "App:Homepage:"+f.Name(), nav)
+			err = registerMenuItems(f.Name, global.Config.UIFileRoot+f.Name+"/", "App:Homepage:"+f.Name, nav)
+			if err != nil {
+				return
+			}
 		} else {
 
-			if strings.HasSuffix(f.Name(), ".html") {
+			if strings.HasSuffix(f.Name, ".html") {
 
-				file := strings.Replace(f.Name(), ".html", "", -1)
+				file := strings.Replace(f.Name, ".html", "", -1)
 				fileName, fileOrder := getNameAndOrder(file)
 
-				nav.Sitemap.RegisterWithOrder(fileName, fileOrder, "App:Homepage:"+f.Name(), fileName, -1)
+				nav.Sitemap.RegisterWithOrder(fileName, fileOrder, "App:Homepage:"+f.Name, fileName, -1)
 			}
 		}
 	}

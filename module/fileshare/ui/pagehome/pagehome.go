@@ -12,7 +12,7 @@ import (
 	"github.com/dekoch/gouniversal/module/fileshare/typefileshare"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
-	"github.com/dekoch/gouniversal/shared/io/fileInfo"
+	"github.com/dekoch/gouniversal/shared/io/fileinfo"
 	"github.com/dekoch/gouniversal/shared/navigation"
 
 	"github.com/google/uuid"
@@ -117,7 +117,7 @@ func Render(page *typefileshare.Page, nav *navigation.Navigation, r *http.Reques
 	}
 
 	// scan directory
-	list, err := fileInfo.Get(fileRoot + path)
+	list, err := fileinfo.Get(fileRoot+path, 0, true)
 	if err != nil {
 		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "home.go", nav.User.UUID)
 	}

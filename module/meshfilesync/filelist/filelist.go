@@ -13,7 +13,7 @@ import (
 	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
 	"github.com/dekoch/gouniversal/module/meshfilesync/syncfile"
 	"github.com/dekoch/gouniversal/shared/console"
-	"github.com/dekoch/gouniversal/shared/io/fileInfo"
+	"github.com/dekoch/gouniversal/shared/io/fileinfo"
 )
 
 const debug = false
@@ -79,7 +79,7 @@ func (fl *FileList) Scan() error {
 		}
 	}
 
-	localFiles, err := fileInfo.GetRecursive(fl.path)
+	localFiles, err := fileinfo.Get(fl.path, -1, false)
 	if err != nil {
 		return err
 	}

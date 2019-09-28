@@ -20,7 +20,7 @@ import (
 	"github.com/dekoch/gouniversal/module/gasprice/typemd"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
-	"github.com/dekoch/gouniversal/shared/io/fileInfo"
+	"github.com/dekoch/gouniversal/shared/io/fileinfo"
 	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/timeout"
@@ -248,7 +248,7 @@ func loadFromCSV(station, gastype string, fromdate, todate time.Time) ([]price.P
 
 	to.Start(999)
 
-	files, err := fileInfo.Get(global.Config.FileRoot)
+	files, err := fileinfo.Get(global.Config.FileRoot, 0, false)
 	if err != nil {
 		return ret, err
 	}
@@ -270,7 +270,7 @@ func loadFromCSV(station, gastype string, fromdate, todate time.Time) ([]price.P
 
 		wg.Add(1)
 
-		go func(filesCore []fileInfo.FileInfo) {
+		go func(filesCore []fileinfo.FileInfo) {
 
 			var (
 				plCore  pricelist.PriceList
