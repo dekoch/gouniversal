@@ -11,6 +11,7 @@ import (
 	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
 	"github.com/dekoch/gouniversal/module/mesh/typemesh"
 	"github.com/dekoch/gouniversal/module/meshfilesync/global"
+	"github.com/dekoch/gouniversal/module/meshfilesync/outgoingfile"
 	"github.com/dekoch/gouniversal/module/meshfilesync/typesmfs"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/datasize"
@@ -150,69 +151,76 @@ func sendUploadReq() {
 	for {
 		<-cUploadReqStart
 
-		if time.Since(global.UploadTime).Seconds() > 1.0 {
+		var (
+			err      error
+			b        []byte
+			server   serverinfo.ServerInfo
+			serverID string
 
-			var (
-				err      error
-				b        []byte
-				server   serverinfo.ServerInfo
-				serverID string
+			msg typesmfs.Message
+		)
 
-				msg typesmfs.Message
-			)
+		thisID := mesh.GetServerInfo().ID
 
-			thisID := mesh.GetServerInfo().ID
+		for _, missingFile := range global.DownloadFiles.Get() {
 
-			missingFiles := global.DownloadFiles.Get()
-
-			for _, missingFile := range missingFiles {
-
-				if missingFile.Deleted {
-					continue
-				}
-
-				if datasize.ByteSize(missingFile.Size).MBytes() > global.Config.GetMaxFileSize() {
-					continue
-				}
-
-				func() {
-
-					err = nil
-
-					for i := 0; i <= 5; i++ {
-
-						switch i {
-						case 0:
-							serverID, err = missingFile.SelectSource(thisID)
-
-						case 1:
-							server, err = mesh.GetServerWithID(serverID)
-
-						case 2:
-							msg.Type = typesmfs.MessFileUploadReq
-							msg.Version = 1.0
-							msg.Content, err = json.Marshal(missingFile)
-
-						case 3:
-							b, err = json.Marshal(msg)
-
-						case 4:
-							size := datasize.ByteSize(missingFile.Size).HumanReadable()
-							console.Output("?-> ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
-
-							err = mesh.NewMessage(server, typemesh.MessFileSync, 1.0, b)
-
-						case 5:
-							global.DownloadFiles.Delete(missingFile.Path)
-						}
-
-						if err != nil {
-							console.Log(err, "")
-							return
-						}
-					}
-				}()
+			if missingFile.Deleted {
+				continue
 			}
+
+			if global.IncomingFiles.Exists(missingFile.Path) {
+
+				t, err := global.IncomingFiles.GetIncomingTime(missingFile.Path)
+				if err != nil {
+					continue
+				}
+
+				if time.Since(t).Seconds() < 30.0 {
+					continue
+				}
+			}
+
+			if datasize.ByteSize(missingFile.Size).MBytes() > global.Config.GetMaxFileSize() {
+				continue
+			}
+
+			func() {
+
+				err = nil
+
+				for i := 0; i <= 5; i++ {
+
+					switch i {
+					case 0:
+						serverID, err = missingFile.SelectSource(thisID)
+
+					case 1:
+						server, err = mesh.GetServerWithID(serverID)
+
+					case 2:
+						msg.Type = typesmfs.MessFileUploadReq
+						msg.Version = 1.0
+						msg.Content, err = json.Marshal(missingFile)
+
+					case 3:
+						b, err = json.Marshal(msg)
+
+					case 4:
+						size := datasize.ByteSize(missingFile.Size).HumanReadable()
+						console.Output("?-> ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
+
+						err = mesh.NewMessage(server, typemesh.MessFileSync, 1.0, b)
+
+					case 5:
+						global.DownloadFiles.Delete(missingFile.Path)
+					}
+
+					if err != nil {
+						console.Log(err, "")
+						return
+					}
+				}
+			}()
 		}
 
 		cUploadReqFinish <- true
@@ -231,13 +239,12 @@ func uploadFiles() {
 			server   serverinfo.ServerInfo
 			serverID string
 
-			msg typesmfs.Message
-			ft  typesmfs.FileTransfer
+			msg     typesmfs.Message
+			ft      typesmfs.FileTransfer
+			outFile outgoingfile.OutgoingFile
 		)
 
-		missingFiles := global.UploadFiles.Get()
-
-		for _, missingFile := range missingFiles {
+		for _, missingFile := range global.UploadFiles.Get() {
 
 			if _, err := os.Stat(fileRoot + missingFile.Path); os.IsNotExist(err) {
 				continue
@@ -261,42 +268,35 @@ func uploadFiles() {
 						server, err = mesh.GetServerWithID(serverID)
 
 					case 2:
-						ft.FileInfo = missingFile
-						_, err = ft.FileInfo.Update(fileRoot)
+						_, err = missingFile.Update(fileRoot)
 
 					case 3:
-						msg.Version = 1.0
-						msg.Type = typesmfs.MessFileUploadStart
-						msg.Content, err = json.Marshal(ft)
-
-					case 4:
-						b, err = json.Marshal(msg)
-
-					case 5:
-						size := datasize.ByteSize(missingFile.Size).HumanReadable()
-						console.Output("  > ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
-
-						err = mesh.NewMessage(server, typemesh.MessFileSync, 1.0, b)
-
-					case 6:
+						ft.FileInfo = missingFile
 						ft.Content, err = file.ReadFile(fileRoot + ft.FileInfo.Path)
 
-					case 7:
+					case 4:
+						msg.Version = 1.0
 						msg.Type = typesmfs.MessFileUpload
 						msg.Content, err = json.Marshal(ft)
 
-					case 8:
+					case 5:
 						b, err = json.Marshal(msg)
+
+					case 6:
+						outFile.Set(missingFile, server)
+						err = outFile.SendNewMessage(true)
+
+					case 7:
+						err = outFile.SendContMessage(false)
+
+					case 8:
+						err = mesh.NewMessage(server, typemesh.MessFileSync, 1.0, b)
+
+						outFile.Delete()
 
 					case 9:
 						size := datasize.ByteSize(missingFile.Size).HumanReadable()
-						console.Output("- > ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
-
-						err = mesh.NewMessage(server, typemesh.MessFileSync, 1.0, b)
-
-						if err == nil {
-							console.Output("--> ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
-						}
+						console.Output("--> ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
 					}
 
 					if err != nil {
@@ -307,6 +307,7 @@ func uploadFiles() {
 			}()
 		}
 
+		outFile.Delete()
 		global.UploadFiles.Reset()
 
 		cUploadFinish <- true

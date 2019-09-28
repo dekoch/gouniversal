@@ -1,8 +1,6 @@
 package global
 
 import (
-	"time"
-
 	"github.com/dekoch/gouniversal/module/meshfilesync/filelist"
 	"github.com/dekoch/gouniversal/module/meshfilesync/moduleconfig"
 	"github.com/dekoch/gouniversal/shared/language"
@@ -16,6 +14,5 @@ var (
 	OutdatedFiles filelist.FileList
 	DownloadFiles filelist.FileList
 	UploadFiles   filelist.FileList
-
-	UploadTime time.Time
+	IncomingFiles filelist.FileList
 )

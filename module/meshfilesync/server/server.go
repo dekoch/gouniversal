@@ -128,11 +128,11 @@ func list(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 
 						path := fileRoot + lf.Path
 						if _, err := os.Stat(path); os.IsNotExist(err) == false {
-							console.Output("removing ("+sender.ID+"): "+path, "meshFS")
+							console.Output("removing ("+sender.ID+"): "+lf.Path, "meshFS")
 
 							err = os.Remove(path)
 							if err == nil {
-								global.LocalFiles.MarkAsDeleted(lf.Path)
+								global.LocalFiles.MarkAsDeleted(lf.Path, lf.DelTime)
 							}
 						}
 					}
@@ -204,8 +204,8 @@ func uploadStart(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 				size := datasize.ByteSize(ft.FileInfo.Size).HumanReadable()
 				console.Output("< - ("+size+") \""+ft.FileInfo.Path+"\" from \""+sender.ID+"\"", "meshFS")
 
-				timeOut := time.Minute * time.Duration(datasize.ByteSize(ft.FileInfo.Size).MBytes())
-				global.UploadTime = time.Now().Add(timeOut)
+				global.IncomingFiles.Add(ft.FileInfo)
+				err = global.IncomingFiles.SetIncomingTime(ft.FileInfo.Path, time.Now())
 			}
 
 			if err != nil {
@@ -274,7 +274,6 @@ func upload(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 			case 7:
 				global.LocalFiles.Add(ft.FileInfo)
 				global.DownloadFiles.Delete(ft.FileInfo.Path)
-				global.UploadTime = time.Now()
 			}
 
 			if err != nil {
@@ -283,6 +282,8 @@ func upload(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 			}
 		}
 	}()
+
+	global.IncomingFiles.Delete(ft.FileInfo.Path)
 
 	return err
 }

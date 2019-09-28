@@ -24,6 +24,7 @@ type SyncFile struct {
 	Deleted     bool
 	Sources     []string
 	destination string
+	incoming    time.Time
 }
 
 var (
@@ -226,4 +227,20 @@ func (f *SyncFile) ClearChecksum() {
 
 	var n []byte
 	f.Checksum = n
+}
+
+func (f *SyncFile) SetIncomingTime(t time.Time) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	f.incoming = t
+}
+
+func (f *SyncFile) GetIncomingTime() time.Time {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	return f.incoming
 }

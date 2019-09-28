@@ -2,6 +2,7 @@ package filelist
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
 	"github.com/dekoch/gouniversal/module/meshfilesync/syncfile"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/fileInfo"
 )
 
@@ -104,7 +106,7 @@ func (fl *FileList) Scan() error {
 				// file was deleted
 				if fl.Files[i].Deleted {
 
-					fmt.Println("U: " + fl.Files[i].Path)
+					console.Output("DA: "+fl.Files[i].Path, "meshFS")
 
 					fl.Files[i].Deleted = false
 					fl.Files[i].AddTime = now
@@ -119,7 +121,7 @@ func (fl *FileList) Scan() error {
 				}
 
 				if updated {
-					fmt.Println("U: " + fl.Files[i].Path)
+					console.Output("U: "+fl.Files[i].Path, "meshFS")
 				}
 
 				fl.Files[i].AddSource(fl.serverID)
@@ -150,7 +152,7 @@ func (fl *FileList) Scan() error {
 
 		if found == false {
 
-			fmt.Println("A: " + lf.Path + lf.Name)
+			console.Output("A: "+lf.Path+lf.Name, "meshFS")
 
 			// new file to list
 			n.New(fl.path, lf.Path+lf.Name)
@@ -183,7 +185,7 @@ func (fl *FileList) Scan() error {
 
 			if fl.Files[i].Deleted == false {
 
-				fmt.Println("D: " + fl.Files[i].Path)
+				console.Output("D: "+fl.Files[i].Path, "meshFS")
 
 				fl.Files[i].Deleted = true
 				fl.Files[i].DelTime = now
@@ -432,7 +434,7 @@ func (fl *FileList) Delete(path string) {
 	fl.Files = l
 }
 
-func (fl *FileList) MarkAsDeleted(path string) {
+func (fl *FileList) MarkAsDeleted(path string, deltime time.Time) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -441,12 +443,62 @@ func (fl *FileList) MarkAsDeleted(path string) {
 
 		if fl.Files[i].Path == path {
 
-			fl.Files[i].DelTime = time.Now()
+			fl.Files[i].DelTime = deltime
 			fl.Files[i].Deleted = true
 
 			return
 		}
 	}
+}
+
+func (fl *FileList) Exists(path string) bool {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	for i := range fl.Files {
+
+		if fl.Files[i].Path == path {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (fl *FileList) SetIncomingTime(path string, t time.Time) error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	for i := range fl.Files {
+
+		if fl.Files[i].Path == path {
+
+			fl.Files[i].SetIncomingTime(t)
+
+			return nil
+		}
+	}
+
+	return errors.New("file not found")
+}
+
+func (fl *FileList) GetIncomingTime(path string) (time.Time, error) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	for i := range fl.Files {
+
+		if fl.Files[i].Path == path {
+
+			return fl.Files[i].GetIncomingTime(), nil
+		}
+	}
+
+	t := time.Now()
+	return t, errors.New("file not found")
 }
 
 func compare(in1 syncfile.SyncFile, in2 syncfile.SyncFile) fileState {
