@@ -81,7 +81,10 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	// combobox Language
 	cmbLang := "<select name=\"language\">"
 
-	global.Lang.LoadLangFiles()
+	err = global.Lang.LoadLangFiles()
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+	}
 
 	langFiles := global.Lang.ListNames()
 
