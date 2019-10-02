@@ -2,13 +2,14 @@ package language
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"errors"
 	"os"
 	"sync"
 
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/io/file"
+	"github.com/dekoch/gouniversal/shared/io/fileinfo"
 )
 
 type lang struct {
@@ -57,11 +58,10 @@ func (l *Language) SaveLang(lf interface{}, name string) error {
 	b, err := json.Marshal(lf)
 	if err != nil {
 		console.Log(err, "")
+		return err
 	}
 
-	err = file.WriteFile(l.langDir+name, b)
-
-	return err
+	return file.WriteFile(l.langDir+name, b)
 }
 
 func (l *Language) loadLang(name string) (lang, error) {
@@ -79,59 +79,74 @@ func (l *Language) loadLang(name string) (lang, error) {
 	return lf, err
 }
 
-func (l *Language) loadLangFiles() {
+func (l *Language) loadLangFiles() error {
 
-	files, err := ioutil.ReadDir(l.langDir)
+	files, err := fileinfo.Get(l.langDir, 0, false)
 	if err != nil {
-		console.Log(err, "")
-		return
+		return err
 	}
 
-	l.files = nil
+	var n []lang
+	l.files = n
 
 	for _, fl := range files {
 
-		lf, err := l.loadLang(fl.Name())
-		if err == nil {
-			l.files = append(l.files, lf)
+		lf, err := l.loadLang(fl.Name)
+		if err != nil {
+			return err
 		}
+
+		l.files = append(l.files, lf)
 	}
+
+	return nil
 }
 
 // LoadLangFiles adds all existing language files from a given path
-func (l *Language) LoadLangFiles() {
+func (l *Language) LoadLangFiles() error {
 	mut.Lock()
 	defer mut.Unlock()
 
-	l.loadLangFiles()
+	return l.loadLangFiles()
 }
 
-func fileToStruct(lf lang, s interface{}) {
+func fileToStruct(lf lang, s interface{}) error {
 
 	err := json.Unmarshal(lf.file, &s)
 	if err != nil {
 		console.Log(err, "")
 	}
+
+	return err
 }
 
 // SelectLang parses a language file to struct
-func (l *Language) SelectLang(name string, s interface{}) {
-
-	mut.RLock()
+func (l *Language) SelectLang(name string, s interface{}) error {
 
 	// search lang
-	for i := 0; i < len(l.files); i++ {
+	found, err := func() (bool, error) {
 
-		if name == l.files[i].name {
+		mut.RLock()
+		defer mut.RUnlock()
 
-			fileToStruct(l.files[i], s)
+		for i := 0; i < len(l.files); i++ {
 
-			mut.RUnlock()
-			return
+			if name == l.files[i].name {
+
+				return true, fileToStruct(l.files[i], s)
+			}
 		}
+
+		return false, nil
+	}()
+
+	if err != nil {
+		return err
 	}
 
-	mut.RUnlock()
+	if found {
+		return nil
+	}
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -144,8 +159,7 @@ func (l *Language) SelectLang(name string, s interface{}) {
 
 		if name == l.files[i].name {
 
-			fileToStruct(l.files[i], s)
-			return
+			return fileToStruct(l.files[i], s)
 		}
 	}
 
@@ -155,10 +169,11 @@ func (l *Language) SelectLang(name string, s interface{}) {
 
 		if l.defLang == l.files[i].name {
 
-			fileToStruct(l.files[i], s)
-			return
+			return fileToStruct(l.files[i], s)
 		}
 	}
+
+	return errors.New("language not found")
 }
 
 // ListNames returns a list of all language files
