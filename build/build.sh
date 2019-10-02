@@ -7,3 +7,6 @@ COMMIT=$(git rev-parse HEAD)
 echo "package build\r\n" > $FILE
 echo "const BuildTime = \""$TIME"\"" >> $FILE
 echo "const Commit = \""$COMMIT"\"" >> $FILE
+
+echo Build: $TIME
+echo Commit: $COMMIT
