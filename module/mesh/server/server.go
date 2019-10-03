@@ -17,7 +17,6 @@ import (
 	"github.com/dekoch/gouniversal/shared/aes"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/sbool"
-	"github.com/google/uuid"
 
 	meshFSServer "github.com/dekoch/gouniversal/module/meshfilesync/server"
 )
@@ -102,56 +101,69 @@ func (this *Server) Message(input typemesh.ServerMessage, output *string) error 
 
 	server := global.Config.Server.Get()
 
-	if global.NetworkConfig.Network.CheckID(input.Network.ID) == false {
-		err = errors.New("ServerDifferentMeshID")
-	} else if global.NetworkConfig.Network.CheckHashWithLocalKey(input.Network.Hash) == false {
-		err = errors.New("ServerWrongMeshKey")
-	}
+	func() {
 
-	if err == nil {
-		if settings.LocalConnection == false {
-			// check IDs, if we have the same inside a network, change own
-			if input.Sender.ID == server.ID {
+		for i := 0; i <= 7; i++ {
 
-				global.NetworkConfig.ServerList.Delete(server.ID)
-
-				u := uuid.Must(uuid.NewRandom())
-				fmt.Println("change ID to " + u.String())
-				global.Config.Server.SetID(u.String())
-			}
-		}
-
-		// decrypt message content
-		b, err := aes.Decrypt(global.Keyfile.GetKey(), string(input.Message.Content))
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			input.Message.Content = []byte(b)
-
-			if debug {
-				writeDebug(input.Message.Type, input.Sender.ID)
-			}
-
-			if input.Message.Type == typemesh.MessAnnounce {
-				if input.Message.Version == 1.0 {
-					announce(input)
+			switch i {
+			case 0:
+				if input.Receiver.ID != server.ID {
+					err = errors.New("ServerWrongReceiver")
 				}
-			}
 
-			if input.Receiver.ID != server.ID {
-				err = errors.New("ServerWrongReceiver")
-			} else {
+			case 1:
+				// check IDs
+				if settings.LocalConnection == false {
 
+					if input.Sender.ID == server.ID {
+						err = errors.New("ServerSameID")
+					}
+				}
+
+			case 2:
+				if global.NetworkConfig.Network.CheckID(input.Network.ID) == false {
+					err = errors.New("ServerDifferentMeshID")
+				}
+
+			case 3:
+				if global.NetworkConfig.Network.CheckHashWithLocalKey(input.Network.Hash) == false {
+					err = errors.New("ServerWrongMeshKey")
+				}
+
+			case 4:
+				if debug {
+					writeDebug(input.Message.Type, input.Sender.ID)
+				}
+
+			case 5:
 				switch input.Message.Type {
 				case typemesh.MessHello:
 
 					global.NetworkConfig.ServerList.Add(input.Sender)
+					return
+				}
+
+			case 6:
+				// decrypt message content
+				var content string
+
+				content, err = aes.Decrypt(global.Keyfile.GetKey(), string(input.Message.Content))
+				if err == nil {
+					input.Message.Content = []byte(content)
+				}
+
+			case 7:
+				switch input.Message.Type {
+				case typemesh.MessAnnounce:
+
+					if input.Message.Version == 1.0 {
+						announce(input)
+					}
 
 				case typemesh.MessFileSync:
 
 					if build.ModuleMeshFS {
 						if input.Message.Version == 1.0 {
-
 							err = meshFSServer.Server(input)
 						}
 					} else {
@@ -159,8 +171,16 @@ func (this *Server) Message(input typemesh.ServerMessage, output *string) error 
 					}
 				}
 			}
+
+			if err != nil {
+				if debug {
+					console.Output(err, "mesh")
+				}
+
+				return
+			}
 		}
-	}
+	}()
 
 	if err == nil {
 		err = errors.New("nil")
