@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/dekoch/gouniversal/module/mesh/global"
 	"github.com/dekoch/gouniversal/module/mesh/lang"
@@ -23,12 +24,14 @@ func RegisterPage(page *typemesh.Page, nav *navigation.Navigation) {
 
 func Render(page *typemesh.Page, nav *navigation.Navigation, r *http.Request) {
 
-	button := r.FormValue("edit")
+	var err error
 
 	type Content struct {
 		Lang             lang.Server
 		ID               template.HTML
 		Port             template.HTML
+		ExposePort       template.HTML
+		SetManualAddress template.HTML
 		PubAddrUpdInterv template.HTML
 		Addresses        template.HTML
 	}
@@ -36,18 +39,28 @@ func Render(page *typemesh.Page, nav *navigation.Navigation, r *http.Request) {
 
 	c.Lang = page.Lang.Server
 
-	if button == "apply" {
-
-		err := edit(r)
-		if err != nil {
-			alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
-		}
+	switch r.FormValue("edit") {
+	case "apply":
+		err = edit(r)
 	}
 
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+	}
+
+	global.Config.Server.Update()
 	this := global.Config.Server.Get()
 
 	c.ID = template.HTML(this.ID)
 	c.Port = template.HTML(strconv.Itoa(this.Port))
+
+	if this.ExposePort > 0 {
+		c.ExposePort = template.HTML(strconv.Itoa(this.ExposePort))
+	} else {
+		c.ExposePort = template.HTML("")
+	}
+
+	c.SetManualAddress = template.HTML(global.Config.GetManualAddress())
 	c.PubAddrUpdInterv = template.HTML(strconv.Itoa(global.Config.PubAddrUpdInterv))
 
 	addr := ""
@@ -74,12 +87,15 @@ func edit(r *http.Request) error {
 		iPubAddrUpdInterv int
 		sPort             string
 		iPort             int
+		sExposePort       string
+		iExposePort       int
+		address           string
 		restartServer     bool
 	)
 
 	func() {
 
-		for i := 0; i <= 7; i++ {
+		for i := 0; i <= 13; i++ {
 
 			switch i {
 			case 0:
@@ -89,6 +105,12 @@ func edit(r *http.Request) error {
 				sPort, err = functions.CheckFormInput("Port", r)
 
 			case 2:
+				sExposePort, err = functions.CheckFormInput("ExposePort", r)
+
+			case 3:
+				address, err = functions.CheckFormInput("SetManualAddress", r)
+
+			case 4:
 				// check input
 				if functions.IsEmpty(sPort) ||
 					functions.IsEmpty(sPubAddrUpdInterv) {
@@ -96,35 +118,57 @@ func edit(r *http.Request) error {
 					err = errors.New("bad input")
 				}
 
-			case 3:
+			case 5:
 				iPubAddrUpdInterv, err = strconv.Atoi(sPubAddrUpdInterv)
 
-			case 4:
+			case 6:
 				iPort, err = strconv.Atoi(sPort)
 
-			case 5:
+			case 7:
+				if functions.IsEmpty(sExposePort) {
+					iExposePort = -1
+				} else {
+					iExposePort, err = strconv.Atoi(sExposePort)
+				}
+
+			case 8:
 				// check converted input
 				if iPubAddrUpdInterv < 0 ||
 					iPubAddrUpdInterv > 1440 ||
 					iPort < 1 ||
-					iPort > 65535 {
+					iPort > 65535 ||
+					iExposePort < -1 ||
+					iExposePort > 65535 {
 
 					err = errors.New("bad input")
 				}
 
-			case 6:
+			case 9:
 				if global.Config.Server.GetPort() != iPort {
 
 					global.Config.Server.SetPort(iPort)
 					restartServer = true
 				}
 
+			case 10:
+				if iExposePort <= 0 {
+					iExposePort = -1
+				}
+
+				global.Config.Server.SetExposePort(iExposePort)
+
+			case 11:
 				global.Config.PubAddrUpdInterv = iPubAddrUpdInterv
 				global.Config.Server.SetPubAddrUpdInterv(iPubAddrUpdInterv)
 
+			case 12:
+				address = strings.Trim(address, " ")
+				global.Config.SetManualAddress(address)
+				global.Config.Server.SetManualAddress(address)
+
 				err = global.Config.SaveConfig()
 
-			case 7:
+			case 13:
 				if restartServer {
 					server.Restart()
 				}

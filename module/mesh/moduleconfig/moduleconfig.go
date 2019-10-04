@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/mesh/serverinfo"
@@ -23,11 +24,13 @@ type ModuleConfig struct {
 	UIFileRoot       string
 	LangFileRoot     string
 	PubAddrUpdInterv int // minutes (0=disabled)
+	ManualAddress    string
 	Server           serverinfo.ServerInfo
 }
 
 var (
 	header config.FileHeader
+	mut    sync.Mutex
 )
 
 func init() {
@@ -50,6 +53,7 @@ func (hc *ModuleConfig) loadDefaults() {
 	u := uuid.Must(uuid.NewRandom())
 	hc.Server.ID = u.String() // UUID
 	hc.Server.SetPort(9999)
+	hc.Server.SetExposePort(-1)
 }
 
 func (hc ModuleConfig) SaveConfig() error {
@@ -106,6 +110,7 @@ func (hc *ModuleConfig) LoadConfig() error {
 	}
 
 	hc.Server.SetPubAddrUpdInterv(hc.PubAddrUpdInterv)
+	hc.Server.SetManualAddress(hc.ManualAddress)
 
 	return err
 }
@@ -123,4 +128,20 @@ func (hc *ModuleConfig) CheckInput() error {
 	}
 
 	return nil
+}
+
+func (hc *ModuleConfig) SetManualAddress(addr string) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.ManualAddress = addr
+}
+
+func (hc *ModuleConfig) GetManualAddress() string {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	return hc.ManualAddress
 }

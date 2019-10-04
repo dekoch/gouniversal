@@ -9,6 +9,8 @@ type Server struct {
 	Apply            string
 	ID               string
 	Port             string
+	ExposePort       string
+	SetManualAddress string
 	PubAddrUpdInterv string
 	Addresses        string
 }
@@ -55,6 +57,8 @@ func DefaultEn() LangFile {
 	l.Server.Apply = "Apply"
 	l.Server.ID = "ID"
 	l.Server.Port = "Port"
+	l.Server.ExposePort = "Expose Port"
+	l.Server.SetManualAddress = "Set Manual Address"
 	l.Server.PubAddrUpdInterv = "Public Address Update Interval (0=disabled) [m]"
 	l.Server.Addresses = "Addresses"
 

@@ -2,20 +2,28 @@
     <table class="table">
         <tbody>
             <tr>
-                <th>{{.Lang.Port}}:</th>
-                <td><input type="text" class="form-control" name="Port" value="{{.Port}}"></td>
-            </tr>
-            <tr>
-                <th>{{.Lang.PubAddrUpdInterv}}:</th>
-                <td><input type="text" class="form-control" name="PubAddrUpdInterv" value="{{.PubAddrUpdInterv}}"></td>
-            </tr>
-            <tr>
                 <th>{{.Lang.ID}}:</th>
                 <td>{{.ID}}</td>
             </tr>
             <tr>
                 <th>{{.Lang.Addresses}}:</th>
                 <td>{{.Addresses}}</td>
+            </tr>
+            <tr>
+                <th>{{.Lang.Port}}:</th>
+                <td><input type="text" class="form-control" name="Port" value="{{.Port}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.ExposePort}}:</th>
+                <td><input type="text" class="form-control" name="ExposePort" value="{{.ExposePort}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.SetManualAddress}}:</th>
+                <td><input type="text" class="form-control" name="SetManualAddress" value="{{.SetManualAddress}}"></td>
+            </tr>
+            <tr>
+                <th>{{.Lang.PubAddrUpdInterv}}:</th>
+                <td><input type="text" class="form-control" name="PubAddrUpdInterv" value="{{.PubAddrUpdInterv}}"></td>
             </tr>
         </tbody>
     </table>

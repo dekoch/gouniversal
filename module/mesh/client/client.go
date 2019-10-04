@@ -201,43 +201,35 @@ func SendMessage(output typemesh.ServerMessage) error {
 
 func send(output typemesh.ServerMessage, addr string) error {
 
-	// check for v4 or v6 addresses
+	// check for v6 address
 	ip := net.ParseIP(addr)
-	if ip == nil {
-		return errors.New("bad address")
-	}
-
-	if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() {
-		return errors.New("bad address")
-	}
-
-	address := ""
-
-	if ip.To4() != nil {
-		address = addr
-	} else if ip.To16() != nil {
-		// we have to add []
-		address = "[" + addr + "]"
-	} else {
-		return errors.New("bad address")
+	if ip != nil {
+		if ip.To16() != nil {
+			// we have to add []
+			addr = "[" + addr + "]"
+		}
 	}
 
 	receiverPort := strconv.Itoa(output.Receiver.Port)
 
-	conn, err := net.DialTimeout("tcp", address+":"+receiverPort, 5*time.Second)
+	if output.Receiver.ExposePort > 0 {
+		receiverPort = strconv.Itoa(output.Receiver.ExposePort)
+	}
+
+	conn, err := net.DialTimeout("tcp", addr+":"+receiverPort, 5*time.Second)
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	c := rpc.NewClient(conn)
+	defer c.Close()
 
 	var inputErr string
 	err = c.Call("Server.Message", output, &inputErr)
 	if err != nil {
 		return err
 	}
-
-	c.Close()
 
 	// message sent
 	return nil
@@ -253,17 +245,6 @@ func IsLoop(in serverinfo.ServerInfo) bool {
 
 	if this.ID == in.ID {
 		return true
-	}
-
-	for _, thisAddr := range this.Address {
-
-		for _, inAddr := range in.Address {
-
-			if thisAddr+strconv.Itoa(this.Port) == inAddr+strconv.Itoa(in.Port) {
-
-				return true
-			}
-		}
 	}
 
 	return false

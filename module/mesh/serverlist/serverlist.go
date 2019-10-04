@@ -42,6 +42,10 @@ func (sl *ServerList) Add(server serverinfo.ServerInfo) {
 			// check if newer
 			if server.TimeStamp.After(sl.ServerList[i].TimeStamp) {
 				// update
+				if server.ExposePort == 0 {
+					server.ExposePort = sl.ServerList[i].ExposePort
+				}
+
 				sl.ServerList[i] = server
 			}
 			return
@@ -51,9 +55,7 @@ func (sl *ServerList) Add(server serverinfo.ServerInfo) {
 	console.Output("add \""+server.ID+"\"", "mesh")
 
 	// add new server to list
-	newServer := make([]serverinfo.ServerInfo, 1)
-	newServer[0] = server
-	sl.ServerList = append(sl.ServerList, newServer...)
+	sl.ServerList = append(sl.ServerList, server)
 }
 
 func (sl *ServerList) AddList(serverList []serverinfo.ServerInfo) {
@@ -127,15 +129,11 @@ func (sl *ServerList) Delete(id string) {
 	console.Output("delete \""+id+"\"", "mesh")
 
 	var l []serverinfo.ServerInfo
-	n := make([]serverinfo.ServerInfo, 1)
 
 	for i := 0; i < len(sl.ServerList); i++ {
 
 		if id != sl.ServerList[i].ID {
-
-			n[0] = sl.ServerList[i]
-
-			l = append(l, n...)
+			l = append(l, sl.ServerList[i])
 		}
 	}
 
