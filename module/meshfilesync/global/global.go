@@ -15,4 +15,7 @@ var (
 	DownloadFiles filelist.FileList
 	UploadFiles   filelist.FileList
 	IncomingFiles filelist.FileList
+
+	CUploadReqStart = make(chan bool)
+	CUploadStart    = make(chan bool)
 )

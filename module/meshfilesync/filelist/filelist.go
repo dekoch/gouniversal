@@ -235,7 +235,10 @@ func (fl *FileList) add(n syncfile.SyncFile) {
 			fl.Files[i] = n
 			// keep old ID
 			fl.Files[i].ID = o.ID
-			fl.Files[i].AddSourceList(o.Sources)
+
+			if bytes.Compare(fl.Files[i].Checksum, o.Checksum) == 0 {
+				fl.Files[i].AddSourceList(o.Sources)
+			}
 
 			return
 		}
@@ -301,6 +304,22 @@ func (fl *FileList) Get() []syncfile.SyncFile {
 	defer mut.Unlock()
 
 	return fl.Files
+}
+
+func (fl *FileList) GetFileInfo(path string) (syncfile.SyncFile, error) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	for i := range fl.Files {
+
+		if fl.Files[i].Path == path {
+			return fl.Files[i], nil
+		}
+	}
+
+	var ret syncfile.SyncFile
+	return ret, errors.New("file not found")
 }
 
 func (fl *FileList) Reset() {
@@ -421,6 +440,11 @@ func (fl *FileList) Delete(path string) {
 	mut.Lock()
 	defer mut.Unlock()
 
+	fl.delete(path)
+}
+
+func (fl *FileList) delete(path string) {
+
 	var l []syncfile.SyncFile
 
 	for _, file := range fl.Files {
@@ -499,6 +523,20 @@ func (fl *FileList) GetIncomingTime(path string) (time.Time, error) {
 
 	t := time.Now()
 	return t, errors.New("file not found")
+}
+
+func (fl *FileList) ClearIncomingFiles(sec float64) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	for i := range fl.Files {
+
+		if time.Since(fl.Files[i].GetIncomingTime()).Seconds() > sec {
+
+			fl.delete(fl.Files[i].Path)
+		}
+	}
 }
 
 func compare(in1 syncfile.SyncFile, in2 syncfile.SyncFile) fileState {

@@ -21,18 +21,12 @@ import (
 const debug = false
 
 const dSendList time.Duration = 30 * time.Second
-const dUploadReq time.Duration = dSendList
-const dUpload time.Duration = 5 * time.Second
 
 var (
 	fileRoot string
 
-	cSendListStart   = make(chan bool)
-	cSendListFinish  = make(chan bool)
-	cUploadReqStart  = make(chan bool)
-	cUploadReqFinish = make(chan bool)
-	cUploadStart     = make(chan bool)
-	cUploadFinish    = make(chan bool)
+	cSendListStart  = make(chan bool)
+	cSendListFinish = make(chan bool)
 )
 
 func LoadConfig() {
@@ -50,8 +44,6 @@ func LoadConfig() {
 func job() {
 
 	timerSendList := time.NewTimer(dSendList)
-	timerUploadReq := time.NewTimer(dUploadReq)
-	timerUpload := time.NewTimer(dUpload)
 
 	for {
 		select {
@@ -61,20 +53,6 @@ func job() {
 
 		case <-cSendListFinish:
 			timerSendList.Reset(dSendList)
-
-		case <-timerUploadReq.C:
-			timerUploadReq.Stop()
-			cUploadReqStart <- true
-
-		case <-cUploadReqFinish:
-			timerUploadReq.Reset(dUploadReq)
-
-		case <-timerUpload.C:
-			timerUpload.Stop()
-			cUploadStart <- true
-
-		case <-cUploadFinish:
-			timerUpload.Reset(dUpload)
 		}
 	}
 }
@@ -149,7 +127,7 @@ func sendFileList() {
 func sendUploadReq() {
 
 	for {
-		<-cUploadReqStart
+		<-global.CUploadReqStart
 
 		var (
 			err      error
@@ -160,6 +138,8 @@ func sendUploadReq() {
 			msg typesmfs.Message
 		)
 
+		global.IncomingFiles.ClearIncomingFiles(30.0)
+
 		thisID := mesh.GetServerInfo().ID
 
 		for _, missingFile := range global.DownloadFiles.Get() {
@@ -169,15 +149,7 @@ func sendUploadReq() {
 			}
 
 			if global.IncomingFiles.Exists(missingFile.Path) {
-
-				t, err := global.IncomingFiles.GetIncomingTime(missingFile.Path)
-				if err != nil {
-					continue
-				}
-
-				if time.Since(t).Seconds() < 30.0 {
-					continue
-				}
+				continue
 			}
 
 			if datasize.ByteSize(missingFile.Size).MBytes() > global.Config.GetMaxFileSize() {
@@ -188,7 +160,7 @@ func sendUploadReq() {
 
 				err = nil
 
-				for i := 0; i <= 5; i++ {
+				for i := 0; i <= 4; i++ {
 
 					switch i {
 					case 0:
@@ -210,9 +182,6 @@ func sendUploadReq() {
 						console.Output("?-> ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
 
 						err = mesh.NewMessage(server, typemesh.MessFileSync, 1.0, b)
-
-					case 5:
-						global.DownloadFiles.Delete(missingFile.Path)
 					}
 
 					if err != nil {
@@ -222,8 +191,6 @@ func sendUploadReq() {
 				}
 			}()
 		}
-
-		cUploadReqFinish <- true
 	}
 }
 
@@ -231,13 +198,14 @@ func sendUploadReq() {
 func uploadFiles() {
 
 	for {
-		<-cUploadStart
+		<-global.CUploadStart
 
 		var (
 			err      error
 			b        []byte
 			server   serverinfo.ServerInfo
 			serverID string
+			done     bool
 
 			msg     typesmfs.Message
 			ft      typesmfs.FileTransfer
@@ -245,6 +213,10 @@ func uploadFiles() {
 		)
 
 		for _, missingFile := range global.UploadFiles.Get() {
+
+			if done {
+				continue
+			}
 
 			if _, err := os.Stat(fileRoot + missingFile.Path); os.IsNotExist(err) {
 				continue
@@ -297,6 +269,8 @@ func uploadFiles() {
 					case 9:
 						size := datasize.ByteSize(missingFile.Size).HumanReadable()
 						console.Output("--> ("+size+") \""+missingFile.Path+"\" to \""+serverID+"\"", "meshFS")
+
+						done = true
 					}
 
 					if err != nil {
@@ -309,7 +283,5 @@ func uploadFiles() {
 
 		outFile.Delete()
 		global.UploadFiles.Reset()
-
-		cUploadFinish <- true
 	}
 }

@@ -82,6 +82,10 @@ func (f *SyncFile) update(root string) (bool, error) {
 		f.ModTime = fileInfo.ModTime()
 	}
 
+	if updated {
+		f.clearSources()
+	}
+
 	return updated, nil
 }
 
@@ -155,6 +159,11 @@ func (f *SyncFile) ClearSources() {
 
 	mut.Lock()
 	defer mut.Unlock()
+
+	f.clearSources()
+}
+
+func (f *SyncFile) clearSources() {
 
 	var n []string
 	f.Sources = n

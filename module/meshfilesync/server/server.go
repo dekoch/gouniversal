@@ -81,7 +81,7 @@ func list(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 
 	func() {
 
-		for i := 0; i <= 3; i++ {
+		for i := 0; i <= 4; i++ {
 
 			switch i {
 			case 0:
@@ -137,6 +137,11 @@ func list(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 						}
 					}
 				}
+
+			case 4:
+				go func() {
+					global.CUploadReqStart <- true
+				}()
 			}
 
 			if err != nil {
@@ -152,13 +157,14 @@ func list(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 func uploadReq(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 
 	var (
-		err  error
-		file syncfile.SyncFile
+		err       error
+		file      syncfile.SyncFile
+		localFile syncfile.SyncFile
 	)
 
 	func() {
 
-		for i := 0; i <= 1; i++ {
+		for i := 0; i <= 4; i++ {
 
 			switch i {
 			case 0:
@@ -166,12 +172,25 @@ func uploadReq(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 				err = json.Unmarshal(input.Content, &file)
 
 			case 1:
+				localFile, err = global.LocalFiles.GetFileInfo(file.Path)
+
+			case 2:
+				if bytes.Compare(localFile.Checksum, file.Checksum) != 0 {
+					err = errors.New("different file reuqested")
+				}
+
+			case 3:
 				size := datasize.ByteSize(file.Size).HumanReadable()
 				console.Output("<-? ("+size+") \""+file.Path+"\" from \""+sender.ID+"\"", "meshFS")
 
 				file.SetDestination(sender.ID)
 
 				global.UploadFiles.Add(file)
+
+			case 4:
+				go func() {
+					global.CUploadStart <- true
+				}()
 			}
 
 			if err != nil {
@@ -229,7 +248,7 @@ func upload(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 
 	func() {
 
-		for i := 0; i <= 7; i++ {
+		for i := 0; i <= 8; i++ {
 
 			switch i {
 			case 0:
@@ -274,6 +293,12 @@ func upload(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 			case 7:
 				global.LocalFiles.Add(ft.FileInfo)
 				global.DownloadFiles.Delete(ft.FileInfo.Path)
+				global.IncomingFiles.Delete(ft.FileInfo.Path)
+
+			case 8:
+				go func() {
+					global.CUploadReqStart <- true
+				}()
 			}
 
 			if err != nil {
@@ -282,8 +307,6 @@ func upload(input typesmfs.Message, sender serverinfo.ServerInfo) error {
 			}
 		}
 	}()
-
-	global.IncomingFiles.Delete(ft.FileInfo.Path)
 
 	return err
 }
