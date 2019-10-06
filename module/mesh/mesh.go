@@ -26,11 +26,16 @@ func LoadConfig() {
 	global.Keyfile.LoadConfig()
 	global.NetworkConfig.LoadConfig()
 
-	if global.NetworkConfig.Network.CheckKey(global.Keyfile.GetKey()) == false {
-		console.Log("key<->hash mismatch", " ")
+	key, err := global.Keyfile.GetKey()
+	if err != nil {
+		console.Log(err, "")
 	}
 
-	global.NetworkConfig.Network.SetKey(global.Keyfile.GetKey())
+	if global.NetworkConfig.Network.CheckKey(key) == false {
+		console.Log("key<->hash mismatch", "mesh")
+	}
+
+	global.NetworkConfig.Network.SetKey(key)
 	global.NetworkConfig.Add(global.Config.Server)
 	global.NetworkConfig.ServerList.SetMaxAge(global.NetworkConfig.Network.GetMaxClientAge())
 

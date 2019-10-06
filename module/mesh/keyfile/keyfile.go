@@ -41,7 +41,7 @@ func (hc *Keyfile) SetKey(key []byte) {
 	hc.Key = keyToString(key)
 }
 
-func (hc Keyfile) GetKey() []byte {
+func (hc Keyfile) GetKey() ([]byte, error) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -136,20 +136,23 @@ func keyToString(key []byte) string {
 }
 
 // convert space separated string to byte array
-func stringToKey(key string) []byte {
+func stringToKey(key string) ([]byte, error) {
 
-	strArr := strings.Split(key, " ")
+	var (
+		err error
+		ret []byte
+		b   int
+	)
 
-	byArr := make([]byte, len(strArr))
+	for _, s := range strings.Split(key, " ") {
 
-	for i, str := range strArr {
-
-		b, err := strconv.Atoi(str)
-		if err == nil {
-
-			byArr[i] = byte(b)
+		b, err = strconv.Atoi(s)
+		if err != nil {
+			return ret, err
 		}
+
+		ret = append(ret, byte(b))
 	}
 
-	return byArr
+	return ret, nil
 }

@@ -1,15 +1,12 @@
 package aes
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"io"
 	"strconv"
-	"strings"
 )
 
 // NewKey returns a new key for Encrypt/Decrypt
@@ -33,89 +30,54 @@ func NewKey(size int) ([]byte, error) {
 	return key, nil
 }
 
-// Encrypt returns an encrypted string
-func Encrypt(key []byte, text string) (string, error) {
+// Encrypt returns an encrypted byte array
+func Encrypt(key []byte, text []byte) ([]byte, error) {
 
-	block, err := aes.NewCipher(key)
+	c, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
-	msg := pad([]byte(text))
-	ciphertext := make([]byte, aes.BlockSize+len(msg))
-	iv := ciphertext[:aes.BlockSize]
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return "", err
-	}
-
-	cfb := cipher.NewCFBEncrypter(block, iv)
-	cfb.XORKeyStream(ciphertext[aes.BlockSize:], msg)
-	finalMsg := removeBase64Padding(base64.URLEncoding.EncodeToString(ciphertext))
-	return finalMsg, nil
-}
-
-// Decrypt returns a decrypted string
-func Decrypt(key []byte, text string) (string, error) {
-
-	block, err := aes.NewCipher(key)
+	gcm, err := cipher.NewGCM(c)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
-	if len(text) == 0 {
-		return "", errors.New("no text")
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return []byte{}, err
 	}
 
-	decodedMsg, err := base64.URLEncoding.DecodeString(addBase64Padding(text))
+	return gcm.Seal(nonce, nonce, text, nil), nil
+}
+
+// Decrypt returns a decrypted byte array
+func Decrypt(key []byte, ciphertext []byte) ([]byte, error) {
+
+	c, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
-	if (len(decodedMsg) % aes.BlockSize) != 0 {
-		return "", errors.New("blocksize must be multipe of decoded message length")
+	if len(ciphertext) == 0 {
+		return []byte{}, errors.New("no text")
 	}
 
-	iv := decodedMsg[:aes.BlockSize]
-	msg := decodedMsg[aes.BlockSize:]
-
-	cfb := cipher.NewCFBDecrypter(block, iv)
-	cfb.XORKeyStream(msg, msg)
-
-	unpadMsg, err := unpad(msg)
+	gcm, err := cipher.NewGCM(c)
 	if err != nil {
-		return "", err
+		return []byte{}, err
 	}
 
-	return string(unpadMsg), nil
-}
-
-func pad(src []byte) []byte {
-	padding := aes.BlockSize - len(src)%aes.BlockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(src, padtext...)
-}
-
-func unpad(src []byte) ([]byte, error) {
-	length := len(src)
-	unpadding := int(src[length-1])
-
-	if unpadding > length {
-		return nil, errors.New("unpad error. This could happen when incorrect encryption key is used")
+	nonceSize := gcm.NonceSize()
+	if len(ciphertext) < nonceSize {
+		return []byte{}, err
 	}
 
-	return src[:(length - unpadding)], nil
-}
-
-func addBase64Padding(value string) string {
-
-	m := len(value) % 4
-	if m != 0 {
-		value += strings.Repeat("=", 4-m)
+	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return []byte{}, err
 	}
 
-	return value
-}
-
-func removeBase64Padding(value string) string {
-	return strings.Replace(value, "=", "", -1)
+	return plaintext, nil
 }

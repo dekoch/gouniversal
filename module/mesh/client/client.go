@@ -167,13 +167,16 @@ func SendMessage(output typemesh.ServerMessage) error {
 	output.Sender = global.Config.Server.Get()
 	output.Network = global.NetworkConfig.Network.Get()
 
-	// encrypt message content
-	b, err := aes.Encrypt(global.Keyfile.GetKey(), string(output.Message.Content))
+	key, err := global.Keyfile.GetKey()
 	if err != nil {
 		return err
 	}
 
-	output.Message.Content = []byte(b)
+	// encrypt message content
+	output.Message.Content, err = aes.Encrypt(key, output.Message.Content)
+	if err != nil {
+		return err
+	}
 
 	// try preferred address
 	prefAddr := global.NetworkConfig.ServerList.GetPrefAddress(output.Receiver)

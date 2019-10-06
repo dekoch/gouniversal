@@ -1,6 +1,7 @@
 package aes
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -55,7 +56,7 @@ func TestEncrypt(t *testing.T) {
 
 	for _, tt := range tests {
 
-		got, err := Encrypt(tt.inKey, tt.inText)
+		got, err := Encrypt(tt.inKey, []byte(tt.inText))
 
 		if tt.wantError {
 			if err == nil {
@@ -69,40 +70,6 @@ func TestEncrypt(t *testing.T) {
 
 			if err != nil {
 				t.Errorf("Encrypt(): got %v, want nil", err)
-			}
-		}
-	}
-}
-
-func TestDecrypt(t *testing.T) {
-
-	tests := []struct {
-		inKey     []byte
-		inText    string
-		wantText  string
-		wantError bool
-	}{
-		{[]byte{}, "", "", true},
-		{[]byte{}, "foo", "", true},
-		{[]byte{46, 48, 103, 98, 87, 147, 61, 199, 230, 16, 84, 57, 191, 211, 186, 79, 239, 85, 208, 204, 169, 90, 205, 49, 238, 173, 43, 103, 186, 244, 104, 190}, "", "", true},
-		{[]byte{46, 48, 103, 98, 87, 147, 61, 199, 230, 16, 84, 57, 191, 211, 186, 79, 239, 85, 208, 204, 169, 90, 205, 49, 238, 173, 43, 103, 186, 244, 104, 190}, "MEYcHyFmLJsOWdiP9Oz7QoMVBgDDPEc5drvRSDWsRI4", "foo", false},
-	}
-
-	for _, tt := range tests {
-
-		got, err := Decrypt(tt.inKey, tt.inText)
-
-		if got != tt.wantText {
-			t.Errorf("Decrypt(): got %s, want %s", got, tt.wantText)
-		}
-
-		if tt.wantError {
-			if err == nil {
-				t.Errorf("Decrypt(): got nil, want error")
-			}
-		} else {
-			if err != nil {
-				t.Errorf("Decrypt(): got %v, want nil", err)
 			}
 		}
 	}
@@ -125,7 +92,7 @@ func TestPackage(t *testing.T) {
 			t.Errorf("TestPackage: got %v, want nil", err)
 		}
 
-		e, err := Encrypt(key, "foo")
+		e, err := Encrypt(key, []byte("foo"))
 		if err != nil {
 			t.Errorf("TestPackage: got %v, want nil", err)
 		}
@@ -135,7 +102,7 @@ func TestPackage(t *testing.T) {
 			t.Errorf("TestPackage: got %v, want nil", err)
 		}
 
-		if d != "foo" {
+		if bytes.Equal(d, []byte("foo")) == false {
 			t.Errorf("TestPackage: got %s, want foo", d)
 		}
 	}

@@ -100,7 +100,7 @@ func multiAesEnc() {
 
 func aesEnc(key []byte) {
 
-	_, err := aes.Encrypt(key, string(key))
+	_, err := aes.Encrypt(key, key)
 	if err != nil {
 		fmt.Println(err)
 	}

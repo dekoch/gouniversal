@@ -22,7 +22,7 @@ func calc() {
 			return
 		}
 
-		enc, err := aes.Encrypt(key, string(key))
+		enc, err := aes.Encrypt(key, key)
 		if err != nil {
 			fmt.Println(err)
 			return

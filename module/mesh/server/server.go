@@ -97,13 +97,16 @@ func Restart() {
 
 func (this *Server) Message(input typemesh.ServerMessage, output *string) error {
 
-	var err error
+	var (
+		err error
+		key []byte
+	)
 
 	server := global.Config.Server.Get()
 
 	func() {
 
-		for i := 0; i <= 7; i++ {
+		for i := 0; i <= 8; i++ {
 
 			switch i {
 			case 0:
@@ -144,15 +147,13 @@ func (this *Server) Message(input typemesh.ServerMessage, output *string) error 
 				}
 
 			case 6:
-				// decrypt message content
-				var content string
-
-				content, err = aes.Decrypt(global.Keyfile.GetKey(), string(input.Message.Content))
-				if err == nil {
-					input.Message.Content = []byte(content)
-				}
+				key, err = global.Keyfile.GetKey()
 
 			case 7:
+				// decrypt message content
+				input.Message.Content, err = aes.Decrypt(key, input.Message.Content)
+
+			case 8:
 				switch input.Message.Type {
 				case typemesh.MessAnnounce:
 
