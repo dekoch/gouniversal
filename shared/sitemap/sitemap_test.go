@@ -90,14 +90,14 @@ func TestClear(t *testing.T) {
 	s.Register("fooMenu", "fooPath0", "fooTitle0")
 	s.Register("fooMenu", "fooPath1", "fooTitle1")
 
-	gotList := s.PageList()
+	gotList := s.GetPages()
 	if len(gotList) != 2 {
 		t.Errorf("TestClear(): got %d, want 2", len(gotList))
 	}
 
 	s.Clear()
 
-	gotList = s.PageList()
+	gotList = s.GetPages()
 	if len(gotList) != 0 {
 		t.Errorf("TestClear(): got %d, want 0", len(gotList))
 	}

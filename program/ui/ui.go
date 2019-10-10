@@ -162,68 +162,60 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		c.Title = nav.Path
 	}
 
-	pages := nav.Sitemap.Pages
-	mDropdown := make([]menuDropdown, 0)
+	var mDropdown []menuDropdown
 
 	// put each allowed page into menu slice
-	for i := 0; i < len(pages); i++ {
+	for _, page := range nav.Sitemap.GetPages() {
 
-		if pages[i].Menu != "" {
+		if usermanagement.IsPageAllowed(page.Path, nav.User) == false &&
+			nav.GodMode == false {
 
-			if usermanagement.IsPageAllowed(pages[i].Path, nav.User) ||
-				nav.GodMode {
+			continue
+		}
 
-				dropdownFound := false
-				for d := 0; d < len(mDropdown); d++ {
+		dropdownFound := false
 
-					if pages[i].Menu == mDropdown[d].Title {
-						dropdownFound = true
-					}
-				}
+		for d := 0; d < len(mDropdown); d++ {
 
-				if dropdownFound == false {
-					// create new dropdown
-					newDropdown := make([]menuDropdown, 1)
-					newDropdown[0].Title = pages[i].Menu
+			if page.Menu == mDropdown[d].Title {
 
-					if pages[i].MenuOrder > -1 {
+				mDropdown[d].Items = append(mDropdown[d].Items, page)
 
-						newDropdown[0].Order = pages[i].MenuOrder
-					} else {
-						// set predefined order
-						if newDropdown[0].Title == "Program" {
-
-							newDropdown[0].Order = 0
-
-						} else if newDropdown[0].Title == "App" {
-
-							newDropdown[0].Order = 1
-
-						} else if newDropdown[0].Title == "Account" {
-
-							newDropdown[0].Order = 999
-
-						} else {
-							newDropdown[0].Order = 999 - len(mDropdown)
-						}
-					}
-
-					mDropdown = append(mDropdown, newDropdown...)
-				}
-
-				// add items to dropdown
-				for d := 0; d < len(mDropdown); d++ {
-
-					if pages[i].Menu == mDropdown[d].Title {
-
-						newItem := make([]sitemap.Page, 1)
-						newItem[0] = pages[i]
-
-						mDropdown[d].Items = append(mDropdown[d].Items, newItem...)
-					}
-				}
+				dropdownFound = true
 			}
 		}
+
+		if dropdownFound {
+			continue
+		}
+
+		// create new dropdown
+		var newDropdown menuDropdown
+		newDropdown.Title = page.Menu
+
+		if page.MenuOrder > -1 {
+
+			newDropdown.Order = page.MenuOrder
+		} else {
+			// set predefined order
+			switch newDropdown.Title {
+			case "Program":
+				newDropdown.Order = 0
+
+			case "App":
+				newDropdown.Order = 1
+
+			case "Account":
+				newDropdown.Order = 999
+
+			default:
+				newDropdown.Order = 999 - len(mDropdown)
+			}
+		}
+
+		newDropdown.Items = append(newDropdown.Items, page)
+
+		mDropdown = append(mDropdown, newDropdown)
 	}
 
 	htmlMenuLeft := ""
@@ -398,7 +390,7 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 		// select first allowed page
 		if nav.Path == "init" {
 
-			for _, p := range nav.Sitemap.Pages {
+			for _, p := range nav.Sitemap.GetPages() {
 
 				if p.Menu != "" && nav.Path == "init" {
 

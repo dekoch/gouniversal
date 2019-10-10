@@ -16,7 +16,7 @@ type Page struct {
 }
 
 type Sitemap struct {
-	Pages []Page
+	pages []Page
 }
 
 // RegisterWithOrder adds a pagepath + title to a sitemap
@@ -41,7 +41,7 @@ func (site *Sitemap) RegisterWithOrder(menu string, menuorder int, path string, 
 	n.Title = title
 	n.TitleOrder = titleorder
 
-	site.Pages = append(site.Pages, n)
+	site.pages = append(site.pages, n)
 }
 
 // Register adds a pagepath + title to a sitemap
@@ -59,9 +59,9 @@ func (site *Sitemap) PageList() []string {
 
 	var list []string
 
-	for i := len(site.Pages) - 1; i >= 0; i-- {
+	for i := len(site.pages) - 1; i >= 0; i-- {
 
-		list = append(list, site.Pages[i].Path)
+		list = append(list, site.pages[i].Path)
 	}
 
 	return list
@@ -71,39 +71,45 @@ func (site *Sitemap) PageList() []string {
 func (site *Sitemap) PageTitle(path string) string {
 
 	// find page
-	for i := 0; i < len(site.Pages); i++ {
+	for i := 0; i < len(site.pages); i++ {
 
-		if path == site.Pages[i].Path {
+		if path == site.pages[i].Path {
 
-			return site.Pages[i].Title
+			return site.pages[i].Title
 		}
 	}
 
 	// find page with same prefix (path with parameter)
-	for i := 0; i < len(site.Pages); i++ {
+	for i := 0; i < len(site.pages); i++ {
 
-		if strings.HasPrefix(path, site.Pages[i].Path) {
+		if strings.HasPrefix(path, site.pages[i].Path) {
 
-			return site.Pages[i].Title
+			return site.pages[i].Title
 		}
 	}
 
 	return ""
 }
 
+// GetPages returns a array of registered pages
+func (site *Sitemap) GetPages() []Page {
+
+	return site.pages
+}
+
 // ShowMap lists all registered pages
 func (site *Sitemap) ShowMap() {
 
-	for i := 0; i < len(site.Pages); i++ {
+	for i := 0; i < len(site.pages); i++ {
 
-		fmt.Print(site.Pages[i].Path)
+		fmt.Print(site.pages[i].Path)
 		fmt.Print("\t")
-		fmt.Println(site.Pages[i].Title)
+		fmt.Println(site.pages[i].Title)
 	}
 }
 
 // Clear removes all registered pages
 func (site *Sitemap) Clear() {
 
-	site.Pages = make([]Page, 0)
+	site.pages = make([]Page, 0)
 }
