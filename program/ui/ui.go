@@ -167,6 +167,10 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 	// put each allowed page into menu slice
 	for _, page := range nav.Sitemap.GetPages() {
 
+		if page.Menu == "" {
+			continue
+		}
+
 		if usermanagement.IsPageAllowed(page.Path, nav.User) == false &&
 			nav.GodMode == false {
 
