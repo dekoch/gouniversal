@@ -10,6 +10,7 @@ import (
 	"github.com/dekoch/gouniversal/module/gpsnav"
 	"github.com/dekoch/gouniversal/module/heatingmath"
 	"github.com/dekoch/gouniversal/module/homepage"
+	"github.com/dekoch/gouniversal/module/instabackup"
 	"github.com/dekoch/gouniversal/module/iptracker"
 	"github.com/dekoch/gouniversal/module/logviewer"
 	"github.com/dekoch/gouniversal/module/mark"
@@ -90,6 +91,11 @@ func LoadConfig() {
 	if build.ModulePictureX {
 		sharedConsole.Log("PictureX enabled", "Module")
 		picturex.LoadConfig()
+	}
+
+	if build.ModuleInstaBackup {
+		sharedConsole.Log("InstaBackup enabled", "Module")
+		instabackup.LoadConfig()
 	}
 
 	if build.ModuleGPSNav {
@@ -300,6 +306,10 @@ func Exit() {
 
 	if build.ModulePictureX {
 		picturex.Exit()
+	}
+
+	if build.ModuleInstaBackup {
+		instabackup.Exit()
 	}
 
 	if build.ModuleGPSNav {

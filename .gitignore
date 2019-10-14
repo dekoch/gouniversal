@@ -4,6 +4,7 @@
 *.so
 *.dylib
 debug
+__debug_bin
 amd64
 arm5
 arm6
@@ -22,12 +23,14 @@ i386
 
 # Project data
 data/config/gasprice/
+data/config/instabackup/
 data/config/mesh/mesh
 data/config/mesh/network
 data/config/mesh/network.key
 data/config/meshfilesync/
 data/gasprice/
 data/homepage/dekoch.net/static/
+data/instabackup/
 data/log/
 data/mediadownloader/
 data/meshfilesync/
