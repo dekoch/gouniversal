@@ -185,7 +185,7 @@ func sendUploadReq() {
 					}
 
 					if err != nil {
-						console.Log(err, "")
+						console.Output(err, "")
 						return
 					}
 				}
@@ -274,7 +274,7 @@ func uploadFiles() {
 					}
 
 					if err != nil {
-						console.Log(err, "")
+						console.Output(err, "")
 						return
 					}
 				}
