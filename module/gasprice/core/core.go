@@ -149,7 +149,7 @@ func savePricesToDB(prices []price.Price) error {
 
 	func() {
 
-		for i := 0; i <= 4; i++ {
+		for i := 0; i <= 5; i++ {
 
 			switch i {
 			case 0:
@@ -162,6 +162,13 @@ func savePricesToDB(prices []price.Price) error {
 				dbconn.Tx, err = dbconn.DB.Begin()
 
 			case 3:
+				defer func() {
+					if err != nil {
+						dbconn.Tx.Rollback()
+					}
+				}()
+
+			case 4:
 				// save
 				for _, price := range prices {
 
@@ -171,13 +178,8 @@ func savePricesToDB(prices []price.Price) error {
 					}
 				}
 
-			case 4:
+			case 5:
 				err = dbconn.Tx.Commit()
-			}
-
-			if err != nil {
-				dbconn.Tx.Rollback()
-				return
 			}
 		}
 	}()
@@ -216,7 +218,7 @@ func csvToDB(filepath string, db *sql.DB, tx *sql.Tx) error {
 
 	func() {
 
-		for i := 0; i <= 3; i++ {
+		for i := 0; i <= 4; i++ {
 
 			switch i {
 			case 0:
@@ -227,6 +229,13 @@ func csvToDB(filepath string, db *sql.DB, tx *sql.Tx) error {
 				tx, err = db.Begin()
 
 			case 2:
+				defer func() {
+					if err != nil {
+						tx.Rollback()
+					}
+				}()
+
+			case 3:
 				// save
 				for _, pr := range pl.Prices {
 
@@ -236,13 +245,8 @@ func csvToDB(filepath string, db *sql.DB, tx *sql.Tx) error {
 					}
 				}
 
-			case 3:
+			case 4:
 				err = tx.Commit()
-			}
-
-			if err != nil {
-				tx.Rollback()
-				return
 			}
 		}
 	}()
