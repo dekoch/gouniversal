@@ -1,3 +1,36 @@
+<h3>Docker für gouniversal</h3>
+06.10.2019<br>
+Nach ein paar Tagen Docker testen, gibt es nun ein Dockerfile und ein build script.<br>
+Auf Basis eines alpine Linux, kann nun ein gouniversal Image erstellt werden.<br>
+<br>
+Tests mit mesh + meshFileSync werden dadurch wesentlich vereinfacht und beschleunigt.
+
+<hr>
+<h3>GasPrice mit SQLite</h3>
+20.09.2019<br>
+GasPrice speichert seit Februar alle 15min. Benzinpreise<br>
+von mehreren Tankstellen in der Umgebung.<br>
+GasPrice entstand ursprünglich als "Forschungsprojekt".<br>
+Thema: Wie stark/wie oft wechselt der Preis über einen Tag.<br>
+<br>
+Alle Preise wurden in EINE .csv gespeichert und anfangs als Tabelle extern ausgewertet.<br>
+Danach folgte die grafische Darstellung mit gouniversal.<br>
+<br>
+Mit der Zeit füllte sich die .csv auf >160.000 Einträge (~25MB).<br>
+Problem 1: Bei jedem anhängen einer Zeile, muss die komplette Datei ins RAM geladen werden, Zeilen werden angehängt, komplette Datei speichern.<br>
+Problem 2: Die grafische Darstellung muss auch die komplette Datei ins RAM laden, dann erst kann nach Datum/Zeit gefiltert werden.<br>
+Lösung: Große .csv wurde aufgeteilt --> eine .csv pro Tag (was das Filtern wesentlich vereinfachte)<br>
+<br>
+Monate später...<br>
+Neues Problem: Die grafische Darstellung verwendete EINE goroutine (Core) um alle Dateien (~200) zu laden, lesen und darzustellen.<br>
+Lösung: Liste aller .csv durch die Anzahl Cores splitten und jeden Core einen Teil abarbeiten lassen.<br>
+<br>
+Monate später...<br>
+Durch ein weiteres "Forschungsprojekt" entstand ein package namens "sqlite3".<br>
+Was nach ausgiebigen testen nun auch seine Verwendung in GasPrice fand.<br>
+Dadurch konnte die grafische Darstellung der Benzinpreise nochmals beschleunigt werden.
+
+<hr>
 <h3>Fileserver</h3>
 24.04.2018<br>
 owncloud ist nun abgeschaltet!<br>

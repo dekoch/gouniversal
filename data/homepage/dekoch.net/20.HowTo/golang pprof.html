@@ -1,0 +1,6 @@
+Remote Profiling:<br>
+go tool pprof -pdf http://127.0.0.1:8080/debug/pprof/heap<br>
+<br>
+Local Profiling:<br>
+go test -memprofile mem.prof -run Test<br>
+go tool pprof -pdf mem.prof<br>
