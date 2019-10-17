@@ -59,45 +59,48 @@ func Render(page *typefileshare.Page, nav *navigation.Navigation, r *http.Reques
 	}
 
 	// check if exist
-	if _, oserr := os.Stat(fileRoot + fullPath); os.IsNotExist(oserr) {
-		err = oserr
-	}
-
-	if err == nil {
-
-		if strings.HasSuffix(dir, "/") == false {
-			dir += "/"
-		}
-
-		name := filepath.Base(fullPath)
-
-		edit := r.FormValue("edit")
-
-		if edit == "apply" {
-
-			// rename
-			newName := r.FormValue("name")
-
-			if newName != name && functions.IsEmpty(newName) == false {
-
-				err = os.Rename(fileRoot+fullPath, fileRoot+dir+newName)
-			}
-
-			// redirect to containing folder
-			nav.RedirectPath("App:Fileshare:Home$Folder="+dir, false)
-		}
-
-		c.Name = template.HTML(name)
-
-		cont, err := functions.PageToString(global.Config.UIFileRoot+"edit.html", c)
-		if err == nil {
-			page.Content += cont
-		} else {
-			nav.RedirectPath("404", true)
-		}
-
-	} else {
+	if _, err = os.Stat(fileRoot + fullPath); os.IsNotExist(err) {
 		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "edit.go", nav.User.UUID)
 		nav.RedirectPath("400", true)
+		return
+	}
+
+	if strings.HasSuffix(dir, "/") == false {
+		dir += "/"
+	}
+
+	name := filepath.Base(fullPath)
+
+	switch r.FormValue("edit") {
+	case "apply":
+		// rename
+		newName := r.FormValue("name")
+
+		if newName == name {
+			// redirect to containing folder
+			nav.RedirectPath("App:Fileshare:Home$Folder="+dir, false)
+			return
+		}
+
+		if functions.IsEmpty(newName) == false {
+
+			err = os.Rename(fileRoot+fullPath, fileRoot+dir+newName)
+			if err != nil {
+				alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+			} else {
+				// redirect to containing folder
+				nav.RedirectPath("App:Fileshare:Home$Folder="+dir, false)
+				return
+			}
+		}
+	}
+
+	c.Name = template.HTML(name)
+
+	cont, err := functions.PageToString(global.Config.UIFileRoot+"edit.html", c)
+	if err == nil {
+		page.Content += cont
+	} else {
+		nav.RedirectPath("404", true)
 	}
 }
