@@ -8,6 +8,7 @@ import (
 	"github.com/dekoch/gouniversal/module/logviewer/global"
 	"github.com/dekoch/gouniversal/module/logviewer/lang"
 	"github.com/dekoch/gouniversal/module/logviewer/typelogviewer"
+	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/io/file"
 	"github.com/dekoch/gouniversal/shared/io/fileinfo"
@@ -71,6 +72,9 @@ func Render(page *typelogviewer.Page, nav *navigation.Navigation, r *http.Reques
 
 	// scan directory
 	list, err := fileinfo.Get(fileRoot+path, 0, true)
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+	}
 
 	htmlFolders := ""
 	htmlFiles := ""
