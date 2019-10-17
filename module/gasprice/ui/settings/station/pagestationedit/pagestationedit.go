@@ -67,6 +67,10 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 
 	station, err := global.Config.Stations.GetStation(id)
+	if err != nil {
+		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
+	}
+
 	c.UUID = template.HTML(station.UUID)
 	c.Name = template.HTML(station.Name)
 	c.Company = template.HTML(station.Company)
