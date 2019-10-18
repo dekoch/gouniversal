@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"runtime"
 	"strconv"
@@ -20,7 +21,12 @@ import (
 )
 
 func main() {
-	console.LoadConfig()
+	err := console.LoadConfig()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	console.Log("App starting...", " ")
 	console.Log("Build: "+build.BuildTime, " ")
 	console.Log("Commit: "+build.Commit, " ")
@@ -30,7 +36,11 @@ func main() {
 	global.Lang = language.New("data/lang/program/", en, "en")
 
 	if build.UIEnabled {
-		global.UIConfig.LoadConfig()
+
+		err = global.UIConfig.LoadConfig()
+		if err != nil {
+			console.Log(err, "")
+		}
 	}
 
 	// UI or console mode
@@ -93,7 +103,7 @@ func main() {
 	module.Exit()
 
 	console.Log("App ended", " ")
-	os.Exit(1)
+	os.Exit(0)
 }
 
 func printHelp() {
