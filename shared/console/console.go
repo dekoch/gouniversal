@@ -19,11 +19,12 @@ var (
 	logFile   *os.File
 	logLogger *log.Logger
 	mut       sync.RWMutex
+	rootPath  string
 	input     string
 	output    []string
 )
 
-func LoadConfig() {
+func LoadConfig() error {
 
 	t := time.Now()
 
@@ -39,13 +40,24 @@ func LoadConfig() {
 		err = os.MkdirAll(logFilePath, os.ModePerm)
 	}
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	logFile, _ = os.Create(logFilePath + fileName)
+	logFile, err = os.Create(logFilePath + fileName)
+	if err != nil {
+		return err
+	}
+
 	logLogger = log.New(logFile, "", 0)
 
+	rootPath, err = os.Getwd()
+	if err != nil {
+		return err
+	}
+
 	Log(logFilePath+fileName, " ")
+
+	return nil
 }
 
 func Input(s string) {
@@ -72,27 +84,20 @@ func appendOutput(s string) {
 		output = output[1:cnt]
 	}
 
-	newOutput := make([]string, 1)
-	newOutput[0] = s
-	output = append(output, newOutput...)
+	output = append(output, s)
 }
 
 func caller() string {
 
 	_, file, line, ok := runtime.Caller(3)
-	if ok == false {
+	if ok {
+
+		file = strings.Replace(file, rootPath, "", -1)
+	} else {
+
 		file = "???"
 		line = 0
 	}
-
-	short := file
-	for i := len(file) - 1; i > 0; i-- {
-		if file[i] == '/' {
-			short = file[i+1:]
-			break
-		}
-	}
-	file = short
 
 	return file + ":" + strconv.Itoa(line)
 }
@@ -113,7 +118,7 @@ func consoleOutput(message interface{}, sender string) string {
 			s = sender + ": " + m
 		}
 	} else {
-		s = caller() + ": " + m
+		s = "Console " + caller() + ": " + m
 	}
 
 	t := time.Now()
