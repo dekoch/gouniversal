@@ -24,6 +24,7 @@ type ModuleConfig struct {
 	DBFile         string
 	UpdInterv      int // minutes (0=disabled)
 	HashReset      int // minutes
+	MaxTokens      int
 	Users          []string
 	Hashes         hashstor.HashStor
 }
@@ -50,6 +51,7 @@ func (hc *ModuleConfig) loadDefaults() {
 
 	hc.UpdInterv = -1
 	hc.HashReset = 5
+	hc.MaxTokens = 5
 
 	hc.Hashes.Add("")
 }
@@ -142,6 +144,22 @@ func (hc *ModuleConfig) GetHashReset() time.Duration {
 	defer mut.RUnlock()
 
 	return time.Duration(hc.HashReset) * time.Minute
+}
+
+func (hc *ModuleConfig) SetMaxTokens(n int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.MaxTokens = n
+}
+
+func (hc *ModuleConfig) GetMaxTokens() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.MaxTokens
 }
 
 func (hc *ModuleConfig) AddUser(username string) {

@@ -177,6 +177,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 		picturex.RegisterPage(page, nav)
 	}
 
+	if build.ModuleInstaBackup {
+		instabackup.RegisterPage(page, nav)
+	}
+
 	if build.ModuleGPSNav {
 		gpsnav.RegisterPage(page, nav)
 	}
@@ -252,6 +256,12 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	case "PictureX":
 		if build.ModulePictureX {
 			picturex.Render(page, nav, r)
+			return
+		}
+
+	case "InstaBackup":
+		if build.ModuleInstaBackup {
+			instabackup.Render(page, nav, r)
 			return
 		}
 

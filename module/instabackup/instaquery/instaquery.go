@@ -2,10 +2,11 @@ package instaquery
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/dekoch/gouniversal/shared/console"
 )
 
 type InstaQuery struct {
@@ -57,7 +58,7 @@ func (iq *InstaQuery) SendQuery() ([]byte, error) {
 			case 0:
 				ur, err = iq.getQuery()
 
-				fmt.Println(ur)
+				console.Output(ur, "InstaQuery")
 
 			case 1:
 				_, err = url.Parse(ur)
