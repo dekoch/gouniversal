@@ -42,94 +42,140 @@ var (
 	cookieName string
 )
 
-func setCookie(parameter string, value string, w http.ResponseWriter, r *http.Request) {
-	//console.Log("set cookie " + parameter + " to " + value)
+func notFound(message interface{}, w http.ResponseWriter) {
 
-	session, _ := store.Get(r, cookieName)
+	console.Log(message, "Error 404")
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusNotFound)
+}
+
+func internalError(message interface{}, w http.ResponseWriter) {
+
+	console.Log(message, "Error 500")
+
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusInternalServerError)
+}
+
+func setCookie(parameter string, value string, w http.ResponseWriter, r *http.Request) error {
+
+	session, err := store.Get(r, cookieName)
+	if err != nil {
+		return err
+	}
+
 	session.Values[parameter] = value
-	session.Save(r, w)
+
+	return session.Save(r, w)
 }
 
 func getCookie(parameter string, w http.ResponseWriter, r *http.Request) (string, error) {
-	//console.Log("get cookie " + parameter)
 
 	session, err := store.Get(r, cookieName)
-
-	if err == nil {
-		return session.Values[parameter].(string), err
+	if err != nil {
+		return "", err
 	}
 
-	return "", err
+	return session.Values[parameter].(string), nil
 }
 
-func setSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Request) {
-	setCookie("navigation", nav.Path, w, r)
+func setSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Request) error {
 
-	setCookie("authenticated", nav.User.UUID, w, r)
+	err := setCookie("navigation", nav.Path, w, r)
+	if err != nil {
+		return err
+	}
+
+	err = setCookie("authenticated", nav.User.UUID, w, r)
+	if err != nil {
+		return err
+	}
+
+	isGod := "false"
 
 	if nav.GodMode {
-		setCookie("isgod", "true", w, r)
-	} else {
-		setCookie("isgod", "", w, r)
+		isGod = "true"
 	}
+
+	return setCookie("isgod", isGod, w, r)
 }
 
-func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Request) {
+func getSession(nav *navigation.Navigation, w http.ResponseWriter, r *http.Request) error {
 
-	session, _ := store.Get(r, cookieName)
-	if session.IsNew {
-		initCookies(w, r)
-	}
+	var (
+		err     error
+		session *sessions.Session
+		uid     string
+		isGod   string
+	)
 
-	// get stored path
-	path, err := getCookie("navigation", w, r)
-	if err == nil {
-		nav.Path = path
-	}
+	func() {
 
-	// get stored user UUID
-	uid, err := getCookie("authenticated", w, r)
-	if err == nil {
+		for i := 0; i <= 8; i++ {
 
-		nav.User, err = global.UserConfig.Get(uid)
+			switch i {
+			case 0:
+				session, err = store.Get(r, cookieName)
 
-		if nav.User.State < userconfig.StatePublic {
-			// if no user found
-			nav.User = global.Guests.SelectGuest(uid)
-		}
+			case 1:
+				if session.IsNew {
+					err = initCookies(nav, w, r)
+				}
 
-		if nav.User.State < userconfig.StatePublic {
-			// if no guest found, create new
-			u, err := global.UserConfig.GetWithState(userconfig.StatePublic)
-			if err != nil {
-				console.Log(err, "")
+			case 2:
+				// get stored path
+				nav.Path, err = getCookie("navigation", w, r)
+
+			case 3:
+				// get stored user UUID
+				uid, err = getCookie("authenticated", w, r)
+
+			case 4:
+				nav.User, _ = global.UserConfig.Get(uid)
+
+			case 5:
+				if nav.User.State < userconfig.StatePublic {
+					// if no user found
+					nav.User = global.Guests.SelectGuest(uid)
+				}
+
+			case 6:
+				if nav.User.State < userconfig.StatePublic {
+					// if no guest found, create new
+					var guest userconfig.User
+					guest, _ = global.UserConfig.GetWithState(userconfig.StatePublic)
+					nav.User = global.Guests.NewGuest(guest, global.UIConfig.MaxGuests)
+				}
+
+			case 7:
+				// for debugging
+				nav.GodMode = false
+				isGod, err = getCookie("isgod", w, r)
+
+			case 8:
+				if isGod == "true" {
+					nav.GodMode = true
+				}
 			}
-			nav.User = global.Guests.NewGuest(u, global.UIConfig.MaxGuests)
-		}
-	}
 
-	// for debugging
-	nav.GodMode = false
-	g, err := getCookie("isgod", w, r)
-	if err == nil {
-		if g == "true" {
-			nav.GodMode = true
+			if err != nil {
+				return
+			}
 		}
-	}
+	}()
+
+	return err
 }
 
-func initCookies(w http.ResponseWriter, r *http.Request) {
-	nav := new(navigation.Navigation)
-	nav.Path = "init"
+func initCookies(nav *navigation.Navigation, w http.ResponseWriter, r *http.Request) error {
 
-	u, err := global.UserConfig.GetWithState(0)
-	if err != nil {
-		console.Log(err, "")
-	}
+	u, _ := global.UserConfig.GetWithState(userconfig.StatePublic)
 	nav.User = global.Guests.NewGuest(u, global.UIConfig.MaxGuests)
+	nav.Path = "init"
 	nav.GodMode = false
 
-	setSession(nav, w, r)
+	return setSession(nav, w, r)
 }
 
 func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
@@ -245,16 +291,15 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 			alignRight = true
 
-			if nav.User.UUID != "" {
+			dropDownTitle = page.Lang.Menu.Account.Title
 
-				if functions.IsEmpty(nav.User.Name) == false {
+			if functions.IsEmpty(nav.User.Name) == false {
 
-					dropDownTitle = nav.User.Name
-				} else {
-					dropDownTitle = nav.User.LoginName
-				}
-			} else {
-				dropDownTitle = page.Lang.Menu.Account.Title
+				dropDownTitle = nav.User.Name
+
+			} else if functions.IsEmpty(nav.User.LoginName) == false {
+
+				dropDownTitle = nav.User.LoginName
 			}
 		}
 
@@ -310,17 +355,25 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" ||
 		newPath != "" {
 
-		session, _ := store.Get(r, cookieName)
-		if session.IsNew {
-			initCookies(w, r)
-		}
-
 		// set new path to cookie
 		if newPath != "" {
+
 			nav := new(navigation.Navigation)
-			getSession(nav, w, r)
+
+			err := getSession(nav, w, r)
+			if err != nil {
+				internalError(err, w)
+				return
+			}
+
 			nav.NavigatePath(newPath)
-			setSession(nav, w, r)
+
+			err = setSession(nav, w, r)
+			if err != nil {
+				internalError(err, w)
+				return
+			}
+
 			console.Output(newPath, "app")
 		}
 
@@ -334,18 +387,20 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/app/", http.StatusSeeOther)
 		}
 
+		return
+
 	} else if r.URL.Path == "/favicon.ico" {
+
 		icon := global.UIConfig.StaticFileRoot + "favicon.ico"
 
 		if _, err := os.Stat(icon); os.IsNotExist(err) == false {
-			http.ServeFile(w, r, icon)
-		}
-	} else {
-		console.Log("Error 404 \""+r.URL.Path+"\" ("+clientinfo.String(r)+")", "handleRoot()")
 
-		w.Header().Set("Content-Type", "text/html")
-		w.WriteHeader(http.StatusNotFound)
+			http.ServeFile(w, r, icon)
+			return
+		}
 	}
+
+	notFound("\""+r.URL.Path+"\" ("+clientinfo.String(r)+")", w)
 }
 
 func handleApp(w http.ResponseWriter, r *http.Request) {
@@ -360,14 +415,18 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	nav.Server.Host = r.Host
 	nav.Server.URLPath = r.URL.Path
 
-	getSession(nav, w, r)
+	err := getSession(nav, w, r)
+	if err != nil {
+		internalError(err, w)
+		return
+	}
 
 	newPath := r.FormValue("navigation")
 
 	if newPath != "" {
 		nav.NavigatePath(newPath)
 
-		console.Output(newPath, "app")
+		console.Output(newPath, "App")
 	}
 
 	nav.Redirect = "init"
@@ -439,12 +498,11 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 				pagelogin.Render(page, nav, r)
 
 			case "Logout":
-				console.Log("\""+nav.User.LoginName+"\" logged out", "Logout")
-
-				u, err := global.UserConfig.GetWithState(userconfig.StatePublic)
-				if err != nil {
-					console.Log(err, "")
+				if nav.User.LoginName != "" {
+					console.Log("\""+nav.User.LoginName+"\" logged out", "Logout")
 				}
+
+				u, _ := global.UserConfig.GetWithState(userconfig.StatePublic)
 				nav.User = global.Guests.NewGuest(u, global.UIConfig.MaxGuests)
 
 				nav.RedirectPath("Account:Login", false)
@@ -506,7 +564,11 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 		console.Input("exit")
 	} else {
 
-		setSession(nav, w, r)
+		err = setSession(nav, w, r)
+		if err != nil {
+			internalError(err, w)
+			return
+		}
 	}
 
 	w.Write(renderProgram(page, nav))
@@ -533,46 +595,42 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 
 func handleRecovery(w http.ResponseWriter, r *http.Request) {
 
-	if global.UIConfig.Recovery {
-
-		button := r.FormValue("recovery")
-
-		if button == "goback" {
-
-			http.Redirect(w, r, "/", http.StatusSeeOther)
-
-		} else if button == "disablerecovery" {
-
-			global.UIConfig.Recovery = false
-			global.UIConfig.SaveConfig()
-
-		} else if button == "cookies" {
-
-			initCookies(w, r)
-
-		} else if button == "god" {
-
-			setCookie("isgod", "true", w, r)
-
-		} else {
-			console.Log(button, "ui.go")
-		}
-
-		type recovery struct {
-			Temp string
-		}
-		var re recovery
-
-		re.Temp = ""
-
-		templ, err := template.ParseFiles(global.UIConfig.ProgramFileRoot + "recovery.html")
-		if err != nil {
-			console.Log(err, "")
-		}
-		templ.Execute(w, re)
-	} else {
-		w.Write([]byte("recovery mode is DISABLED!"))
+	if global.UIConfig.Recovery == false {
+		notFound("Recovery Mode is DISABLED!", w)
+		return
 	}
+
+	switch r.FormValue("recovery") {
+	case "goback":
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+
+	case "disablerecovery":
+		global.UIConfig.Recovery = false
+		global.UIConfig.SaveConfig()
+
+	case "cookies":
+		nav := new(navigation.Navigation)
+		initCookies(nav, w, r)
+
+	case "god":
+		setCookie("isgod", "true", w, r)
+
+	default:
+		console.Log(r.FormValue("recovery"), "ui.go")
+	}
+
+	type recovery struct {
+		Temp string
+	}
+	var re recovery
+
+	re.Temp = ""
+
+	templ, err := template.ParseFiles(global.UIConfig.ProgramFileRoot + "recovery.html")
+	if err != nil {
+		internalError(err, w)
+	}
+	templ.Execute(w, re)
 }
 
 func StartServer() {
@@ -589,76 +647,75 @@ func StartServer() {
 	}
 
 	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		console.Log("no interface found", " ")
+		return
+	}
 
-	if err == nil {
+	// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
+	key := securecookie.GenerateRandomKey(32)
+	store = sessions.NewCookieStore(key)
 
-		// key must be 16, 24 or 32 bytes long (AES-128, AES-192 or AES-256)
-		key := securecookie.GenerateRandomKey(32)
-		store = sessions.NewCookieStore(key)
+	u := uuid.Must(uuid.NewRandom())
+	cookieName = u.String()
 
-		u := uuid.Must(uuid.NewRandom())
-		cookieName = u.String()
+	global.UserConfig.LoadConfig()
+	global.GroupConfig.LoadConfig()
 
-		global.UserConfig.LoadConfig()
-		global.GroupConfig.LoadConfig()
+	alert.Start()
+	module.LoadConfig()
 
-		alert.Start()
-		module.LoadConfig()
-
-		// if HTTPS is enabled, check cert and key file
-		if global.UIConfig.HTTPS.Enabled {
-			if _, err = os.Stat(global.UIConfig.HTTPS.CertFile); os.IsNotExist(err) {
-				global.UIConfig.HTTPS.Enabled = false
-				console.Log("missing CertFile \""+global.UIConfig.HTTPS.CertFile+"\"", " ")
-			}
-
-			if _, err = os.Stat(global.UIConfig.HTTPS.KeyFile); os.IsNotExist(err) {
-				global.UIConfig.HTTPS.Enabled = false
-				console.Log("missing KeyFile \""+global.UIConfig.HTTPS.KeyFile+"\"", " ")
-			}
+	// if HTTPS is enabled, check cert and key file
+	if global.UIConfig.HTTPS.Enabled {
+		if _, err = os.Stat(global.UIConfig.HTTPS.CertFile); os.IsNotExist(err) {
+			global.UIConfig.HTTPS.Enabled = false
+			console.Log("missing CertFile \""+global.UIConfig.HTTPS.CertFile+"\"", " ")
 		}
 
-		// configure server
-		fs := http.FileServer(http.Dir(global.UIConfig.StaticFileRoot))
-		http.Handle("/static/", http.StripPrefix("/static/", fs))
-		http.HandleFunc("/", handleRoot)
-		http.HandleFunc("/app/", handleApp)
-		http.HandleFunc("/recovery/", handleRecovery)
-
-		// start HTTP server
-		if global.UIConfig.HTTP.Enabled {
-
-			go http.ListenAndServe(":"+strconv.Itoa(global.UIConfig.HTTP.Port), nil)
+		if _, err = os.Stat(global.UIConfig.HTTPS.KeyFile); os.IsNotExist(err) {
+			global.UIConfig.HTTPS.Enabled = false
+			console.Log("missing KeyFile \""+global.UIConfig.HTTPS.KeyFile+"\"", " ")
 		}
+	}
 
-		// start HTTPS server
-		if global.UIConfig.HTTPS.Enabled {
+	// configure server
+	fs := http.FileServer(http.Dir(global.UIConfig.StaticFileRoot))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	http.HandleFunc("/", handleRoot)
+	http.HandleFunc("/app/", handleApp)
+	http.HandleFunc("/recovery/", handleRecovery)
 
-			go http.ListenAndServeTLS(":"+strconv.Itoa(global.UIConfig.HTTPS.Port), global.UIConfig.HTTPS.CertFile, global.UIConfig.HTTPS.KeyFile, nil)
-		}
+	// start HTTP server
+	if global.UIConfig.HTTP.Enabled {
 
-		for _, a := range addrs {
-			if ipnet, ok := a.(*net.IPNet); ok {
-				if ipnet.IP.To4() != nil {
+		go http.ListenAndServe(":"+strconv.Itoa(global.UIConfig.HTTP.Port), nil)
+	}
 
-					if global.UIConfig.HTTP.Enabled {
+	// start HTTPS server
+	if global.UIConfig.HTTPS.Enabled {
 
-						console.Log("http://"+ipnet.IP.String()+":"+strconv.Itoa(global.UIConfig.HTTP.Port), " ")
-					}
+		go http.ListenAndServeTLS(":"+strconv.Itoa(global.UIConfig.HTTPS.Port), global.UIConfig.HTTPS.CertFile, global.UIConfig.HTTPS.KeyFile, nil)
+	}
 
-					if global.UIConfig.HTTPS.Enabled {
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok {
+			if ipnet.IP.To4() != nil {
 
-						console.Log("https://"+ipnet.IP.String()+":"+strconv.Itoa(global.UIConfig.HTTPS.Port), " ")
-					}
+				if global.UIConfig.HTTP.Enabled {
+
+					console.Log("http://"+ipnet.IP.String()+":"+strconv.Itoa(global.UIConfig.HTTP.Port), " ")
+				}
+
+				if global.UIConfig.HTTPS.Enabled {
+
+					console.Log("https://"+ipnet.IP.String()+":"+strconv.Itoa(global.UIConfig.HTTPS.Port), " ")
 				}
 			}
 		}
+	}
 
-		if global.UIConfig.Recovery {
-			console.Log("WARNING! Recovery Mode ist enabled", " ")
-		}
-	} else {
-		console.Log("no interface found", " ")
+	if global.UIConfig.Recovery {
+		console.Log("WARNING! Recovery Mode ist enabled", " ")
 	}
 }
 
