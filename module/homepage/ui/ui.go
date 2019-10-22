@@ -97,6 +97,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 
 		if f.IsDir {
 
+			if f.Name == "static" {
+				continue
+			}
+
 			err = registerMenuItems(f.Name, global.Config.UIFileRoot+f.Name+"/", "App:Homepage:"+f.Name, nav)
 			if err != nil {
 				return
