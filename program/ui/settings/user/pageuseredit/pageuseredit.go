@@ -4,6 +4,7 @@ import (
 	"errors"
 	"html/template"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -134,20 +135,30 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	// list of groups
 	grouplist := ""
-
 	groups := global.GroupConfig.List()
 
-	for _, g := range groups {
+	sort.Slice(groups, func(i, j int) bool { return groups[i].Name < groups[j].Name })
 
-		grouplist += "<tr>"
-		grouplist += "<td><a href=\"/?path=Program:Settings:Group:Edit$UUID=" + g.UUID + "\">" + g.Name + "</a></td>"
-		grouplist += "<td><input type=\"checkbox\" name=\"selectedgroups\" value=\"" + g.UUID + "\""
+	for _, group := range groups {
 
-		if usermanagement.IsUserInGroup(g.UUID, c.User) {
+		inGroup := usermanagement.IsUserInGroup(group.UUID, c.User)
 
+		if inGroup {
+			grouplist += "<tr class=\"table-success\">"
+		} else {
+			grouplist += "<tr>"
+		}
+
+		grouplist += "<td><input type=\"checkbox\" name=\"selectedgroups\" value=\"" + group.UUID + "\""
+
+		if inGroup {
 			grouplist += " checked"
 		}
-		grouplist += "></td></tr>"
+
+		grouplist += "></td>"
+
+		grouplist += "<td class=\"text-left\"><a href=\"/?path=Program:Settings:Group:Edit$UUID=" + group.UUID + "\">" + group.Name + "</a></td>"
+		grouplist += "</tr>"
 	}
 
 	c.Groups = template.HTML(grouplist)

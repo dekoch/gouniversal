@@ -4,6 +4,7 @@ import (
 	"errors"
 	"html/template"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -102,19 +103,30 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	// list of pages
 	pagelist := ""
-	sm := nav.Sitemap.PageList()
+	pages := nav.Sitemap.PageList()
 
-	for i := 0; i < len(sm); i++ {
+	sort.Slice(pages, func(i, j int) bool { return pages[i] < pages[j] })
 
-		pagelist += "<tr>"
-		pagelist += "<td>" + sm[i] + "</td>"
-		pagelist += "<td><input type=\"checkbox\" name=\"selectedpages\" value=\"" + sm[i] + "\""
+	for _, page := range pages {
 
-		if groupmanagement.IsPageAllowed(sm[i], c.Group.UUID, false) {
+		allowed := groupmanagement.IsPageAllowed(page, c.Group.UUID, false)
 
+		if allowed {
+			pagelist += "<tr class=\"table-success\">"
+		} else {
+			pagelist += "<tr>"
+		}
+
+		pagelist += "<td><input type=\"checkbox\" name=\"selectedpages\" value=\"" + page + "\""
+
+		if allowed {
 			pagelist += " checked"
 		}
-		pagelist += "></td></tr>"
+
+		pagelist += "></td>"
+
+		pagelist += "<td class=\"text-left\">" + page + "</td>"
+		pagelist += "</tr>"
 	}
 
 	c.Pages = template.HTML(pagelist)
