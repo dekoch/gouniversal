@@ -19,7 +19,7 @@ func TestGet(t *testing.T) {
 		{0, "file0", 0, false, "test/"},
 		{1, "file1", 1, false, "test/"},
 		{4, "file4", 4, false, "test/"},
-		{5, "foo", 0, true, "test/"},
+		{5, "foo", -1, true, "test/"},
 		{8, "file2", 2, false, "test/foo/"},
 	}
 
@@ -53,9 +53,11 @@ func TestGet(t *testing.T) {
 			return
 		}
 
-		if got[tt.fileNo].ByteSize != tt.wantByteSize {
-			t.Errorf("Get() ByteSize test %d: got %d, want %d", i, got[tt.fileNo].ByteSize, tt.wantByteSize)
-			return
+		if tt.wantByteSize > 0 {
+			if got[tt.fileNo].ByteSize != tt.wantByteSize {
+				t.Errorf("Get() ByteSize test %d: got %d, want %d", i, got[tt.fileNo].ByteSize, tt.wantByteSize)
+				return
+			}
 		}
 
 		if got[tt.fileNo].IsDir != tt.wantIsDir {
@@ -70,7 +72,7 @@ func TestGet(t *testing.T) {
 	}
 
 	// test without dirs
-	got, err = Get("test/", 1, false)
+	got, err = Get("test", 1, false)
 	if err != nil {
 		t.Errorf("Get() error %v", err)
 		return

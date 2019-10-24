@@ -2,6 +2,7 @@ package fileinfo
 
 import (
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/dekoch/gouniversal/shared/datasize"
@@ -27,6 +28,10 @@ func recursive(path string, maxdepth int, withdir bool, currdepth int) ([]FileIn
 
 	var ret []FileInfo
 
+	if strings.HasSuffix(path, "/") == false {
+		path += "/"
+	}
+
 	list, err := ioutil.ReadDir(path)
 	if err != nil {
 		return ret, err
@@ -40,18 +45,8 @@ func recursive(path string, maxdepth int, withdir bool, currdepth int) ([]FileIn
 		fi.ModTime = l.ModTime()
 		fi.IsDir = l.IsDir()
 		fi.Path = path
-
-		if fi.IsDir {
-
-			fi.ByteSize = 0
-			fi.Size = ""
-
-		} else {
-
-			fi.ByteSize = l.Size()
-			s := datasize.ByteSize(l.Size()).HumanReadable()
-			fi.Size = s
-		}
+		fi.ByteSize = l.Size()
+		fi.Size = datasize.ByteSize(l.Size()).HumanReadable()
 
 		ret = append(ret, fi)
 	}
