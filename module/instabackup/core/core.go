@@ -295,6 +295,19 @@ func getFiles(iq instaquery.InstaQuery, ir *instaresp.InstaResp) ([]downloadFile
 							n.FileName = f.FileID + ".jpg"
 							n.Url = f.DisplayURL
 						}
+						// check if filename is already in array
+						found := false
+
+						for ifi := range files {
+
+							if files[ifi].FileName == n.FileName {
+								found = true
+							}
+						}
+
+						if found {
+							continue
+						}
 
 						files = append(files, n)
 					}
