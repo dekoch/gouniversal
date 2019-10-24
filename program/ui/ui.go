@@ -415,6 +415,8 @@ func handleApp(w http.ResponseWriter, r *http.Request) {
 	nav.Server.Host = r.Host
 	nav.Server.URLPath = r.URL.Path
 
+	nav.ResponseWriter = w
+
 	err := getSession(nav, w, r)
 	if err != nil {
 		internalError(err, w)

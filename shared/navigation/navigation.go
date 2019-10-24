@@ -1,6 +1,7 @@
 package navigation
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/dekoch/gouniversal/program/uiconfig"
@@ -15,16 +16,17 @@ type Server struct {
 }
 
 type Navigation struct {
-	Path        string
-	CurrentPath string
-	LastPath    string
-	Redirect    string
-	User        userconfig.User
-	Guest       bool
-	GodMode     bool
-	Sitemap     sitemap.Sitemap
-	UIConfig    uiconfig.UIConfig
-	Server      Server
+	Path           string
+	CurrentPath    string
+	LastPath       string
+	Redirect       string
+	User           userconfig.User
+	Guest          bool
+	GodMode        bool
+	Sitemap        sitemap.Sitemap
+	UIConfig       uiconfig.UIConfig
+	Server         Server
+	ResponseWriter http.ResponseWriter
 }
 
 func (nav *Navigation) GetNextPage() string {
