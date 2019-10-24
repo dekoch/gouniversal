@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/dekoch/gouniversal/build"
+	"github.com/dekoch/gouniversal/module/backup"
 	"github.com/dekoch/gouniversal/module/console"
 	"github.com/dekoch/gouniversal/module/fileshare"
 	"github.com/dekoch/gouniversal/module/gasprice"
@@ -41,6 +42,11 @@ func LoadConfig() {
 	if build.ModuleLogViewer {
 		sharedConsole.Log("LogViewer enabled", "Module")
 		logviewer.LoadConfig()
+	}
+
+	if build.ModuleBackup {
+		sharedConsole.Log("Backup enabled", "Module")
+		backup.LoadConfig()
 	}
 
 	if build.ModuleOpenESPM {
@@ -141,6 +147,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 		logviewer.RegisterPage(page, nav)
 	}
 
+	if build.ModuleBackup {
+		backup.RegisterPage(page, nav)
+	}
+
 	if build.ModuleOpenESPM {
 		openespm.RegisterPage(page, nav)
 	}
@@ -199,6 +209,12 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	case "LogViewer":
 		if build.ModuleLogViewer {
 			logviewer.Render(page, nav, r)
+			return
+		}
+
+	case "Backup":
+		if build.ModuleBackup {
+			backup.Render(page, nav, r)
 			return
 		}
 
@@ -328,6 +344,10 @@ func Exit() {
 
 	if build.ModuleParaTest {
 		paratest.Exit()
+	}
+
+	if build.ModuleBackup {
+		backup.Exit()
 	}
 
 	if build.ModuleLogViewer {

@@ -6,6 +6,7 @@ const UIEnabled = true
 
 const ModuleConsole = true
 const ModuleLogViewer = true
+const ModuleBackup = true
 const ModuleOpenESPM = true
 const ModuleFileshare = true
 const ModuleHomepage = true
