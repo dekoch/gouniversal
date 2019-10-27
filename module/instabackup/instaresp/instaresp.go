@@ -99,22 +99,26 @@ func (ir *InstaResp) GetFiles() []RespFile {
 	)
 
 	for _, edge := range ir.Response.Data.User.Eottm.Edges {
+		// if edge has childrenedges, ignor main file
+		if len(edge.Node.EdgeSidecarToChildren.Edges) == 0 {
 
-		n.FileID = edge.Node.ID
-		n.DisplayURL = edge.Node.DisplayURL
-		n.IsVideo = edge.Node.IsVideo
-		n.VideoURL = edge.Node.VideoURL
-
-		ret = append(ret, n)
-
-		for _, child := range edge.Node.EdgeSidecarToChildren.Edges {
-
-			n.FileID = child.Node.ID
-			n.DisplayURL = child.Node.DisplayURL
-			n.IsVideo = child.Node.IsVideo
-			n.VideoURL = child.Node.VideoURL
+			n.FileID = edge.Node.ID
+			n.DisplayURL = edge.Node.DisplayURL
+			n.IsVideo = edge.Node.IsVideo
+			n.VideoURL = edge.Node.VideoURL
 
 			ret = append(ret, n)
+		} else {
+
+			for _, child := range edge.Node.EdgeSidecarToChildren.Edges {
+
+				n.FileID = child.Node.ID
+				n.DisplayURL = child.Node.DisplayURL
+				n.IsVideo = child.Node.IsVideo
+				n.VideoURL = child.Node.VideoURL
+
+				ret = append(ret, n)
+			}
 		}
 	}
 
