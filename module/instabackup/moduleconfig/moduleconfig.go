@@ -12,6 +12,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/hashstor"
 	"github.com/dekoch/gouniversal/shared/io/file"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 const configFilePath = "data/config/instabackup/"
@@ -113,6 +114,34 @@ func (hc *ModuleConfig) LoadConfig() error {
 	}
 
 	return err
+}
+
+func (hc *ModuleConfig) Exit(em *types.ExitMessage) error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	var l []userconfig.UserConfig
+
+	for iu := range hc.Users {
+
+		found := false
+
+		for i := range em.Users {
+
+			if hc.Users[iu].User == em.Users[i] {
+				found = true
+			}
+		}
+
+		if found {
+			l = append(l, hc.Users[iu])
+		}
+	}
+
+	hc.Users = l
+
+	return nil
 }
 
 func (hc *ModuleConfig) selectUser(user string) *userconfig.UserConfig {

@@ -37,9 +37,15 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	ui.Render(page, nav, r)
 }
 
-func Exit() {
+func Exit(em *types.ExitMessage) {
 
-	err := global.Config.SaveConfig()
+	err := global.Config.Exit(em)
+	if err != nil {
+		console.Log(err, "")
+		return
+	}
+
+	err = global.Config.SaveConfig()
 	if err != nil {
 		console.Log(err, "")
 	}

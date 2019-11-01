@@ -335,7 +335,7 @@ func Exit(em *types.ExitMessage) {
 	}
 
 	if build.ModuleInstaBackup {
-		instabackup.Exit()
+		instabackup.Exit(em)
 	}
 
 	if build.ModuleGPSNav {
