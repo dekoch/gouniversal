@@ -8,6 +8,7 @@ import (
 	"github.com/dekoch/gouniversal/module/instabackup/lang"
 	"github.com/dekoch/gouniversal/module/instabackup/request"
 	"github.com/dekoch/gouniversal/module/instabackup/ui"
+	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/language"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
@@ -38,4 +39,8 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 func Exit() {
 
+	err := global.Config.SaveConfig()
+	if err != nil {
+		console.Log(err, "")
+	}
 }

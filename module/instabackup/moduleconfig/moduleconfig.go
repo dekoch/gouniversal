@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dekoch/gouniversal/module/instabackup/userconfig"
 	"github.com/dekoch/gouniversal/shared/config"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/hashstor"
@@ -25,7 +26,7 @@ type ModuleConfig struct {
 	UpdInterv      int // minutes (0=disabled)
 	HashReset      int // minutes
 	MaxTokens      int
-	Users          []string
+	Users          []userconfig.UserConfig
 	Hashes         hashstor.HashStor
 }
 
@@ -114,6 +115,30 @@ func (hc *ModuleConfig) LoadConfig() error {
 	return err
 }
 
+func (hc *ModuleConfig) selectUser(user string) *userconfig.UserConfig {
+
+	for iu := range hc.Users {
+
+		if hc.Users[iu].User == user {
+			return &hc.Users[iu]
+		}
+	}
+	// create new user
+	var n userconfig.UserConfig
+	n.LoadDefaults(user)
+
+	hc.Users = append(hc.Users, n)
+	// return new user from array
+	for iu := range hc.Users {
+
+		if hc.Users[iu].User == user {
+			return &hc.Users[iu]
+		}
+	}
+
+	return nil
+}
+
 func (hc *ModuleConfig) SetUpdInterval(minutes int) {
 
 	mut.Lock()
@@ -162,25 +187,33 @@ func (hc *ModuleConfig) GetMaxTokens() int {
 	return hc.MaxTokens
 }
 
-func (hc *ModuleConfig) AddUser(username string) {
-
-	mut.Lock()
-	defer mut.Unlock()
-
-	for i := range hc.Users {
-
-		if hc.Users[i] == username {
-			return
-		}
-	}
-
-	hc.Users = append(hc.Users, username)
-}
-
-func (hc *ModuleConfig) GetUserList() []string {
+func (hc *ModuleConfig) GetAllIDs() []string {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return hc.Users
+	var ret []string
+
+	for i := range hc.Users {
+		ret = append(ret, hc.Users[i].GetIDList()...)
+	}
+
+	return ret
+}
+
+func (hc *ModuleConfig) AddIDToUser(user, instaid string) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	n := hc.selectUser(user)
+	n.AddID(instaid)
+}
+
+func (hc *ModuleConfig) GetIDFromUser(user string) []string {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.selectUser(user).GetIDList()
 }

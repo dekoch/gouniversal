@@ -65,7 +65,12 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 					selectSet = 0
 				}
 
-				files, err = getFiles(selectSet, 12)
+				instaID := global.Config.GetIDFromUser(nav.User.UUID)
+				if len(instaID) == 0 {
+					return
+				}
+
+				files, err = getFiles(instaID, selectSet, 12)
 
 			case 3:
 				token = global.Tokens.New(nav.User.UUID)
@@ -119,7 +124,11 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 }
 
-func getFiles(start, lastn int) ([]instafile.InstaFile, error) {
+func getFiles(users []string, start, lastn int) ([]instafile.InstaFile, error) {
+
+	if len(users) == 0 {
+		return []instafile.InstaFile{}, errors.New("empty user list")
+	}
 
 	var (
 		err    error
@@ -141,7 +150,18 @@ func getFiles(start, lastn int) ([]instafile.InstaFile, error) {
 				defer dbconn.Close()
 
 			case 2:
-				rows, err = dbconn.DB.Query("SELECT id FROM `"+TableName+"` ORDER BY id DESC LIMIT ?, ?", start, lastn)
+				var where string
+
+				for iu := range users {
+
+					where += "userid='" + users[iu] + "'"
+
+					if iu != len(users)-1 {
+						where += " OR "
+					}
+				}
+
+				rows, err = dbconn.DB.Query("SELECT id FROM `"+TableName+"` WHERE "+where+" ORDER BY id DESC LIMIT ?, ?", start, lastn)
 
 			case 3:
 				defer rows.Close()

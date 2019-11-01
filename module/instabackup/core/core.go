@@ -102,7 +102,7 @@ func backup() {
 		return
 	}
 
-	for _, user := range global.Config.GetUserList() {
+	for _, user := range global.Config.GetAllIDs() {
 
 		err = backupUser(user)
 		if err != nil {
