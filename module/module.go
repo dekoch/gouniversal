@@ -347,7 +347,7 @@ func Exit(em *types.ExitMessage) {
 	}
 
 	if build.ModuleBackup {
-		backup.Exit()
+		backup.Exit(em)
 	}
 
 	if build.ModuleLogViewer {
