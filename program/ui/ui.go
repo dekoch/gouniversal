@@ -724,3 +724,8 @@ func StartServer() {
 func Exit() {
 
 }
+
+func GetUserUUIDList() []string {
+
+	return global.UserConfig.GetUUIDList()
+}

@@ -18,6 +18,7 @@ import (
 	"github.com/dekoch/gouniversal/program/ui"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/language"
+	"github.com/dekoch/gouniversal/shared/types"
 )
 
 func main() {
@@ -100,7 +101,10 @@ func main() {
 		ui.Exit()
 	}
 
-	module.Exit()
+	var em types.ExitMessage
+	em.Users = ui.GetUserUUIDList()
+
+	module.Exit(&em)
 
 	console.Log("App ended", " ")
 	os.Exit(0)

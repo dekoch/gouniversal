@@ -292,7 +292,7 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 }
 
 // Exit is called before program exit
-func Exit() {
+func Exit(em *types.ExitMessage) {
 
 	if build.ModuleOpenESPM {
 		openespm.Exit()

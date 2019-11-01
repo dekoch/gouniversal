@@ -253,6 +253,20 @@ func (c *UserConfig) List() []User {
 	return c.User
 }
 
+func (c *UserConfig) GetUUIDList() []string {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	var ret []string
+
+	for i := range c.User {
+		ret = append(ret, c.User[i].UUID)
+	}
+
+	return ret
+}
+
 func (c *UserConfig) Delete(uid string) {
 
 	mut.Lock()

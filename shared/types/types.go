@@ -7,3 +7,7 @@ type Page struct {
 	Content string
 	Lang    lang.LangFile
 }
+
+type ExitMessage struct {
+	Users []string
+}
