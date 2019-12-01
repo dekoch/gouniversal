@@ -2,6 +2,7 @@ package hashstor
 
 import (
 	"errors"
+	"sort"
 	"sync"
 	"time"
 )
@@ -12,8 +13,22 @@ type HashStor struct {
 }
 
 type Hash struct {
-	Hash    string
-	Expired time.Time
+	Hash      string
+	Expired   time.Time
+	requested time.Time
+}
+
+func (hs *HashStor) Init() {
+
+	hs.mut.Lock()
+	defer hs.mut.Unlock()
+
+	t := time.Now()
+
+	for i := range hs.Hashes {
+
+		hs.Hashes[i].requested = t
+	}
 }
 
 func (hs *HashStor) Add(str string) {
@@ -77,12 +92,17 @@ func (hs *HashStor) SetAsExpired(str string, to time.Duration) {
 
 func (hs *HashStor) GetHash() (string, error) {
 
-	hs.mut.RLock()
-	defer hs.mut.RUnlock()
+	hs.mut.Lock()
+	defer hs.mut.Unlock()
+
+	sort.Slice(hs.Hashes, func(i, j int) bool { return hs.Hashes[i].requested.Unix() < hs.Hashes[j].requested.Unix() })
 
 	for i := range hs.Hashes {
 
 		if time.Now().After(hs.Hashes[i].Expired) {
+
+			hs.Hashes[i].requested = time.Now()
+
 			return hs.Hashes[i].Hash, nil
 		}
 	}
