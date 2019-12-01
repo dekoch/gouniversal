@@ -21,7 +21,7 @@ func LoadConfig() {
 	en := lang.DefaultEn()
 	global.Lang = language.New(global.Config.LangFileRoot, en, "en")
 
-	global.Tokens.SetMaxTokens(global.Config.GetMaxTokens())
+	global.Tokens.SetMaxTokens(global.Config.GetMaxClientTokens())
 
 	core.LoadConfig()
 	request.LoadConfig()

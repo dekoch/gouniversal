@@ -18,17 +18,18 @@ import (
 const configFilePath = "data/config/instabackup/"
 
 type ModuleConfig struct {
-	Header         config.FileHeader
-	UIFileRoot     string
-	StaticFileRoot string
-	LangFileRoot   string
-	FileRoot       string
-	DBFile         string
-	UpdInterv      int // minutes (0=disabled)
-	HashReset      int // minutes
-	MaxTokens      int
-	Users          []userconfig.UserConfig
-	Hashes         hashstor.HashStor
+	Header          config.FileHeader
+	UIFileRoot      string
+	StaticFileRoot  string
+	LangFileRoot    string
+	FileRoot        string
+	DBFile          string
+	CheckInterv     int // minutes (0=disabled)
+	UpdInterv       int // minutes
+	HashReset       int // minutes
+	MaxClientTokens int
+	Users           []userconfig.UserConfig
+	Hashes          hashstor.HashStor
 }
 
 var (
@@ -51,9 +52,10 @@ func (hc *ModuleConfig) loadDefaults() {
 	hc.FileRoot = "data/instabackup/"
 	hc.DBFile = "data/instabackup/instabackup.db"
 
-	hc.UpdInterv = -1
+	hc.CheckInterv = 5
+	hc.UpdInterv = 30
 	hc.HashReset = 5
-	hc.MaxTokens = 5
+	hc.MaxClientTokens = 5
 
 	hc.Hashes.Add("")
 }
@@ -113,6 +115,8 @@ func (hc *ModuleConfig) LoadConfig() error {
 		hc.loadDefaults()
 	}
 
+	hc.Hashes.Init()
+
 	return err
 }
 
@@ -168,6 +172,22 @@ func (hc *ModuleConfig) selectUser(user string) *userconfig.UserConfig {
 	return nil
 }
 
+func (hc *ModuleConfig) SetCheckInterval(minutes int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.CheckInterv = minutes
+}
+
+func (hc *ModuleConfig) GetCheckInterval() time.Duration {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return time.Duration(hc.CheckInterv) * time.Minute
+}
+
 func (hc *ModuleConfig) SetUpdInterval(minutes int) {
 
 	mut.Lock()
@@ -200,20 +220,20 @@ func (hc *ModuleConfig) GetHashReset() time.Duration {
 	return time.Duration(hc.HashReset) * time.Minute
 }
 
-func (hc *ModuleConfig) SetMaxTokens(n int) {
+func (hc *ModuleConfig) SetMaxClientTokens(n int) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	hc.MaxTokens = n
+	hc.MaxClientTokens = n
 }
 
-func (hc *ModuleConfig) GetMaxTokens() int {
+func (hc *ModuleConfig) GetMaxClientTokens() int {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return hc.MaxTokens
+	return hc.MaxClientTokens
 }
 
 func (hc *ModuleConfig) GetAllIDs() []string {

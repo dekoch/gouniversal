@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"runtime"
+	"sync"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/instabackup/global"
@@ -51,7 +53,7 @@ func LoadConfig() {
 
 	go job()
 
-	if global.Config.UpdInterv == -1 {
+	if global.Config.GetCheckInterval() == time.Duration(-1*time.Minute) {
 		go backup()
 	}
 }
@@ -62,7 +64,7 @@ func Exit() {
 
 func job() {
 
-	intvl := global.Config.GetUpdInterval()
+	intvl := global.Config.GetCheckInterval()
 	timer := time.NewTimer(intvl)
 
 	for {
@@ -75,13 +77,13 @@ func job() {
 				go backup()
 
 			case <-chanBackupFinished:
-				intvl = global.Config.GetUpdInterval()
+				intvl = global.Config.GetCheckInterval()
 				timer.Reset(intvl)
 			}
 		} else {
 			// wait until enabled
 			time.Sleep(1 * time.Minute)
-			intvl = global.Config.GetUpdInterval()
+			intvl = global.Config.GetCheckInterval()
 
 			if intvl > 0 {
 				timer.Reset(intvl)
@@ -102,14 +104,37 @@ func backup() {
 		return
 	}
 
+	var (
+		chanWorker = make(chan string)
+		wg         sync.WaitGroup
+	)
+
+	for i := 0; i < runtime.NumCPU()*10; i++ {
+
+		wg.Add(1)
+
+		go func(ch chan string) {
+
+			for user := range ch {
+
+				err = backupUser(user)
+				if err != nil {
+					console.Log(err, "instabackup")
+				}
+			}
+
+			wg.Done()
+		}(chanWorker)
+	}
+
 	for _, user := range global.Config.GetAllIDs() {
 
-		err = backupUser(user)
-		if err != nil {
-			console.Log(err, "instabackup")
-			continue
-		}
+		chanWorker <- user
 	}
+
+	close(chanWorker)
+
+	wg.Wait()
 
 	err = global.Config.SaveConfig()
 	if err != nil {
@@ -122,7 +147,6 @@ func backupUser(userid string) error {
 
 	var (
 		err       error
-		hash      string
 		b         []byte
 		ir        instaresp.InstaResp
 		downloads []downloadFile
@@ -143,33 +167,26 @@ func backupUser(userid string) error {
 				}
 
 			case 1:
-				hash, err = global.Config.Hashes.GetHash()
-
-			case 2:
 				err = dbconn.Open(global.Config.DBFile)
 
-			case 3:
+			case 2:
 				defer dbconn.Close()
 
-			case 4:
+			case 3:
 				ir.UserID = userid
 				_, err = ir.Load(&dbconn)
 
-			case 5:
-				var (
-					iq          instaquery.InstaQuery
-					hashExpired bool
-				)
+			case 4:
+				if time.Since(ir.Checked) < global.Config.GetUpdInterval() {
+					return
+				}
 
-				iq.QueryHash = hash
+			case 5:
+				var iq instaquery.InstaQuery
 				iq.Variables.ID = ir.UserID
 				iq.Variables.First = 50
 
-				downloads, userName, hashExpired, err = getFiles(iq, &ir)
-
-				if hashExpired {
-					global.Config.Hashes.SetAsExpired(hash, global.Config.GetHashReset())
-				}
+				downloads, userName, err = getFiles(iq, &ir)
 
 			case 6:
 				var n instafile.InstaFile
@@ -244,36 +261,41 @@ func backupUser(userid string) error {
 	return err
 }
 
-func getFiles(iq instaquery.InstaQuery, ir *instaresp.InstaResp) ([]downloadFile, string, bool, error) {
+func getFiles(iq instaquery.InstaQuery, ir *instaresp.InstaResp) ([]downloadFile, string, error) {
 
 	var (
-		err         error
-		files       []downloadFile
-		userName    string
-		hashExpired bool
-		b           []byte
+		err      error
+		files    []downloadFile
+		userName string
+		b        []byte
 	)
 
 	func() {
 
 		for {
 
-			for i := 0; i <= 5; i++ {
+			for i := 0; i <= 6; i++ {
 
 				switch i {
 				case 0:
-					b, err = iq.SendQuery()
+					iq.QueryHash, err = global.Config.Hashes.GetHash()
 
 				case 1:
-					err = ir.Response.Unmarshal(b)
+					b, err = iq.SendQuery()
 
 				case 2:
+					err = ir.Response.Unmarshal(b)
+
+				case 3:
 					if ir.Response.Status != "ok" {
-						hashExpired = true
+
+						global.Config.Hashes.SetAsExpired(iq.QueryHash, global.Config.GetHashReset())
+
+						err = errors.New(ir.Response.Status)
 						return
 					}
 
-				case 3:
+				case 4:
 					if len(ir.Response.Data.User.Eottm.Edges) >= 1 {
 
 						if iq.Variables.ID == ir.Response.Data.User.Eottm.Edges[0].Node.Owner.ID {
@@ -281,7 +303,7 @@ func getFiles(iq instaquery.InstaQuery, ir *instaresp.InstaResp) ([]downloadFile
 						}
 					}
 
-				case 4:
+				case 5:
 					var n downloadFile
 
 					for _, f := range ir.GetFiles() {
@@ -312,7 +334,7 @@ func getFiles(iq instaquery.InstaQuery, ir *instaresp.InstaResp) ([]downloadFile
 						files = append(files, n)
 					}
 
-				case 5:
+				case 6:
 					iq.Variables.After = ir.Response.Data.User.Eottm.PageInfo.EndCursor
 
 					if ir.Response.Data.User.Eottm.PageInfo.HasNextPage == false {
@@ -327,7 +349,7 @@ func getFiles(iq instaquery.InstaQuery, ir *instaresp.InstaResp) ([]downloadFile
 		}
 	}()
 
-	return files, userName, hashExpired, err
+	return files, userName, err
 }
 
 func download(f downloadFile) ([]byte, error) {
