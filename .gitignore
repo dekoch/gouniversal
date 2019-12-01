@@ -29,12 +29,15 @@ data/config/mesh/mesh
 data/config/mesh/network
 data/config/mesh/network.key
 data/config/meshfilesync/
+data/config/monmotion/
+data/fileshare/
 data/gasprice/
+data/gpsnav/
 data/homepage/dekoch.net/static/
 data/instabackup/
 data/log/
 data/mediadownloader/
 data/meshfilesync/
-data/gpsnav/
+data/monmotion/
 data/paratest/
 data/picturex/

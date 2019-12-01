@@ -18,6 +18,7 @@ const ModuleIPTracker = true
 const ModuleGasPrice = true
 const ModulePictureX = true
 const ModuleInstaBackup = true
+const ModuleMonMotion = false
 const ModuleGPSNav = false
 const ModuleModbusTest = false
 const ModuleHeatingMath = false

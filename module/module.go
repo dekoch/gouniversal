@@ -20,6 +20,7 @@ import (
 	"github.com/dekoch/gouniversal/module/meshfilesync"
 	"github.com/dekoch/gouniversal/module/messenger"
 	"github.com/dekoch/gouniversal/module/modbustest"
+	"github.com/dekoch/gouniversal/module/monmotion"
 	"github.com/dekoch/gouniversal/module/openespm"
 	"github.com/dekoch/gouniversal/module/paratest"
 	"github.com/dekoch/gouniversal/module/picturex"
@@ -102,6 +103,11 @@ func LoadConfig() {
 	if build.ModuleInstaBackup {
 		sharedConsole.Log("InstaBackup enabled", "Module")
 		instabackup.LoadConfig()
+	}
+
+	if build.ModuleMonMotion {
+		sharedConsole.Log("MonMotion enabled", "Module")
+		monmotion.LoadConfig()
 	}
 
 	if build.ModuleGPSNav {
@@ -336,6 +342,10 @@ func Exit(em *types.ExitMessage) {
 
 	if build.ModuleInstaBackup {
 		instabackup.Exit(em)
+	}
+
+	if build.ModuleMonMotion {
+		monmotion.Exit(em)
 	}
 
 	if build.ModuleGPSNav {
