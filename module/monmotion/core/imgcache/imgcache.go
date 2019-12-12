@@ -192,9 +192,12 @@ func saveImageCopy(path, name string, fps float32, images []typemd.MoImage) erro
 	for i := len(images) - 1; i >= 0; i-- {
 
 		buf := &bytes.Buffer{}
-		jpeg.Encode(buf, images[i].Img, nil)
+		err := jpeg.Encode(buf, images[i].Img, nil)
+		if err != nil {
+			return err
+		}
 
-		err := file.WriteFile(path+images[i].Captured.Format("20060102_150405.0000")+"_"+name+".jpg", buf.Bytes())
+		err = file.WriteFile(path+images[i].Captured.Format("20060102_150405.0000")+"_"+name+".jpg", buf.Bytes())
 		if err != nil {
 			return err
 		}
