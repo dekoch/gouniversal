@@ -1,0 +1,15 @@
+<form method="post">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">{{.Lang.Enable}}</th>
+                <th scope="col">{{.Lang.Name}}</th>
+                <th scope="col">{{.Lang.Source}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{.DeviceList}}
+        </tbody>
+    </table>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+</form>

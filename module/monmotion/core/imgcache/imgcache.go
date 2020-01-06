@@ -3,6 +3,7 @@ package imgcache
 import (
 	"bytes"
 	"errors"
+	"image"
 	"image/jpeg"
 	"strconv"
 	"sync"
@@ -12,8 +13,6 @@ import (
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/io/file"
-
-	"github.com/icza/mjpeg"
 )
 
 type ImgCache struct {
@@ -54,6 +53,15 @@ func (ic *ImgCache) AddImage(img typemd.MoImage) {
 	ic.images = append(n, ic.images...)
 }
 
+func (ic *ImgCache) Clear() {
+
+	ic.mu.Lock()
+	defer ic.mu.Unlock()
+
+	var n []typemd.MoImage
+	ic.images = n
+}
+
 func (ic *ImgCache) GetImageCnt() int {
 
 	ic.mu.RLock()
@@ -69,7 +77,14 @@ func (ic *ImgCache) GetLatestImage() (typemd.MoImage, error) {
 
 	if len(ic.images) == 0 {
 		var nw typemd.MoImage
-		return nw, errors.New("no image available")
+		nw.Captured = time.Now()
+
+		upLeft := image.Point{0, 0}
+		lowRight := image.Point{100, 100}
+
+		nw.Img = image.NewRGBA(image.Rectangle{upLeft, lowRight})
+
+		return nw, nil
 	}
 
 	return ic.images[0], nil
@@ -116,50 +131,6 @@ func (ic *ImgCache) getFPS() float32 {
 	fps := float32(l) / float32(t) * 1000.0
 
 	return fps
-}
-
-func (ic *ImgCache) SaveVideo(path string) error {
-
-	ic.mu.RLock()
-	defer ic.mu.RUnlock()
-
-	if len(ic.images) == 0 {
-		return errors.New("no image available")
-	}
-
-	go saveVideoCopy(path, ic.getFPS(), ic.images)
-
-	return nil
-}
-
-func saveVideoCopy(path string, fps float32, images []typemd.MoImage) error {
-
-	console.Output("saveVideoCopy", " ")
-
-	if len(images) == 0 {
-		return errors.New("no image available")
-	}
-
-	width := images[0].Img.Bounds().Max.X
-	height := images[0].Img.Bounds().Max.Y
-
-	video, err := mjpeg.New(path, int32(width), int32(height), int32(fps))
-	if err != nil {
-		return err
-	}
-
-	for i := len(images) - 1; i >= 0; i-- {
-
-		buf := &bytes.Buffer{}
-		jpeg.Encode(buf, images[i].Img, nil)
-
-		err = video.AddFrame(buf.Bytes())
-		if err != nil {
-			return err
-		}
-	}
-
-	return video.Close()
 }
 
 func (ic *ImgCache) SaveImages(path, name string) error {

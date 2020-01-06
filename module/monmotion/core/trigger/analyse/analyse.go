@@ -11,9 +11,8 @@ import (
 )
 
 type Analyse struct {
-	chanResult    chan Result
-	mut           sync.RWMutex
 	wg            sync.WaitGroup
+	chanResult    chan Result
 	tuneEnabled   bool
 	tuneThreshold uint32
 	tuneTimeOut   timeout.TimeOut
@@ -30,14 +29,16 @@ type Result struct {
 	Threshold         uint32
 }
 
+var mut sync.RWMutex
+
 func (an *Analyse) LoadConfig() {
 
 }
 
 func (an *Analyse) EnableAutoTune(timeout int, tunestep uint32) {
 
-	an.mut.Lock()
-	defer an.mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	an.tuneEnabled = true
 	an.tuneThreshold = 0
@@ -47,8 +48,8 @@ func (an *Analyse) EnableAutoTune(timeout int, tunestep uint32) {
 
 func (an *Analyse) AnalyseImage(oldImg, newImg *typemd.MoImage, threshold uint32) (Result, error) {
 
-	an.mut.Lock()
-	defer an.mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	var (
 		err error

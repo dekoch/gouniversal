@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/dekoch/gouniversal/module/monmotion/core"
+	"github.com/dekoch/gouniversal/module/monmotion/core/coreconfig"
 	"github.com/dekoch/gouniversal/shared/config"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
@@ -19,7 +19,8 @@ type ModuleConfig struct {
 	UIFileRoot     string
 	StaticFileRoot string
 	LangFileRoot   string
-	Cam            []core.Core
+	NoCores        int
+	Devices        []coreconfig.CoreConfig
 }
 
 var (
@@ -39,10 +40,7 @@ func (hc *ModuleConfig) loadDefaults() {
 	hc.StaticFileRoot = "data/ui/monmotion/1.0/static/"
 	hc.LangFileRoot = "data/lang/monmotion/"
 
-	var n core.Core
-	n.LoadDefaults()
-
-	hc.Cam = append(hc.Cam, n)
+	hc.NoCores = 1
 }
 
 func (hc ModuleConfig) SaveConfig() error {
@@ -101,4 +99,116 @@ func (hc *ModuleConfig) LoadConfig() error {
 	}
 
 	return err
+}
+
+func (hc *ModuleConfig) SetNoCores(n int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.NoCores = n
+}
+
+func (hc *ModuleConfig) GetNoCores() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.NoCores
+}
+
+func (hc *ModuleConfig) GetDevices() []coreconfig.CoreConfig {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.Devices
+}
+
+func (hc *ModuleConfig) AddNewDevice(dev coreconfig.CoreConfig) bool {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	// check if device is already in list
+	for i := range hc.Devices {
+
+		if hc.Devices[i].Acquire.Device.Source == dev.Acquire.Device.Source {
+			return false
+		}
+	}
+
+	hc.Devices = append(hc.Devices, dev)
+
+	return true
+}
+
+func (hc *ModuleConfig) SetEnabledDevices(uids []string) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	for i := range hc.Devices {
+
+		hc.Devices[i].Enabled = false
+
+		for _, selDev := range uids {
+
+			if hc.Devices[i].UUID == selDev {
+
+				hc.Devices[i].Enabled = true
+			}
+		}
+	}
+}
+
+func (hc *ModuleConfig) GetEnabledDevices() []string {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	var ret []string
+
+	for i := range hc.Devices {
+
+		if hc.Devices[i].Enabled {
+			ret = append(ret, hc.Devices[i].UUID)
+		}
+	}
+
+	return ret
+}
+
+func (hc *ModuleConfig) GetDisabledDevices() []string {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	var ret []string
+
+	for i := range hc.Devices {
+
+		if hc.Devices[i].Enabled == false {
+			ret = append(ret, hc.Devices[i].UUID)
+		}
+	}
+
+	return ret
+}
+
+func (hc *ModuleConfig) GetDevice(uid string) (*coreconfig.CoreConfig, error) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	for i := range hc.Devices {
+
+		if hc.Devices[i].UUID == uid {
+
+			return &hc.Devices[i], nil
+		}
+	}
+
+	var n coreconfig.CoreConfig
+	return &n, errors.New("device uuid not found")
 }

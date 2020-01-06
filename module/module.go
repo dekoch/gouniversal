@@ -197,6 +197,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 		instabackup.RegisterPage(page, nav)
 	}
 
+	if build.ModuleMonMotion {
+		monmotion.RegisterPage(page, nav)
+	}
+
 	if build.ModuleGPSNav {
 		gpsnav.RegisterPage(page, nav)
 	}
@@ -284,6 +288,12 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 	case "InstaBackup":
 		if build.ModuleInstaBackup {
 			instabackup.Render(page, nav, r)
+			return
+		}
+
+	case "MonMotion":
+		if build.ModuleMonMotion {
+			monmotion.Render(page, nav, r)
 			return
 		}
 

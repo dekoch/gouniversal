@@ -5,39 +5,71 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/acquireconfig"
 	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/webcam"
 	"github.com/dekoch/gouniversal/module/monmotion/typemd"
 
 	"github.com/disintegration/imaging"
+	"github.com/jinzhu/copier"
 )
 
 type Acquire struct {
-	useWebcam          bool
-	webserverChecked   time.Time
-	webcam             webcam.Webcam
-	Source             string
-	Width, Height, Fps uint32
+	config           acquireconfig.AcquireConfig
+	webcam           webcam.Webcam
+	useWebcam        bool
+	webserverChecked time.Time
 }
 
-func (ac *Acquire) LoadDefaults() {
+var mut sync.RWMutex
 
-	ac.Source = "/dev/video0"
-	ac.Width = 0
-	ac.Height = 0
-	ac.Fps = 30
+func (ac *Acquire) ListConfigs() ([]acquireconfig.DeviceConfig, error) {
+
+	return ac.webcam.ListConfigs()
 }
 
-func (ac *Acquire) Start() error {
+func (ac *Acquire) TestWebcam(conf acquireconfig.AcquireConfig) error {
 
-	if strings.HasPrefix(ac.Source, "http") {
+	mut.Lock()
+	defer mut.Unlock()
+
+	ac.config.Lock()
+	copier.Copy(&ac.config, &conf)
+	ac.config.Unlock()
+
+	return ac.webcam.Test(ac.config.Device)
+}
+
+func (ac *Acquire) Start(conf acquireconfig.AcquireConfig) error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	ac.config.Lock()
+	copier.Copy(&ac.config, &conf)
+	ac.config.Unlock()
+
+	if strings.HasPrefix(conf.Device.Source, "http") {
 
 		ac.useWebcam = false
 	} else {
 		ac.useWebcam = true
 
-		return ac.webcam.Start(ac.Source, ac.Width, ac.Height, ac.Fps)
+		return ac.webcam.Start(ac.config.Device)
+	}
+
+	return nil
+}
+
+func (ac *Acquire) Stop() error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	if ac.useWebcam {
+		return ac.webcam.Stop()
 	}
 
 	return nil
@@ -45,16 +77,44 @@ func (ac *Acquire) Start() error {
 
 func (ac *Acquire) GetImage() (typemd.MoImage, error) {
 
+	mut.RLock()
+	defer mut.RUnlock()
+
+	var (
+		err error
+		ret typemd.MoImage
+	)
+
 	if ac.useWebcam {
-		return ac.webcam.GetImage()
+		ret, err = ac.webcam.GetImage()
+	} else {
+		ret, err = ac.fromWebsever()
 	}
 
-	return ac.fromWebsever()
+	if err != nil {
+		return ret, err
+	}
+
+	cfg := ac.config.GetProcessConfig()
+
+	if cfg.Width == 0 ||
+		cfg.Height == 0 ||
+		(cfg.Width == ret.Img.Bounds().Max.X && cfg.Height == ret.Img.Bounds().Max.Y) {
+		return ret, nil
+	}
+
+	if cfg.Crop {
+		ret.Img = imaging.CropCenter(ret.Img, cfg.Width, cfg.Height)
+	} else {
+		ret.Img = imaging.Resize(ret.Img, cfg.Width, cfg.Height, imaging.Box)
+	}
+
+	return ret, nil
 }
 
 func (ac *Acquire) fromWebsever() (typemd.MoImage, error) {
 
-	pause := time.Duration(1000/ac.Fps)*time.Millisecond - time.Since(ac.webserverChecked)
+	pause := time.Duration(1000/ac.config.Device.FPS)*time.Millisecond - time.Since(ac.webserverChecked)
 
 	time.Sleep(pause)
 
@@ -70,14 +130,14 @@ func (ac *Acquire) fromWebsever() (typemd.MoImage, error) {
 
 			switch i {
 			case 0:
-				b, err = download(ac.Source)
+				b, err = download(ac.config.Device.Source)
 
 			case 1:
 				ret.Captured = time.Now()
 				ret.Img, err = imaging.Decode(bytes.NewReader(b), imaging.AutoOrientation(true))
 
 			case 2:
-				ret.Img = imaging.Resize(ret.Img, int(ac.Width), int(ac.Height), imaging.Box)
+				ret.Img = imaging.Resize(ret.Img, ac.config.Device.Width, ac.config.Device.Height, imaging.Box)
 
 				ac.webserverChecked = time.Now()
 			}

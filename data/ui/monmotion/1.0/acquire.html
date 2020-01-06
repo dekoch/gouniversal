@@ -1,0 +1,81 @@
+<form method="post">
+    <img class="img-fluid" src="/monmotion/{{.Device}}/?uuid={{.UUID}}&token={{.Token}}&content=image"></td>
+
+    <table class="table">
+        <tr>
+            <td id="captured"></td>
+            <td id="size"></td>
+        </tr>
+    </table>
+
+    <div id="accordion">
+        <div class="card">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapseControl">
+                    {{.Lang.Control}}
+                </a>
+            </div>
+            <div id="collapseControl" class="collapse show" data-parent="#accordion">
+                <div class="card-body">
+                    <button class="btn btn-default fa fa-play" type="submit" name="control" value="start" title="{{.Lang.Start}}"></button>
+                    <button class="btn btn-default fa fa-stop" type="submit" name="control" value="stop" title="{{.Lang.Stop}}"></button>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <a class="card-link" data-toggle="collapse" href="#collapseSettings">
+                    {{.Lang.Settings}}
+                </a>
+            </div>
+            <div id="collapseSettings" class="collapse" data-parent="#accordion">
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th>{{.Lang.Record}}:</th>
+                            <td><input type="checkbox" name="chbrecord" value="checked" {{.ChbRecordChecked}}></td>
+                        </tr>
+                        <tr>
+                            <th>{{.Lang.PreRecodingPeriod}}:</th>
+                            <td>{{.CmbPreRecodingPeriod}}</td>
+                        </tr>
+                        <tr>
+                            <th>{{.Lang.OverrunPeriod}}:</th>
+                            <td>{{.CmbOverrunPeriod}}</td>
+                        </tr>
+                        <tr>
+                            <th>{{.Lang.SetupPeriod}}:</th>
+                            <td>{{.CmbSetupPeriod}}</td>
+                        </tr>
+                        <tr>
+                            <th>{{.Lang.InputResolutionFPS}}:</th>
+                            <td>{{.CmbDeviceConfig}}</td>
+                        </tr>
+                        <tr>
+                            <th>{{.Lang.OutputResolution}}:</th>
+                            <td>{{.CmbProcessResolution}}</td>
+                        </tr>
+                        <tr>
+                            <th>{{.Lang.CropOutput}}:</th>
+                            <td><input type="checkbox" name="chbcrop" value="checked" {{.ChbCropChecked}}></td>
+                        </tr>
+                    </table>
+                    <button class="btn btn-default fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="text/javascript">
+        // Create a new HTML5 EventSource
+        var sourceConsole = new EventSource('/monmotion/{{.Device}}/?uuid={{.UUID}}&token={{.Token}}&content=info');
+        // Create a callback for when a new message is received.
+        sourceConsole.onmessage = function(c) {
+    
+            var obj = JSON.parse(c.data);
+            // Append the `data` attribute of the message to the DOM.
+            document.getElementById("captured").innerHTML = obj.Captured;
+            document.getElementById("size").innerHTML = obj.Size;
+        };
+    </script>
+</form>

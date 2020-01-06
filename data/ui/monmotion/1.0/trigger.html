@@ -1,0 +1,47 @@
+<form method="post">
+    <table class="table">
+        <tr>
+            <td>
+                {{.Lang.Source}}: {{.CmbSource}}
+                <button class="btn btn-default fa fa-check" type="submit" name="editsource" value="apply" title="{{.Lang.Apply}}"></button>
+            </td>
+        </tr>
+    </table>
+    <div class="card">
+        <div class="card-body">
+            <div {{.PLCHidden}}>
+                <table class="table">
+                    <tr>
+                        <th>{{.Lang.Address}}:</th>
+                        <td><input type="text" class="form-control" name="plcaddress" value="{{.PLCAddress}}"></td>
+                    </tr>
+                    <tr>
+                        <th>{{.Lang.Rack}}:</th>
+                        <td><input type="text" class="form-control" name="plcrack" value="{{.PLCRack}}"></td>
+                    </tr>
+                    <tr>
+                        <th>{{.Lang.Slot}}:</th>
+                        <td><input type="text" class="form-control" name="plcslot" value="{{.PLCSlot}}"></td>
+                    </tr>
+                    <tr>
+                        <th>{{.Lang.Variable}}:</th>
+                        <td><input type="text" class="form-control" name="plcvariable" value="{{.PLCVariable}}"></td>
+                    </tr>
+                </table>
+                <button class="btn btn-default fa fa-check" type="submit" name="editplc" value="apply" title="{{.Lang.Apply}}"></button><br>
+                <br>
+                <button class="btn btn-default fa fa-ethernet" type="submit" name="editplc" value="test">{{.Lang.TestConnection}}</button>
+            </div>
+            <div {{.MotionHidden}}>
+                <table class="table">
+                    <tr>
+                        <td>
+                            Motion
+                        </td>
+                    </tr>
+                </table>
+                <button class="btn btn-default fa fa-check" type="submit" name="editmotion" value="apply" title="{{.Lang.Apply}}"></button>
+            </div>
+        </div>
+    </div>
+</form>

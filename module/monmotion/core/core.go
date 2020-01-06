@@ -1,64 +1,289 @@
 package core
 
 import (
-	"fmt"
+	"errors"
+	"image"
+	"sync"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/monmotion/core/acquire"
+	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/acquireconfig"
+	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/webcam"
 	"github.com/dekoch/gouniversal/module/monmotion/core/coreconfig"
 	"github.com/dekoch/gouniversal/module/monmotion/core/imgcache"
 	"github.com/dekoch/gouniversal/module/monmotion/core/trigger"
+	"github.com/dekoch/gouniversal/module/monmotion/core/trigger/triggerconfig"
+	"github.com/dekoch/gouniversal/module/monmotion/core/uirequest"
 	"github.com/dekoch/gouniversal/module/monmotion/typemd"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/functions"
+
+	"github.com/jinzhu/copier"
 )
 
 type Core struct {
-	images      imgcache.ImgCache
-	chanTrigger chan bool
-
-	coreconfig.CoreConfig
-	Acquire acquire.Acquire
-	Trigger trigger.Trigger
+	config                              coreconfig.CoreConfig
+	acquire                             acquire.Acquire
+	trigger                             trigger.Trigger
+	images                              imgcache.ImgCache
+	request                             uirequest.UIRequest
+	chanTrigger                         chan bool
+	chanJobStop, chanJobStopped         chan bool
+	chanWorkertStop, chanWorkertStopped chan bool
+	configLoaded                        bool
+	active                              bool
 }
 
-func (co *Core) LoadConfig() {
+var mut sync.RWMutex
 
-	if co.Enabled == false {
-		return
+func (co *Core) Reset() error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	co.configLoaded = false
+	co.config.SetUUID("")
+
+	return nil
+}
+
+func (co *Core) LoadConfig(conf coreconfig.CoreConfig) error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	if co.configLoaded {
+		return nil
 	}
+
+	co.config.Lock()
+	copier.Copy(&co.config, &conf)
+	co.config.Unlock()
+
+	if webcam.IsDeviceAvailable(co.config.Acquire.Device.GetSource()) == false {
+		co.config.SetEnabled(false)
+		return nil
+	}
+
+	err := co.request.LoadConfig(co.config.UUID)
+	if err != nil {
+		return err
+	}
+
+	err = co.acquire.TestWebcam(co.config.Acquire)
+	if err != nil {
+		return err
+	}
+
+	co.setPreview()
+
+	co.configLoaded = true
+
+	if co.config.Enabled && co.config.Record {
+		return co.start()
+	}
+
+	return nil
+}
+
+func (co *Core) Start(conf coreconfig.CoreConfig) error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	if co.active {
+		return nil
+	}
+
+	co.config.Lock()
+	copier.Copy(&co.config, &conf)
+	co.config.Unlock()
+
+	return co.start()
+}
+
+func (co *Core) start() error {
+
+	if co.active {
+		return nil
+	}
+
+	if co.config.Enabled == false {
+		return errors.New("device is disabled")
+	}
+
+	err := co.acquire.Start(co.config.Acquire)
+	if err != nil {
+		return err
+	}
+
+	err = functions.CreateDir(co.config.GetFileRoot())
+	if err != nil {
+		return err
+	}
+
+	co.active = true
 
 	co.chanTrigger = make(chan bool)
-
-	err := co.Acquire.Start()
-	if err != nil {
-		console.Log(err, "")
-		return
-	}
-
-	err = functions.CreateDir(co.GetFileRoot())
-	if err != nil {
-		console.Log(err, "")
-		return
-	}
+	co.chanJobStop = make(chan bool)
+	co.chanJobStopped = make(chan bool)
+	co.chanWorkertStop = make(chan bool)
+	co.chanWorkertStopped = make(chan bool)
 
 	go co.jobGetImage()
 	go co.job()
 
-	time.Sleep(co.GetSetup())
-
-	err = co.Trigger.LoadConfig(&co.images, co.chanTrigger)
-	if err != nil {
-		console.Log(err, "")
-		return
+	if co.config.Trigger.GetSource() == triggerconfig.MOTION {
+		time.Sleep(co.config.GetSetup())
 	}
+
+	return co.trigger.Start(co.config.Trigger, &co.images, co.chanTrigger)
 }
 
-func (co *Core) LoadDefaults() {
+func (co *Core) Stop() error {
 
-	co.LoadCoreDefaults()
-	co.Acquire.LoadDefaults()
-	co.Trigger.LoadDefaults()
+	mut.Lock()
+	defer mut.Unlock()
+
+	return co.stop()
+}
+
+func (co *Core) stop() error {
+
+	if co.active == false {
+		return nil
+	}
+
+	err := co.trigger.Stop()
+	if err != nil {
+		return err
+	}
+
+	co.chanWorkertStop <- true
+	<-co.chanWorkertStopped
+	co.chanJobStop <- true
+	<-co.chanJobStopped
+
+	close(co.chanTrigger)
+	close(co.chanJobStop)
+	close(co.chanJobStopped)
+	close(co.chanWorkertStop)
+	close(co.chanWorkertStopped)
+
+	co.images.Clear()
+
+	co.setPreview()
+
+	co.active = false
+
+	return co.acquire.Stop()
+}
+
+func (co *Core) Restart(conf coreconfig.CoreConfig) error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	if co.active == false {
+		return nil
+	}
+
+	err := co.stop()
+	if err != nil {
+		return err
+	}
+
+	co.config.Lock()
+	copier.Copy(&co.config, &conf)
+	co.config.Unlock()
+
+	return co.start()
+}
+
+func (co *Core) Exit() error {
+
+	mut.Lock()
+	defer mut.Unlock() //func (co *Core) setPreview(res acquireconfig.Resolution) {
+
+	return co.stop()
+}
+
+func (co *Core) SetUUID(uid string) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	co.config.SetUUID(uid)
+}
+
+func (co *Core) GetUUID() string {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return co.config.GetUUID()
+}
+
+func (co *Core) ListConfigs() ([]acquireconfig.DeviceConfig, error) {
+
+	return co.acquire.ListConfigs()
+}
+
+func (co *Core) SetPreview(res acquireconfig.Resolution) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	co.setPreviewRes(res)
+}
+
+func (co *Core) setPreview() {
+
+	var res acquireconfig.Resolution
+
+	if co.config.Acquire.Process.Width != 0 && co.config.Acquire.Process.Height != 0 {
+		res = co.config.Acquire.Process.Resolution
+	} else {
+		res = co.config.Acquire.Device.Resolution
+	}
+
+	co.setPreviewRes(res)
+}
+
+func (co *Core) setPreviewRes(res acquireconfig.Resolution) {
+
+	if res.Width == 0 {
+		res.Width = 100
+	}
+
+	if res.Height == 0 {
+		res.Height = 100
+	}
+
+	upLeft := image.Point{0, 0}
+	lowRight := image.Point{res.Width, res.Height}
+
+	var img typemd.MoImage
+	img.Captured = time.Now()
+	img.Img = image.NewRGBA(image.Rectangle{upLeft, lowRight})
+
+	co.request.SetLatestImage(img)
+}
+
+func (co *Core) GetNewToken(uid string) string {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	return co.request.GetNewToken(uid)
+}
+
+func (co *Core) IsActive() bool {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return co.active
 }
 
 func (co *Core) job() {
@@ -70,9 +295,13 @@ func (co *Core) job() {
 
 			console.Output("trigger", "MonMotion")
 
-			if co.GetRecord() {
-				go co.record(co.GetOverrun())
+			if co.config.GetRecord() {
+				go co.record(co.config.GetOverrun())
 			}
+
+		case <-co.chanJobStop:
+			co.chanJobStopped <- true
+			return
 		}
 	}
 }
@@ -86,26 +315,34 @@ func (co *Core) jobGetImage() {
 
 	for {
 
-		func() {
+		select {
+		case <-co.chanWorkertStop:
+			co.chanWorkertStopped <- true
+			return
 
-			err = nil
+		default:
+			func() {
 
-			for i := 0; i <= 1; i++ {
+				err = nil
 
-				switch i {
-				case 0:
-					img, err = co.Acquire.GetImage()
+				for i := 0; i <= 1; i++ {
 
-				case 1:
-					co.images.SetMaxAge(co.GetRecodingDuration() + co.Trigger.GetTimeOut())
-					co.images.AddImage(img)
+					switch i {
+					case 0:
+						img, err = co.acquire.GetImage()
+
+					case 1:
+						co.images.SetMaxAge(co.config.GetRecodingDuration() + co.config.Trigger.GetTimeOut())
+						co.images.AddImage(img)
+						co.request.SetLatestImage(img)
+					}
+
+					if err != nil {
+						return
+					}
 				}
-
-				if err != nil {
-					return
-				}
-			}
-		}()
+			}()
+		}
 	}
 }
 
@@ -117,8 +354,8 @@ func (co *Core) record(delay time.Duration) {
 
 	time.Sleep(delay)
 
-	err := co.images.SaveImages(co.GetFileRoot()+t.Format("20060102_150405.0000")+"/", co.GetName())
+	err := co.images.SaveImages(co.config.GetFileRoot()+t.Format("20060102_150405.0000")+"/", co.config.GetName())
 	if err != nil {
-		fmt.Println(err)
+		console.Log(err, "MonMotion")
 	}
 }

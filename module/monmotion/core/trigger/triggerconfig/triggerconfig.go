@@ -1,6 +1,7 @@
 package triggerconfig
 
 import (
+	"errors"
 	"sync"
 	"time"
 )
@@ -8,8 +9,9 @@ import (
 type Source string
 
 const (
-	MOTION Source = "Motion"
-	PLC    Source = "PLC"
+	MOTION   Source = "Motion"
+	PLC      Source = "PLC"
+	DISABLED Source = "disabled"
 )
 
 type SourceMotion struct {
@@ -34,13 +36,14 @@ type TriggerConfig struct {
 	Source            Source
 	Motion            SourceMotion
 	PLC               SourcePLC
-	mut               sync.RWMutex
 }
+
+var mut sync.RWMutex
 
 func (hc *TriggerConfig) LoadDefaults() {
 
 	hc.TriggerAfterEvent = false
-	hc.Source = MOTION
+	hc.Source = DISABLED
 	hc.CheckIntvl = 200
 
 	hc.Motion.TimeSpan = 1000
@@ -56,82 +59,102 @@ func (hc *TriggerConfig) LoadDefaults() {
 	hc.PLC.Variable = "DB1000.DBX0.0"
 }
 
-func (hc *TriggerConfig) SetSource(source Source) {
+func (hc *TriggerConfig) Lock() {
 
-	hc.mut.Lock()
-	defer hc.mut.Unlock()
+	mut.Lock()
+}
 
-	hc.Source = source
+func (hc *TriggerConfig) Unlock() {
+
+	mut.Unlock()
+}
+
+func (hc *TriggerConfig) SetSource(source Source) error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	if source == DISABLED ||
+		source == PLC ||
+		source == MOTION {
+
+		hc.Source = source
+		return nil
+	}
+
+	return errors.New("invalid trigger source")
 }
 
 func (hc *TriggerConfig) GetSource() Source {
 
-	hc.mut.RLock()
-	defer hc.mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	return hc.Source
 }
 
 func (hc *TriggerConfig) SetTrigger(afterevent bool) {
 
-	hc.mut.Lock()
-	defer hc.mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	hc.TriggerAfterEvent = afterevent
 }
 
 func (hc *TriggerConfig) GetTriggerAfterEvent() bool {
 
-	hc.mut.RLock()
-	defer hc.mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	return hc.TriggerAfterEvent
 }
 
 func (hc *TriggerConfig) GetCheckIntvl() time.Duration {
 
-	hc.mut.RLock()
-	defer hc.mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	return time.Duration(hc.CheckIntvl) * time.Millisecond
 }
 
 func (hc *TriggerConfig) SetMotionConfig(motion SourceMotion) {
 
-	hc.mut.Lock()
-	defer hc.mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	hc.Motion = motion
 }
 
 func (hc *TriggerConfig) GetMotionConfig() SourceMotion {
 
-	hc.mut.RLock()
-	defer hc.mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	return hc.Motion
 }
 
-func (hc *TriggerConfig) SetPLCConfig(plc SourcePLC) {
+func (hc *TriggerConfig) SetPLCConfig(plc SourcePLC) error {
 
-	hc.mut.Lock()
-	defer hc.mut.Unlock()
+	mut.Lock()
+	defer mut.Unlock()
 
 	hc.PLC = plc
+
+	return nil
 }
 
 func (hc *TriggerConfig) GetPLCConfig() SourcePLC {
 
-	hc.mut.RLock()
-	defer hc.mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	return hc.PLC
 }
 
 func (hc *TriggerConfig) GetTimeOut() time.Duration {
 
-	hc.mut.RLock()
-	defer hc.mut.RUnlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	if hc.Source == MOTION {
 		return time.Duration(hc.Motion.TimeOut) * time.Millisecond

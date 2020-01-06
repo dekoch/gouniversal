@@ -4,27 +4,49 @@ import (
 	"bytes"
 	"errors"
 	"image/jpeg"
+	"sync"
 	"time"
 
+	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/acquireconfig"
 	"github.com/dekoch/gouniversal/module/monmotion/typemd"
 	"github.com/dekoch/gouniversal/shared/mjpegavi1"
 
+	"github.com/jinzhu/copier"
 	"github.com/korandiz/v4l"
 	"github.com/korandiz/v4l/fmt/mjpeg"
 )
 
 type Webcam struct {
-	source             string
-	width, height, fps int
-	dev                *v4l.Device
+	config      acquireconfig.DeviceConfig
+	dev         *v4l.Device
+	listconfigs []v4l.DeviceConfig
+	active      bool
 }
 
-func (we *Webcam) Start(source string, width, height, fps uint32) error {
+var mut sync.RWMutex
 
-	we.source = source
-	we.width = int(width)
-	we.height = int(height)
-	we.fps = int(fps)
+func (we *Webcam) Test(conf acquireconfig.DeviceConfig) error {
+
+	err := we.Start(conf)
+	if err != nil {
+		return err
+	}
+
+	return we.Stop()
+}
+
+func (we *Webcam) Start(conf acquireconfig.DeviceConfig) error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	if we.active {
+		return nil
+	}
+
+	we.config.Lock()
+	copier.Copy(&we.config, &conf)
+	we.config.Unlock()
 
 	var (
 		err error
@@ -35,42 +57,35 @@ func (we *Webcam) Start(source string, width, height, fps uint32) error {
 
 		switch i {
 		case 0:
-			devs := v4l.FindDevices()
-			if len(devs) < 1 {
-				return errors.New("no device found")
-			}
-
-			found := false
-
-			for _, dev := range devs {
-				if dev.Path == we.source {
-					found = true
-				}
-			}
-
-			if found == false {
-				return errors.New("device " + we.source + " not found")
+			if IsDeviceAvailable(conf.Source) == false {
+				return errors.New("device " + conf.Source + " not found")
 			}
 
 		case 1:
-			we.dev, err = v4l.Open(we.source)
+			we.dev, err = v4l.Open(conf.Source)
 
 		case 2:
-			cfg, err = we.dev.GetConfig()
+			we.active = true
+
+			we.listconfigs, err = we.dev.ListConfigs()
+
+			if len(we.listconfigs) > 0 {
+				cfg = we.listconfigs[0]
+			}
 
 		case 3:
 			cfg.Format = mjpeg.FourCC
 
-			if we.width > 0 {
-				cfg.Width = we.width
+			if we.config.Width > 0 {
+				cfg.Width = we.config.Width
 			}
 
-			if we.height > 0 {
-				cfg.Height = we.height
+			if we.config.Height > 0 {
+				cfg.Height = we.config.Height
 			}
 
-			if we.fps > 0 {
-				cfg.FPS.N = uint32(we.fps)
+			if we.config.FPS > 0 {
+				cfg.FPS.N = uint32(we.config.FPS)
 				cfg.FPS.D = 1
 			}
 
@@ -88,7 +103,7 @@ func (we *Webcam) Start(source string, width, height, fps uint32) error {
 			}
 
 		case 7:
-			_, err = we.GetImage()
+			_, err = we.getImage()
 		}
 
 		if err != nil {
@@ -99,7 +114,35 @@ func (we *Webcam) Start(source string, width, height, fps uint32) error {
 	return nil
 }
 
+func (we *Webcam) Stop() error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	if we.active == false {
+		return nil
+	}
+
+	if IsDeviceAvailable(we.config.Source) == false {
+		return errors.New("device " + we.config.Source + " not found")
+	}
+
+	we.dev.Close()
+
+	we.active = false
+
+	return nil
+}
+
 func (we *Webcam) GetImage() (typemd.MoImage, error) {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return we.getImage()
+}
+
+func (we *Webcam) getImage() (typemd.MoImage, error) {
 
 	var (
 		err error
@@ -135,4 +178,111 @@ func (we *Webcam) GetImage() (typemd.MoImage, error) {
 	}()
 
 	return ret, err
+}
+
+func (we *Webcam) ListConfigs() ([]acquireconfig.DeviceConfig, error) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	var (
+		err error
+		ret []acquireconfig.DeviceConfig
+	)
+
+	for i := 0; i <= 1; i++ {
+
+		switch i {
+		case 0:
+			if we.active == false {
+				err = we.devListConfigs()
+			}
+
+		case 1:
+			if len(we.listconfigs) == 0 {
+				return ret, nil
+			}
+
+			for i := range we.listconfigs {
+
+				if we.listconfigs[i].Format != mjpeg.FourCC {
+					continue
+				}
+
+				var n acquireconfig.DeviceConfig
+				n.Width = we.listconfigs[i].Width
+				n.Height = we.listconfigs[i].Height
+				n.FPS = int(we.listconfigs[i].FPS.N)
+
+				ret = append(ret, n)
+			}
+		}
+
+		if err != nil {
+			return ret, err
+		}
+	}
+
+	return ret, nil
+}
+
+func (we *Webcam) devListConfigs() error {
+
+	if we.active {
+		return errors.New("device is active")
+	}
+
+	var err error
+
+	for i := 0; i <= 3; i++ {
+
+		switch i {
+		case 0:
+			if IsDeviceAvailable(we.config.Source) == false {
+				return errors.New("device " + we.config.Source + " not found")
+			}
+
+		case 1:
+			we.dev, err = v4l.Open(we.config.Source)
+
+		case 2:
+			we.listconfigs, err = we.dev.ListConfigs()
+
+		case 3:
+			we.dev.Close()
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func FindDevices() []string {
+
+	var ret []string
+
+	for _, dev := range v4l.FindDevices() {
+		ret = append(ret, dev.Path)
+	}
+
+	return ret
+}
+
+func IsDeviceAvailable(path string) bool {
+
+	devs := v4l.FindDevices()
+	if len(devs) == 0 {
+		return false
+	}
+
+	for _, dev := range devs {
+		if dev.Path == path {
+			return true
+		}
+	}
+
+	return false
 }

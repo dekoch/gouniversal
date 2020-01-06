@@ -1,20 +1,30 @@
 package webcam
 
 import (
+	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/acquireconfig"
 	"github.com/dekoch/gouniversal/module/monmotion/typemd"
 )
 
 type Webcam struct {
-	source             string
-	width, height, fps uint32
+	config acquireconfig.DeviceConfig
 }
 
-func (we *Webcam) Start(source string, width, height, fps uint32) error {
+func (we *Webcam) Test(conf acquireconfig.DeviceConfig) error {
 
-	we.source = source
-	we.width = width
-	we.height = height
-	we.fps = fps
+	err := we.Start(conf)
+	if err != nil {
+		return err
+	}
+
+	return we.Stop()
+}
+
+func (we *Webcam) Start(conf acquireconfig.DeviceConfig) error {
+
+	return nil
+}
+
+func (we *Webcam) Stop() error {
 
 	return nil
 }
@@ -27,4 +37,23 @@ func (we *Webcam) GetImage() (typemd.MoImage, error) {
 	)
 
 	return ret, err
+}
+
+func (we *Webcam) ListConfigs() ([]acquireconfig.DeviceConfig, error) {
+
+	var ret []acquireconfig.DeviceConfig
+
+	return ret, nil
+}
+
+func FindDevices() []string {
+
+	var ret []string
+
+	return ret
+}
+
+func IsDeviceAvailable(path string) bool {
+
+	return false
 }
