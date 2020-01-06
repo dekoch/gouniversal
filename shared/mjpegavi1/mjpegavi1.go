@@ -1,3 +1,26 @@
+/*
+patch image/jpeg: bad RST marker due to pre-reset marker byte alignment
+https://github.com/golang/go/issues/28717
+
+src/image/jpeg/scan.go
+if err := d.readFull(d.tmp[:2]); err != nil {
+	return err
+}
+
++++ patch +++
+// detect the presence of a stuffed 0xff00 pair caused by byte alignment before RST marker
+if d.tmp[0] == 0xff && d.tmp[1] == 0x00 {
+	if err := d.readFull(d.tmp[:2]); err != nil {
+		return err
+	}
+}
++++ patch +++
+
+if d.tmp[0] != 0xff || d.tmp[1] != expectedRST {
+	return FormatError("bad RST marker")
+}
+*/
+
 package mjpegavi1
 
 import (
