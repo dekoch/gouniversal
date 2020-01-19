@@ -20,6 +20,7 @@ type ModuleConfig struct {
 	StaticFileRoot string
 	LangFileRoot   string
 	NoCores        int
+	ExportFileRoot string
 	Devices        []coreconfig.CoreConfig
 }
 
@@ -40,7 +41,8 @@ func (hc *ModuleConfig) loadDefaults() {
 	hc.StaticFileRoot = "data/ui/monmotion/1.0/static/"
 	hc.LangFileRoot = "data/lang/monmotion/"
 
-	hc.NoCores = 1
+	hc.ExportFileRoot = "data/monmotion/"
+	hc.NoCores = 5
 }
 
 func (hc ModuleConfig) SaveConfig() error {
@@ -99,6 +101,22 @@ func (hc *ModuleConfig) LoadConfig() error {
 	}
 
 	return err
+}
+
+func (hc *ModuleConfig) SetExportFileRoot(path string) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.ExportFileRoot = path
+}
+
+func (hc *ModuleConfig) GetExportFileRoot() string {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.ExportFileRoot
 }
 
 func (hc *ModuleConfig) SetNoCores(n int) {

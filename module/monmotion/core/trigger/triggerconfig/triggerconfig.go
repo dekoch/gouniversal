@@ -11,6 +11,7 @@ type Source string
 const (
 	MOTION   Source = "Motion"
 	PLC      Source = "PLC"
+	INTERVAL Source = "Interval"
 	DISABLED Source = "disabled"
 )
 
@@ -30,12 +31,17 @@ type SourcePLC struct {
 	Variable string
 }
 
+type SourceInterval struct {
+	Delay int // second
+}
+
 type TriggerConfig struct {
 	TriggerAfterEvent bool
 	CheckIntvl        int // millisecond
 	Source            Source
 	Motion            SourceMotion
 	PLC               SourcePLC
+	Interval          SourceInterval
 }
 
 var mut sync.RWMutex
@@ -57,6 +63,8 @@ func (hc *TriggerConfig) LoadDefaults() {
 	hc.PLC.Rack = 0
 	hc.PLC.Slot = 2
 	hc.PLC.Variable = "DB1000.DBX0.0"
+
+	hc.Interval.Delay = 10
 }
 
 func (hc *TriggerConfig) Lock() {
@@ -76,7 +84,8 @@ func (hc *TriggerConfig) SetSource(source Source) error {
 
 	if source == DISABLED ||
 		source == PLC ||
-		source == MOTION {
+		source == MOTION ||
+		source == INTERVAL {
 
 		hc.Source = source
 		return nil
@@ -151,6 +160,24 @@ func (hc *TriggerConfig) GetPLCConfig() SourcePLC {
 	return hc.PLC
 }
 
+func (hc *TriggerConfig) SetIntervalConfig(interval SourceInterval) error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.Interval = interval
+
+	return nil
+}
+
+func (hc *TriggerConfig) GetIntervalConfig() SourceInterval {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.Interval
+}
+
 func (hc *TriggerConfig) GetTimeOut() time.Duration {
 
 	mut.RLock()
@@ -161,4 +188,12 @@ func (hc *TriggerConfig) GetTimeOut() time.Duration {
 	}
 
 	return time.Duration(0)
+}
+
+func (hc *SourceMotion) GetTimeSpan() time.Duration {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return time.Duration(hc.TimeSpan) * time.Millisecond
 }

@@ -1,11 +1,12 @@
 package analyse
 
 import (
+	"image"
 	"runtime"
 	"strconv"
 	"sync"
 
-	"github.com/dekoch/gouniversal/module/monmotion/typemd"
+	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/timeout"
 )
@@ -46,7 +47,7 @@ func (an *Analyse) EnableAutoTune(timeout int, tunestep uint32) {
 	an.tuneTimeOut.Start(timeout)
 }
 
-func (an *Analyse) AnalyseImage(oldImg, newImg *typemd.MoImage, threshold uint32) (Result, error) {
+func (an *Analyse) AnalyseImage(oldMDImg, newMDImg mdimg.MDImage, threshold uint32) (Result, error) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -61,28 +62,55 @@ func (an *Analyse) AnalyseImage(oldImg, newImg *typemd.MoImage, threshold uint32
 
 	func() {
 
-		for i := 0; i <= 2; i++ {
+		type resultConvert struct {
+			Err error
+			Img image.Image
+		}
+
+		chanConvert := make(chan resultConvert)
+
+		var oldImg, newImg image.Image
+
+		for i := 0; i <= 4; i++ {
 
 			switch i {
 			case 0:
-				if newImg.Img.Bounds().Max.X != oldImg.Img.Bounds().Max.X ||
-					newImg.Img.Bounds().Max.Y != oldImg.Img.Bounds().Max.Y {
+				if newMDImg.Width != oldMDImg.Width ||
+					newMDImg.Height != oldMDImg.Height {
 
 					return
 				}
 
 			case 1:
+				go func() {
+
+					var r resultConvert
+					r.Img, r.Err = oldMDImg.GetImage()
+
+					chanConvert <- r
+				}()
+
+			case 2:
+				newImg, err = newMDImg.GetImage()
+				if err != nil {
+					return
+				}
+
+				r := <-chanConvert
+				err = r.Err
+				oldImg = r.Img
+
+			case 3:
 				an.chanResult = make(chan Result, workerCnt)
 
-				bounds := newImg.Img.Bounds().Max
-				partY := bounds.Y / workerCnt
+				partY := newMDImg.Height / workerCnt
 
 				for n := 0; n < workerCnt; n++ {
 
 					var w work
 					w.startX = 0
 					w.startY = n * partY
-					w.endX = bounds.X
+					w.endX = newMDImg.Width
 					w.endY = (n + 1) * partY
 
 					if an.tuneEnabled {
@@ -96,7 +124,7 @@ func (an *Analyse) AnalyseImage(oldImg, newImg *typemd.MoImage, threshold uint32
 					go an.worker(oldImg, newImg, w)
 				}
 
-			case 2:
+			case 4:
 				an.wg.Wait()
 
 				close(an.chanResult)
@@ -140,7 +168,7 @@ func (an *Analyse) AnalyseImage(oldImg, newImg *typemd.MoImage, threshold uint32
 	return ret, err
 }
 
-func (an *Analyse) worker(oldImg, newImg *typemd.MoImage, w work) {
+func (an *Analyse) worker(o, n image.Image, w work) {
 
 	var r Result
 
@@ -148,8 +176,8 @@ func (an *Analyse) worker(oldImg, newImg *typemd.MoImage, w work) {
 
 		for x := w.startX; x < w.endX; x++ {
 
-			rNew, gNew, bNew, _ := newImg.Img.At(x, y).RGBA()
-			rOld, gOld, bOld, _ := oldImg.Img.At(x, y).RGBA()
+			rNew, gNew, bNew, _ := n.At(x, y).RGBA()
+			rOld, gOld, bOld, _ := o.At(x, y).RGBA()
 
 			if an.threshold(rNew, rOld, w.threshold) {
 

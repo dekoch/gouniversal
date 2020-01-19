@@ -7,13 +7,7 @@ import (
 )
 
 type AcquireConfig struct {
-	Device  DeviceConfig
-	Process ProcessConfig
-}
-
-type Resolution struct {
-	Width  int
-	Height int
+	Device DeviceConfig
 }
 
 var mut sync.RWMutex
@@ -31,7 +25,6 @@ func (hc *AcquireConfig) Unlock() {
 func (hc *AcquireConfig) LoadDefaults() {
 
 	hc.Device.LoadDefaults()
-	hc.Process.LoadDefaults()
 }
 
 func (hc *AcquireConfig) SetDeviceConfig(conf DeviceConfig) error {
@@ -50,22 +43,4 @@ func (hc *AcquireConfig) GetDeviceConfig() DeviceConfig {
 	defer mut.RUnlock()
 
 	return hc.Device
-}
-
-func (hc *AcquireConfig) SetProcessConfig(conf ProcessConfig) error {
-
-	mut.Lock()
-	defer mut.Unlock()
-
-	hc.Process = conf
-
-	return nil
-}
-
-func (hc *AcquireConfig) GetProcessConfig() ProcessConfig {
-
-	mut.RLock()
-	defer mut.RUnlock()
-
-	return hc.Process
 }

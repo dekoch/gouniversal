@@ -8,12 +8,14 @@ import (
 	"github.com/dekoch/gouniversal/module/monmotion/ui/pageacquire"
 	"github.com/dekoch/gouniversal/module/monmotion/ui/pagedevicelist"
 	"github.com/dekoch/gouniversal/module/monmotion/ui/pagetrigger"
+	"github.com/dekoch/gouniversal/module/monmotion/ui/pageviewer"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 )
 
-func LoadConfig() {
+func LoadConfig() error {
 
+	return global.UIRequest.LoadConfig()
 }
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
@@ -24,6 +26,7 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 	pagedevicelist.RegisterPage(appPage, nav)
 	pageacquire.RegisterPage(appPage, nav)
 	pagetrigger.RegisterPage(appPage, nav)
+	pageviewer.RegisterPage(appPage, nav)
 }
 
 func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
@@ -41,6 +44,9 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 
 	case "Trigger":
 		pagetrigger.Render(appPage, nav, r)
+
+	case "Viewer":
+		pageviewer.Render(appPage, nav, r)
 
 	default:
 		nav.RedirectPath("404", true)

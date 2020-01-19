@@ -35,14 +35,16 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	menu.Render("trigger", page, nav, r)
 
 	type Content struct {
-		Lang         lang.DeviceTrigger
-		CmbSource    template.HTML
-		MotionHidden template.HTMLAttr
-		PLCHidden    template.HTMLAttr
-		PLCAddress   template.HTML
-		PLCRack      template.HTML
-		PLCSlot      template.HTML
-		PLCVariable  template.HTML
+		Lang           lang.DeviceTrigger
+		CmbSource      template.HTML
+		IntervalHidden template.HTMLAttr
+		Delay          template.HTML
+		MotionHidden   template.HTMLAttr
+		PLCHidden      template.HTMLAttr
+		PLCAddress     template.HTML
+		PLCRack        template.HTML
+		PLCSlot        template.HTML
+		PLCVariable    template.HTML
 	}
 	var c Content
 
@@ -59,7 +61,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 		// Form input
 		id := nav.Parameter("UUID")
 
-		for i := 0; i <= 6; i++ {
+		for i := 0; i <= 7; i++ {
 
 			switch i {
 			case 0:
@@ -82,6 +84,19 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 				}
 
 			case 3:
+				switch r.FormValue("editinterval") {
+				case "apply":
+					err = editInterval(config, r)
+					if err == nil {
+						err = global.Config.SaveConfig()
+					}
+
+					if err == nil {
+						err = dev.Restart(*config)
+					}
+				}
+
+			case 4:
 				switch r.FormValue("editplc") {
 				case "apply":
 					err = editPLC(config, r)
@@ -100,7 +115,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 					}
 				}
 
-			case 4:
+			case 5:
 				switch r.FormValue("editmotion") {
 				case "apply":
 					err = editMotion(id, r)
@@ -113,14 +128,21 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 					}
 				}
 
-			case 5:
+			case 6:
 				c.CmbSource, err = cmbSource(config, c.Lang)
 
-			case 6:
+			case 7:
+				c.IntervalHidden = template.HTMLAttr("hidden")
 				c.PLCHidden = template.HTMLAttr("hidden")
 				c.MotionHidden = template.HTMLAttr("hidden")
 
 				switch config.Trigger.GetSource() {
+				case triggerconfig.INTERVAL:
+					c.IntervalHidden = template.HTMLAttr("")
+
+					cfg := config.Trigger.GetIntervalConfig()
+					c.Delay = template.HTML(strconv.Itoa(cfg.Delay))
+
 				case triggerconfig.PLC:
 					c.PLCHidden = template.HTMLAttr("")
 
@@ -159,7 +181,13 @@ func cmbSource(config *coreconfig.CoreConfig, lang lang.DeviceTrigger) (template
 	if opt == triggerconfig.DISABLED {
 		tag += " selected"
 	}
-	tag += ">disabled</option>"
+	tag += ">" + lang.Disabled + "</option>"
+
+	tag += "<option value=\"interval\""
+	if opt == triggerconfig.INTERVAL {
+		tag += " selected"
+	}
+	tag += ">" + lang.Interval + "</option>"
 
 	tag += "<option value=\"plc\""
 	if opt == triggerconfig.PLC {
@@ -180,13 +208,14 @@ func cmbSource(config *coreconfig.CoreConfig, lang lang.DeviceTrigger) (template
 
 func editSource(config *coreconfig.CoreConfig, r *http.Request) error {
 
-	var (
-		err       error
-		selSource string
-		src       triggerconfig.Source
-	)
+	var err error
 
 	func() {
+
+		var (
+			selSource string
+			src       triggerconfig.Source
+		)
 
 		for i := 0; i <= 3; i++ {
 
@@ -203,6 +232,9 @@ func editSource(config *coreconfig.CoreConfig, r *http.Request) error {
 				switch selSource {
 				case "disabled":
 					src = triggerconfig.DISABLED
+
+				case "interval":
+					src = triggerconfig.INTERVAL
 
 				case "plc":
 					src = triggerconfig.PLC
@@ -227,19 +259,61 @@ func editSource(config *coreconfig.CoreConfig, r *http.Request) error {
 	return err
 }
 
-func editPLC(config *coreconfig.CoreConfig, r *http.Request) error {
+func editInterval(config *coreconfig.CoreConfig, r *http.Request) error {
 
-	var (
-		err      error
-		address  string
-		strRack  string
-		intRack  int
-		strSlot  string
-		intSlot  int
-		variable string
-	)
+	var err error
 
 	func() {
+
+		var (
+			strDelay string
+			intDelay int
+		)
+
+		for i := 0; i <= 3; i++ {
+
+			switch i {
+			case 0:
+				strDelay, err = functions.CheckFormInput("delay", r)
+
+			case 1:
+				if functions.IsEmpty(strDelay) {
+					err = errors.New("bad input")
+				}
+
+			case 2:
+				intDelay, err = strconv.Atoi(strDelay)
+
+			case 3:
+				var cfg triggerconfig.SourceInterval
+				cfg.Delay = intDelay
+
+				err = config.Trigger.SetIntervalConfig(cfg)
+			}
+
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	return err
+}
+
+func editPLC(config *coreconfig.CoreConfig, r *http.Request) error {
+
+	var err error
+
+	func() {
+
+		var (
+			address  string
+			strRack  string
+			intRack  int
+			strSlot  string
+			intSlot  int
+			variable string
+		)
 
 		for i := 0; i <= 7; i++ {
 
@@ -291,9 +365,7 @@ func editPLC(config *coreconfig.CoreConfig, r *http.Request) error {
 
 func editMotion(id string, r *http.Request) error {
 
-	var (
-		err error
-	)
+	var err error
 
 	func() {
 
@@ -314,16 +386,17 @@ func editMotion(id string, r *http.Request) error {
 
 func testPLC(config *coreconfig.CoreConfig, page *typemd.Page, nav *navigation.Navigation) error {
 
-	var (
-		err   error
-		cfg   triggerconfig.SourcePLC
-		plc   s7conn.S7Conn
-		conn  *s7conn.Connection
-		val   interface{}
-		state bool
-	)
+	var err error
 
 	func() {
+
+		var (
+			cfg   triggerconfig.SourcePLC
+			plc   s7conn.S7Conn
+			conn  *s7conn.Connection
+			val   interface{}
+			state bool
+		)
 
 		for i := 0; i <= 6; i++ {
 

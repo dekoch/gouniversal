@@ -6,6 +6,7 @@ import (
 
 	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/webcam"
 	"github.com/dekoch/gouniversal/module/monmotion/core/coreconfig"
+	"github.com/dekoch/gouniversal/module/monmotion/dbstorage"
 	"github.com/dekoch/gouniversal/module/monmotion/global"
 	"github.com/dekoch/gouniversal/module/monmotion/lang"
 	"github.com/dekoch/gouniversal/module/monmotion/ui"
@@ -65,6 +66,9 @@ func LoadConfig() {
 
 	global.Config.SaveConfig()
 
+	fs := http.FileServer(http.Dir(global.Config.StaticFileRoot))
+	http.Handle("/monmotion/static/", http.StripPrefix("/monmotion/static/", fs))
+
 	ui.LoadConfig()
 }
 
@@ -97,5 +101,10 @@ func Exit(em *types.ExitMessage) {
 		if err != nil {
 			console.Log(err, "")
 		}
+	}
+
+	err = dbstorage.Vacuum()
+	if err != nil {
+		console.Log(err, "")
 	}
 }

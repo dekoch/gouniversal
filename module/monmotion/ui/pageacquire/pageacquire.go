@@ -33,17 +33,15 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	menu.Render("acquire", page, nav, r)
 
 	type Content struct {
-		Lang                 lang.DeviceAcquire
-		UUID                 template.HTML
-		Token                template.HTML
-		Device               template.HTML
-		ChbRecordChecked     template.HTMLAttr
-		CmbPreRecodingPeriod template.HTML
-		CmbOverrunPeriod     template.HTML
-		CmbSetupPeriod       template.HTML
-		CmbDeviceConfig      template.HTML
-		CmbProcessResolution template.HTML
-		ChbCropChecked       template.HTMLAttr
+		Lang              lang.DeviceAcquire
+		UUID              template.HTML
+		Token             template.HTML
+		Device            template.HTML
+		ChbRecordChecked  template.HTMLAttr
+		PreRecodingPeriod template.HTML
+		OverrunPeriod     template.HTML
+		SetupPeriod       template.HTML
+		CmbDeviceConfig   template.HTML
 	}
 	var c Content
 
@@ -62,7 +60,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 		// Form input
 		id := nav.Parameter("UUID")
 
-		for i := 0; i <= 9; i++ {
+		for i := 0; i <= 8; i++ {
 
 			switch i {
 			case 0:
@@ -97,18 +95,15 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 				c.CmbDeviceConfig, err = cmbDeviceConfig(config, dev)
 
 			case 5:
-				c.CmbProcessResolution, err = cmbProcessResolution(config)
+				c.PreRecodingPeriod = template.HTML(strconv.FormatFloat(config.GetPreRecoding().Seconds(), 'f', 0, 64))
 
 			case 6:
-				c.CmbPreRecodingPeriod, err = cmbPreRecodingPeriod(config)
+				c.OverrunPeriod = template.HTML(strconv.FormatFloat(config.GetOverrun().Seconds(), 'f', 0, 64))
 
 			case 7:
-				c.CmbOverrunPeriod, err = cmbOverrunPeriod(config)
+				c.SetupPeriod = template.HTML(strconv.FormatFloat(config.GetSetup().Seconds(), 'f', 0, 64))
 
 			case 8:
-				c.CmbSetupPeriod, err = cmbSetupPeriod(config)
-
-			case 9:
 				c.Token = template.HTML(dev.GetNewToken(nav.User.UUID))
 				c.Device = template.HTML(id)
 
@@ -116,12 +111,6 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 					c.ChbRecordChecked = template.HTMLAttr("checked")
 				} else {
 					c.ChbRecordChecked = template.HTMLAttr("")
-				}
-
-				if config.Acquire.Process.GetCrop() {
-					c.ChbCropChecked = template.HTMLAttr("checked")
-				} else {
-					c.ChbCropChecked = template.HTMLAttr("")
 				}
 			}
 
@@ -175,124 +164,26 @@ func cmbDeviceConfig(config *coreconfig.CoreConfig, dev *core.Core) (template.HT
 	return template.HTML(tag), nil
 }
 
-func cmbProcessResolution(config *coreconfig.CoreConfig) (template.HTML, error) {
-
-	opt := config.Acquire.GetProcessConfig()
-	tag := "<select name=\"processresolution\">"
-	// none
-	tag += "<option value=\"-1\""
-	if opt.Height == 0 &&
-		opt.Width == 0 {
-
-		tag += " selected"
-	}
-	tag += "></option>"
-	// 640×480, 800×600, 960×720, 1024×768
-
-	var cfgs [4]acquireconfig.Resolution
-	cfgs[0].Width = 640
-	cfgs[0].Height = 480
-	cfgs[1].Width = 800
-	cfgs[1].Height = 600
-	cfgs[2].Width = 960
-	cfgs[2].Height = 720
-	cfgs[3].Width = 1024
-	cfgs[3].Height = 768
-
-	for _, cfg := range cfgs {
-
-		tag += "<option value=\"" + strconv.Itoa(cfg.Width) + "x" + strconv.Itoa(cfg.Height) + "\""
-		if opt.Height == cfg.Height &&
-			opt.Width == cfg.Width {
-
-			tag += " selected"
-		}
-		tag += ">" + strconv.Itoa(cfg.Width) + "x" + strconv.Itoa(cfg.Height) + "</option>"
-	}
-
-	tag += "</select>"
-
-	return template.HTML(tag), nil
-}
-
-func cmbPreRecodingPeriod(config *coreconfig.CoreConfig) (template.HTML, error) {
-
-	opt := config.GetPreRecoding().Milliseconds()
-	tag := "<select name=\"prerecodingperiod\">"
-
-	for i := 0; i <= 10000; i += 500 {
-
-		tag += "<option value=\"" + strconv.Itoa(i) + "\""
-		if opt == int64(i) {
-			tag += " selected"
-		}
-		tag += ">" + strconv.Itoa(i) + "</option>"
-	}
-
-	tag += "</select>"
-
-	return template.HTML(tag), nil
-}
-
-func cmbOverrunPeriod(config *coreconfig.CoreConfig) (template.HTML, error) {
-
-	opt := config.GetOverrun().Milliseconds()
-	tag := "<select name=\"overrunperiod\">"
-
-	for i := 0; i <= 10000; i += 500 {
-
-		tag += "<option value=\"" + strconv.Itoa(i) + "\""
-		if opt == int64(i) {
-			tag += " selected"
-		}
-		tag += ">" + strconv.Itoa(i) + "</option>"
-	}
-
-	tag += "</select>"
-
-	return template.HTML(tag), nil
-}
-
-func cmbSetupPeriod(config *coreconfig.CoreConfig) (template.HTML, error) {
-
-	opt := config.GetSetup().Milliseconds()
-	tag := "<select name=\"setupperiod\">"
-
-	for i := 0; i <= 10000; i += 500 {
-
-		tag += "<option value=\"" + strconv.Itoa(i) + "\""
-		if opt == int64(i) {
-			tag += " selected"
-		}
-		tag += ">" + strconv.Itoa(i) + "</option>"
-	}
-
-	tag += "</select>"
-
-	return template.HTML(tag), nil
-}
-
 func edit(config *coreconfig.CoreConfig, dev *core.Core, r *http.Request) error {
 
-	var (
-		err                  error
-		selPreRecoding       string
-		intPreRecoding       int
-		selOverrun           string
-		intOverrun           int
-		selSetup             string
-		intSetup             int
-		selDeviceConfig      string
-		noDeviceConfig       int
-		selProcessResolution string
-		dcfgs                []acquireconfig.DeviceConfig
-		dcfg                 acquireconfig.DeviceConfig
-		pcfg                 acquireconfig.ProcessConfig
-	)
+	var err error
 
 	func() {
 
-		for i := 0; i <= 15; i++ {
+		var (
+			selPreRecoding  string
+			intPreRecoding  int
+			selOverrun      string
+			intOverrun      int
+			selSetup        string
+			intSetup        int
+			selDeviceConfig string
+			noDeviceConfig  int
+			dcfgs           []acquireconfig.DeviceConfig
+			dcfg            acquireconfig.DeviceConfig
+		)
+
+		for i := 0; i <= 12; i++ {
 
 			switch i {
 			case 0:
@@ -308,28 +199,24 @@ func edit(config *coreconfig.CoreConfig, dev *core.Core, r *http.Request) error 
 				selDeviceConfig = r.FormValue("deviceconfig")
 
 			case 4:
-				selProcessResolution, err = functions.CheckFormInput("processresolution", r)
-
-			case 5:
 				if functions.IsEmpty(selPreRecoding) ||
 					functions.IsEmpty(selOverrun) ||
 					functions.IsEmpty(selSetup) ||
-					functions.IsEmpty(selDeviceConfig) ||
-					functions.IsEmpty(selProcessResolution) {
+					functions.IsEmpty(selDeviceConfig) {
 
 					err = errors.New("bad input")
 				}
 
-			case 6:
+			case 5:
 				intPreRecoding, err = strconv.Atoi(selPreRecoding)
 
-			case 7:
+			case 6:
 				intOverrun, err = strconv.Atoi(selOverrun)
 
-			case 8:
+			case 7:
 				intSetup, err = strconv.Atoi(selSetup)
 
-			case 9:
+			case 8:
 				if r.FormValue("chbrecord") == "checked" {
 					config.SetRecord(true)
 				} else {
@@ -340,10 +227,10 @@ func edit(config *coreconfig.CoreConfig, dev *core.Core, r *http.Request) error 
 				config.SetOverrun(intOverrun)
 				config.SetSetup(intSetup)
 
-			case 10:
+			case 9:
 				dcfgs, err = dev.ListConfigs()
 
-			case 11:
+			case 10:
 				noDeviceConfig, err = strconv.Atoi(selDeviceConfig)
 
 				switch noDeviceConfig {
@@ -358,49 +245,12 @@ func edit(config *coreconfig.CoreConfig, dev *core.Core, r *http.Request) error 
 					}
 				}
 
-			case 12:
-				// 640×480, 800×600, 960×720, 1024×768
-				switch selProcessResolution {
-				case "-1":
-					pcfg.Width = 0
-					pcfg.Height = 0
-
-				case "640x480":
-					pcfg.Width = 640
-					pcfg.Height = 480
-
-				case "800x600":
-					pcfg.Width = 800
-					pcfg.Height = 600
-
-				case "960x720":
-					pcfg.Width = 960
-					pcfg.Height = 720
-
-				case "1024x768":
-					pcfg.Width = 1024
-					pcfg.Height = 768
-				}
-
-				err = config.Acquire.SetProcessConfig(pcfg)
-
-			case 13:
-				if r.FormValue("chbcrop") == "checked" {
-					config.Acquire.Process.SetCrop(true)
-				} else {
-					config.Acquire.Process.SetCrop(false)
-				}
-
-			case 14:
+			case 11:
 				config.Acquire.Device.SetResolution(dcfg.Resolution)
 				config.Acquire.Device.SetFPS(dcfg.FPS)
 
-			case 15:
-				if pcfg.Width != 0 && pcfg.Height != 0 {
-					dev.SetPreview(pcfg.Resolution)
-				} else {
-					dev.SetPreview(dcfg.Resolution)
-				}
+			case 12:
+				dev.SetPreview(dcfg.Resolution)
 			}
 
 			if err != nil {

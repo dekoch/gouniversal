@@ -9,8 +9,18 @@
     </table>
     <div class="card">
         <div class="card-body">
+            <div {{.IntervalHidden}}>
+                <table class="table text-right">
+                    <tr>
+                        <th>{{.Lang.Delay}}:</th>
+                        <td><input type="text" class="form-control" name="delay" value="{{.Delay}}"></td>
+                        <td class="text-left">[s]</td>
+                    </tr>
+                </table>
+                <button class="btn btn-default fa fa-check" type="submit" name="editinterval" value="apply" title="{{.Lang.Apply}}"></button>
+            </div>
             <div {{.PLCHidden}}>
-                <table class="table">
+                <table class="table text-right">
                     <tr>
                         <th>{{.Lang.Address}}:</th>
                         <td><input type="text" class="form-control" name="plcaddress" value="{{.PLCAddress}}"></td>

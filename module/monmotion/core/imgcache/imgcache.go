@@ -1,180 +1,226 @@
 package imgcache
 
 import (
-	"bytes"
 	"errors"
 	"image"
-	"image/jpeg"
-	"strconv"
 	"sync"
 	"time"
 
-	"github.com/dekoch/gouniversal/module/monmotion/typemd"
+	"github.com/dekoch/gouniversal/module/monmotion/dbstorage"
+	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 	"github.com/dekoch/gouniversal/shared/console"
-	"github.com/dekoch/gouniversal/shared/functions"
-	"github.com/dekoch/gouniversal/shared/io/file"
 )
 
 type ImgCache struct {
-	images []typemd.MoImage
-	maxAge time.Duration
-	mu     sync.RWMutex
+	device string
+
+	ramImages []mdimg.MDImage
+	ramMaxAge time.Duration
+
+	dbImages    []mdimg.MDImage
+	dbMaxAge    time.Duration
+	dbBlockSize int
+
+	mut     sync.RWMutex
+	mutSave sync.Mutex
 }
 
-func (ic *ImgCache) SetMaxAge(d time.Duration) {
+func (ic *ImgCache) LoadConfig(device string) error {
 
-	ic.mu.Lock()
-	defer ic.mu.Unlock()
+	ic.mut.Lock()
+	defer ic.mut.Unlock()
 
-	ic.maxAge = d
+	ic.device = device
+
+	err := dbstorage.LoadConfig()
+	if err != nil {
+		return err
+	}
+
+	return dbstorage.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), time.Now())
 }
 
-func (ic *ImgCache) AddImage(img typemd.MoImage) {
+func (ic *ImgCache) Exit() error {
 
-	ic.mu.Lock()
-	defer ic.mu.Unlock()
+	ic.mut.Lock()
+	defer ic.mut.Unlock()
 
-	var n []typemd.MoImage
+	ic.ramImages = []mdimg.MDImage{}
+	ic.dbImages = []mdimg.MDImage{}
+
+	return dbstorage.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), time.Now())
+}
+
+func (ic *ImgCache) SetRAMSettings(maxage time.Duration) {
+
+	ic.mut.Lock()
+	defer ic.mut.Unlock()
+
+	ic.ramMaxAge = maxage
+}
+
+func (ic *ImgCache) SetDBSettings(maxage time.Duration, blocksize int) {
+
+	ic.mut.Lock()
+	defer ic.mut.Unlock()
+
+	ic.dbMaxAge = maxage
+	ic.dbBlockSize = blocksize
+}
+
+func (ic *ImgCache) AddImage(img mdimg.MDImage, todb bool) {
+
+	ic.mut.Lock()
+	defer ic.mut.Unlock()
+
+	ic.addToCache(img)
+
+	if todb {
+		ic.addToDB(img)
+	}
+}
+
+func (ic *ImgCache) addToCache(img mdimg.MDImage) {
+
+	var n []mdimg.MDImage
 	n = append(n, img)
 
-	for i := range ic.images {
+	for i := range ic.ramImages {
 
-		if time.Since(ic.images[i].Captured) > ic.maxAge {
+		if time.Since(ic.ramImages[i].Captured) > ic.ramMaxAge {
 
 			if i >= 1 {
-
-				ic.images = append(n, ic.images[:i-1]...)
-
+				ic.ramImages = append(n, ic.ramImages[:i-1]...)
 				return
 			}
 		}
 	}
 
-	ic.images = append(n, ic.images...)
+	ic.ramImages = append(n, ic.ramImages...)
 }
 
-func (ic *ImgCache) Clear() {
+func (ic *ImgCache) addToDB(img mdimg.MDImage) {
 
-	ic.mu.Lock()
-	defer ic.mu.Unlock()
+	if len(ic.dbImages) >= ic.dbBlockSize {
 
-	var n []typemd.MoImage
-	ic.images = n
+		go func(images []mdimg.MDImage) {
+
+			t := images[len(images)-1].Captured.Add(-ic.dbMaxAge)
+			dbstorage.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), t)
+			ic.saveImagesToDB(images, mdimg.CACHE, t)
+		}(ic.dbImages)
+
+		var n []mdimg.MDImage
+		ic.dbImages = append(n, img)
+		return
+	}
+
+	ic.dbImages = append(ic.dbImages, img)
 }
 
 func (ic *ImgCache) GetImageCnt() int {
 
-	ic.mu.RLock()
-	defer ic.mu.RUnlock()
+	ic.mut.RLock()
+	defer ic.mut.RUnlock()
 
-	return len(ic.images)
+	return len(ic.ramImages)
 }
 
-func (ic *ImgCache) GetLatestImage() (typemd.MoImage, error) {
+func (ic *ImgCache) GetLatestImage() (mdimg.MDImage, error) {
 
-	ic.mu.RLock()
-	defer ic.mu.RUnlock()
+	ic.mut.RLock()
+	defer ic.mut.RUnlock()
 
-	if len(ic.images) == 0 {
-		var nw typemd.MoImage
+	if len(ic.ramImages) == 0 {
+		var nw mdimg.MDImage
 		nw.Captured = time.Now()
 
 		upLeft := image.Point{0, 0}
 		lowRight := image.Point{100, 100}
 
-		nw.Img = image.NewRGBA(image.Rectangle{upLeft, lowRight})
+		nw.EncodeImage(image.NewRGBA(image.Rectangle{upLeft, lowRight}))
 
 		return nw, nil
 	}
 
-	return ic.images[0], nil
+	return ic.ramImages[0], nil
 }
 
-func (ic *ImgCache) GetOldImage(d time.Duration) (typemd.MoImage, error) {
+func (ic *ImgCache) GetOldImage(d time.Duration) (mdimg.MDImage, error) {
 
-	ic.mu.RLock()
-	defer ic.mu.RUnlock()
+	ic.mut.RLock()
+	defer ic.mut.RUnlock()
 
-	if len(ic.images) == 0 {
-		var nw typemd.MoImage
+	if len(ic.ramImages) == 0 {
+		var nw mdimg.MDImage
 		return nw, errors.New("no image available")
 	}
 
-	for i := range ic.images {
+	for i := range ic.ramImages {
 
-		if time.Since(ic.images[i].Captured) > d {
-			return ic.images[i], nil
+		if time.Since(ic.ramImages[i].Captured) > d {
+			return ic.ramImages[i], nil
 		}
 	}
 
-	return ic.images[0], nil
+	return ic.ramImages[0], nil
 }
 
 func (ic *ImgCache) GetFPS() float32 {
 
-	ic.mu.RLock()
-	defer ic.mu.RUnlock()
+	ic.mut.RLock()
+	defer ic.mut.RUnlock()
 
 	return ic.getFPS()
 }
 
 func (ic *ImgCache) getFPS() float32 {
 
-	l := len(ic.images)
+	l := len(ic.ramImages)
 
-	if l == 0 {
-		return 0
+	if l <= 1 {
+		return 0.0
 	}
 
-	t := time.Since(ic.images[l-1].Captured).Milliseconds()
+	t := ic.ramImages[0].Captured.Sub(ic.ramImages[l-1].Captured).Milliseconds()
 
 	fps := float32(l) / float32(t) * 1000.0
 
 	return fps
 }
 
-func (ic *ImgCache) SaveImages(path, name string) error {
+func (ic *ImgCache) SaveImages(trigger time.Time, delay time.Time) error {
 
-	ic.mu.RLock()
-	defer ic.mu.RUnlock()
+	ic.mut.Lock()
+	defer ic.mut.Unlock()
 
-	if len(ic.images) == 0 {
-		return errors.New("no image available")
-	}
+	console.Output("saving images", "MonMotion")
 
-	err := functions.CreateDir(path)
-	if err != nil {
-		return err
-	}
+	go func(images []mdimg.MDImage, trigger time.Time, delay time.Time) {
 
-	go saveImageCopy(path, name, ic.getFPS(), ic.images)
+		ic.saveImagesToDB(images, mdimg.SAVED, trigger.Add(-ic.dbMaxAge))
+		dbstorage.SetStateToImages(ic.device, mdimg.SAVED, trigger.Add(-ic.dbMaxAge), delay)
+	}(ic.dbImages, trigger, delay)
+
+	ic.dbImages = []mdimg.MDImage{}
 
 	return nil
 }
 
-func saveImageCopy(path, name string, fps float32, images []typemd.MoImage) error {
+func (ic *ImgCache) saveImagesToDB(images []mdimg.MDImage, state mdimg.ImageState, deletetodate time.Time) error {
 
 	if len(images) == 0 {
 		return errors.New("no image available")
 	}
 
-	console.Output("saving images "+strconv.Itoa(len(images))+" (FPS:"+strconv.FormatFloat(float64(fps), 'f', 1, 32)+")", "MonMotion")
+	ic.mutSave.Lock()
+	defer ic.mutSave.Unlock()
 
-	for i := len(images) - 1; i >= 0; i-- {
+	for i := range images {
 
-		buf := &bytes.Buffer{}
-		err := jpeg.Encode(buf, images[i].Img, nil)
-		if err != nil {
-			return err
-		}
-
-		err = file.WriteFile(path+images[i].Captured.Format("20060102_150405.0000")+"_"+name+".jpg", buf.Bytes())
-		if err != nil {
-			return err
-		}
+		images[i].Device = ic.device
+		images[i].State = state
 	}
 
-	console.Output("images saved to "+path, "MonMotion")
-
-	return nil
+	return dbstorage.SaveImages(images)
 }

@@ -16,9 +16,9 @@ type CoreConfig struct {
 	Enabled     bool
 	Record      bool
 	FileRoot    string
-	PreRecoding int // millisecond
-	Overrun     int // millisecond
-	Setup       int // millisecond
+	PreRecoding int // second
+	Overrun     int // second
+	Setup       int // second
 	Acquire     acquireconfig.AcquireConfig
 	Trigger     triggerconfig.TriggerConfig
 }
@@ -46,9 +46,9 @@ func (hc *CoreConfig) LoadDefaults() {
 	hc.Enabled = false
 	hc.Record = false
 	hc.FileRoot = "data/monmotion/"
-	hc.PreRecoding = 3000
-	hc.Overrun = 3000
-	hc.Setup = 3000
+	hc.PreRecoding = 3
+	hc.Overrun = 3
+	hc.Setup = 3
 	hc.Acquire.LoadDefaults()
 	hc.Trigger.LoadDefaults()
 }
@@ -133,12 +133,12 @@ func (hc *CoreConfig) GetFileRoot() string {
 	return hc.FileRoot
 }
 
-func (hc *CoreConfig) SetSetup(millis int) {
+func (hc *CoreConfig) SetSetup(sec int) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	hc.Setup = millis
+	hc.Setup = sec
 }
 
 func (hc *CoreConfig) GetSetup() time.Duration {
@@ -146,15 +146,15 @@ func (hc *CoreConfig) GetSetup() time.Duration {
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return time.Duration(hc.Setup) * time.Millisecond
+	return time.Duration(hc.Setup) * time.Second
 }
 
-func (hc *CoreConfig) SetPreRecoding(millis int) {
+func (hc *CoreConfig) SetPreRecoding(sec int) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	hc.PreRecoding = millis
+	hc.PreRecoding = sec
 }
 
 func (hc *CoreConfig) GetPreRecoding() time.Duration {
@@ -162,15 +162,15 @@ func (hc *CoreConfig) GetPreRecoding() time.Duration {
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return time.Duration(hc.PreRecoding) * time.Millisecond
+	return time.Duration(hc.PreRecoding) * time.Second
 }
 
-func (hc *CoreConfig) SetOverrun(millis int) {
+func (hc *CoreConfig) SetOverrun(sec int) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	hc.Overrun = millis
+	hc.Overrun = sec
 }
 
 func (hc *CoreConfig) GetOverrun() time.Duration {
@@ -178,7 +178,7 @@ func (hc *CoreConfig) GetOverrun() time.Duration {
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return time.Duration(hc.Overrun) * time.Millisecond
+	return time.Duration(hc.Overrun) * time.Second
 }
 
 func (hc *CoreConfig) GetRecodingDuration() time.Duration {
@@ -186,5 +186,5 @@ func (hc *CoreConfig) GetRecodingDuration() time.Duration {
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return time.Duration(hc.PreRecoding+hc.Overrun) * time.Millisecond
+	return time.Duration(hc.PreRecoding+hc.Overrun) * time.Second
 }

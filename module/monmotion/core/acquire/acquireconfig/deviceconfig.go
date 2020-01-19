@@ -1,8 +1,10 @@
 package acquireconfig
 
+import "github.com/dekoch/gouniversal/module/monmotion/typemd"
+
 type DeviceConfig struct {
 	Source string
-	Resolution
+	typemd.Resolution
 	FPS int
 }
 
@@ -42,7 +44,7 @@ func (hc *DeviceConfig) GetSource() string {
 	return hc.Source
 }
 
-func (hc *DeviceConfig) SetResolution(res Resolution) {
+func (hc *DeviceConfig) SetResolution(res typemd.Resolution) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -50,7 +52,7 @@ func (hc *DeviceConfig) SetResolution(res Resolution) {
 	hc.Resolution = res
 }
 
-func (hc *DeviceConfig) GetResolution() Resolution {
+func (hc *DeviceConfig) GetResolution() typemd.Resolution {
 
 	mut.RLock()
 	defer mut.RUnlock()

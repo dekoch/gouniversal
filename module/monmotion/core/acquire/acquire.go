@@ -1,7 +1,6 @@
 package acquire
 
 import (
-	"bytes"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -10,9 +9,8 @@ import (
 
 	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/acquireconfig"
 	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/webcam"
-	"github.com/dekoch/gouniversal/module/monmotion/typemd"
+	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 
-	"github.com/disintegration/imaging"
 	"github.com/jinzhu/copier"
 )
 
@@ -75,14 +73,14 @@ func (ac *Acquire) Stop() error {
 	return nil
 }
 
-func (ac *Acquire) GetImage() (typemd.MoImage, error) {
+func (ac *Acquire) GetImage() (mdimg.MDImage, error) {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
 	var (
 		err error
-		ret typemd.MoImage
+		ret mdimg.MDImage
 	)
 
 	if ac.useWebcam {
@@ -91,28 +89,10 @@ func (ac *Acquire) GetImage() (typemd.MoImage, error) {
 		ret, err = ac.fromWebsever()
 	}
 
-	if err != nil {
-		return ret, err
-	}
-
-	cfg := ac.config.GetProcessConfig()
-
-	if cfg.Width == 0 ||
-		cfg.Height == 0 ||
-		(cfg.Width == ret.Img.Bounds().Max.X && cfg.Height == ret.Img.Bounds().Max.Y) {
-		return ret, nil
-	}
-
-	if cfg.Crop {
-		ret.Img = imaging.CropCenter(ret.Img, cfg.Width, cfg.Height)
-	} else {
-		ret.Img = imaging.Resize(ret.Img, cfg.Width, cfg.Height, imaging.Box)
-	}
-
-	return ret, nil
+	return ret, err
 }
 
-func (ac *Acquire) fromWebsever() (typemd.MoImage, error) {
+func (ac *Acquire) fromWebsever() (mdimg.MDImage, error) {
 
 	pause := time.Duration(1000/ac.config.Device.FPS)*time.Millisecond - time.Since(ac.webserverChecked)
 
@@ -120,7 +100,7 @@ func (ac *Acquire) fromWebsever() (typemd.MoImage, error) {
 
 	var (
 		err error
-		ret typemd.MoImage
+		ret mdimg.MDImage
 		b   []byte
 	)
 
@@ -134,11 +114,9 @@ func (ac *Acquire) fromWebsever() (typemd.MoImage, error) {
 
 			case 1:
 				ret.Captured = time.Now()
-				ret.Img, err = imaging.Decode(bytes.NewReader(b), imaging.AutoOrientation(true))
+				ret.Jpeg = b
 
 			case 2:
-				ret.Img = imaging.Resize(ret.Img, ac.config.Device.Width, ac.config.Device.Height, imaging.Box)
-
 				ac.webserverChecked = time.Now()
 			}
 

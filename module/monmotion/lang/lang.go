@@ -30,7 +30,7 @@ type DeviceAcquire struct {
 	SetupPeriod        string
 	InputResolutionFPS string
 	OutputResolution   string
-	CropOutput string
+	CropOutput         string
 	Apply              string
 	Console            string
 }
@@ -38,6 +38,9 @@ type DeviceAcquire struct {
 type DeviceTrigger struct {
 	Source         string
 	Apply          string
+	Disabled       string
+	Interval       string
+	Delay          string
 	Motion         string
 	PLC            string
 	Address        string
@@ -55,6 +58,11 @@ type Device struct {
 	DeviceTrigger DeviceTrigger
 }
 
+type Viewer struct {
+	Menu  string
+	Title string
+}
+
 type Alert struct {
 	Success string
 	Info    string
@@ -66,6 +74,7 @@ type LangFile struct {
 	Header     config.FileHeader
 	DeviceList DeviceList
 	Device     Device
+	Viewer     Viewer
 	Alert      Alert
 }
 
@@ -105,6 +114,9 @@ func DefaultEn() LangFile {
 
 	l.Device.DeviceTrigger.Source = "Source"
 	l.Device.DeviceTrigger.Apply = "Apply"
+	l.Device.DeviceTrigger.Disabled = "disabled"
+	l.Device.DeviceTrigger.Interval = "Interval"
+	l.Device.DeviceTrigger.Delay = "Delay"
 	l.Device.DeviceTrigger.Motion = "Motion"
 	l.Device.DeviceTrigger.PLC = "PLC"
 	l.Device.DeviceTrigger.Address = "Address"
@@ -112,6 +124,9 @@ func DefaultEn() LangFile {
 	l.Device.DeviceTrigger.Slot = "Slot"
 	l.Device.DeviceTrigger.Variable = "Variable (DBX/M/I/O)"
 	l.Device.DeviceTrigger.TestConnection = "Test Connection"
+
+	l.Viewer.Menu = l.DeviceList.Menu
+	l.Viewer.Title = "Viewer"
 
 	l.Alert.Success = "Success"
 	l.Alert.Info = "Info"

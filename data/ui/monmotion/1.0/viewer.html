@@ -1,0 +1,52 @@
+<form method="post">
+    {{.CmbTrigger}}
+    <button class="btn btn-default fa fa-check" type="submit" name="edit" value="apply" title=""></button><br>
+</form>
+
+<head>
+    <link rel="stylesheet" href="/monmotion/static/css/viewer.css">
+    <style>
+        .pictures {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .pictures > li {
+            border: 1px solid transparent;
+            float: left;
+            height: calc(100% / 10);
+            margin: 0 -1px -1px 0;
+            overflow: hidden;
+            width: calc(100% / 10);
+        }
+
+        .pictures > li > img {
+            cursor: zoom-in;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<div class="container">
+    <div id="galley">
+        <ul class="pictures">
+            {{.Pictures}}
+        </ul>
+    </div>
+</div>
+
+<script src="/monmotion/static/js/viewer.js"></script>
+<script>
+    window.addEventListener('DOMContentLoaded', function () {
+        var galley = document.getElementById('galley');
+        var viewer = new Viewer(galley, {
+            url: 'data-original',
+            title: function (image) {
+                return image.alt + ' (' + (this.index + 1) + '/' + this.length + ')';
+            },
+            transition: false,
+            interval: {{.Interval}},
+        });
+    });
+</script>

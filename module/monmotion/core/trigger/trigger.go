@@ -9,7 +9,7 @@ import (
 	"github.com/dekoch/gouniversal/module/monmotion/core/imgcache"
 	"github.com/dekoch/gouniversal/module/monmotion/core/trigger/analyse"
 	"github.com/dekoch/gouniversal/module/monmotion/core/trigger/triggerconfig"
-	"github.com/dekoch/gouniversal/module/monmotion/typemd"
+	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/s7conn"
 	"github.com/dekoch/gouniversal/shared/timeout"
@@ -78,6 +78,10 @@ func (tr *Trigger) Start(conf triggerconfig.TriggerConfig, images *imgcache.ImgC
 	case triggerconfig.PLC:
 
 		go tr.jobPLC()
+
+	case triggerconfig.INTERVAL:
+
+		go tr.jobInterval()
 
 	default:
 		return errors.New("invalid source")
@@ -162,7 +166,7 @@ func (tr *Trigger) jobDetectMotion() {
 		config         triggerconfig.SourceMotion
 		motionState    MotionState
 		to             timeout.TimeOut
-		newImg, oldImg typemd.MoImage
+		newImg, oldImg mdimg.MDImage
 		res            analyse.Result
 	)
 
@@ -202,7 +206,7 @@ func (tr *Trigger) jobDetectMotion() {
 						newImg, err = tr.images.GetLatestImage()
 
 					case 3:
-						res, err = tr.analyse.AnalyseImage(&oldImg, &newImg, config.Threshold)
+						res, err = tr.analyse.AnalyseImage(oldImg, newImg, config.Threshold)
 
 					case 4:
 						if res.Threshold > config.Threshold {
@@ -343,6 +347,33 @@ func (tr *Trigger) jobPLC() {
 					}
 				}
 			}()
+
+			tr.chanTriggerFinished <- true
+
+		case <-tr.chanWorkerStop:
+			tr.chanWorkerStopped <- true
+			return
+		}
+	}
+}
+
+func (tr *Trigger) jobInterval() {
+
+	var to timeout.TimeOut
+	to.Start(tr.config.GetIntervalConfig().Delay * 1000)
+
+	for {
+
+		select {
+		case <-tr.chanTriggerStart:
+
+			to.SetTimeOut(tr.config.GetIntervalConfig().Delay * 1000)
+
+			if to.Elapsed() {
+
+				to.Reset()
+				tr.chanTrigger <- true
+			}
 
 			tr.chanTriggerFinished <- true
 

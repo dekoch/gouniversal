@@ -2,7 +2,7 @@ package webcam
 
 import (
 	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/acquireconfig"
-	"github.com/dekoch/gouniversal/module/monmotion/typemd"
+	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 )
 
 type Webcam struct {
@@ -29,11 +29,11 @@ func (we *Webcam) Stop() error {
 	return nil
 }
 
-func (we *Webcam) GetImage() (typemd.MoImage, error) {
+func (we *Webcam) GetImage() (mdimg.MDImage, error) {
 
 	var (
 		err error
-		ret typemd.MoImage
+		ret mdimg.MDImage
 	)
 
 	return ret, err

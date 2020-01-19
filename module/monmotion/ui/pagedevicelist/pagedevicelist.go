@@ -147,7 +147,7 @@ func edit(r *http.Request) error {
 					for _, enabledDev := range enabledDevs {
 
 						if disabledDev == enabledDev {
-							err = global.FreeCore(disabledDev)
+							err = global.ExitCore(disabledDev)
 							if err != nil {
 								return
 							}

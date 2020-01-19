@@ -6,14 +6,16 @@ import (
 
 	"github.com/dekoch/gouniversal/module/monmotion/core"
 	"github.com/dekoch/gouniversal/module/monmotion/moduleconfig"
+	"github.com/dekoch/gouniversal/module/monmotion/ui/pageviewer/uirequest"
 	"github.com/dekoch/gouniversal/shared/language"
 )
 
 var (
-	Config moduleconfig.ModuleConfig
-	Lang   language.Language
-	Cores  []core.Core
-	mut    sync.Mutex
+	Config    moduleconfig.ModuleConfig
+	Lang      language.Language
+	Cores     []core.Core
+	UIRequest uirequest.UIRequest
+	mut       sync.Mutex
 )
 
 func AddCores(n int) {
@@ -71,7 +73,7 @@ func GetFreeCore() (*core.Core, error) {
 	return &n, errors.New("no free core found")
 }
 
-func FreeCore(uid string) error {
+func ExitCore(uid string) error {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -85,12 +87,7 @@ func FreeCore(uid string) error {
 				return err
 			}
 
-			err = Cores[i].Exit()
-			if err != nil {
-				return err
-			}
-
-			return Cores[i].Reset()
+			return Cores[i].Exit()
 		}
 	}
 

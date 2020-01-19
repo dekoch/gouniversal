@@ -1,14 +1,12 @@
 package webcam
 
 import (
-	"bytes"
 	"errors"
-	"image/jpeg"
 	"sync"
 	"time"
 
 	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/acquireconfig"
-	"github.com/dekoch/gouniversal/module/monmotion/typemd"
+	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 	"github.com/dekoch/gouniversal/shared/mjpegavi1"
 
 	"github.com/jinzhu/copier"
@@ -19,7 +17,8 @@ import (
 type Webcam struct {
 	config      acquireconfig.DeviceConfig
 	dev         *v4l.Device
-	listconfigs []v4l.DeviceConfig
+	devConfig   v4l.DeviceConfig
+	listConfigs []v4l.DeviceConfig
 	active      bool
 }
 
@@ -67,10 +66,10 @@ func (we *Webcam) Start(conf acquireconfig.DeviceConfig) error {
 		case 2:
 			we.active = true
 
-			we.listconfigs, err = we.dev.ListConfigs()
+			we.listConfigs, err = we.dev.ListConfigs()
 
-			if len(we.listconfigs) > 0 {
-				cfg = we.listconfigs[0]
+			if len(we.listConfigs) > 0 {
+				cfg = we.listConfigs[0]
 			}
 
 		case 3:
@@ -95,10 +94,10 @@ func (we *Webcam) Start(conf acquireconfig.DeviceConfig) error {
 			err = we.dev.TurnOn()
 
 		case 5:
-			cfg, err = we.dev.GetConfig()
+			we.devConfig, err = we.dev.GetConfig()
 
 		case 6:
-			if cfg.Format != mjpeg.FourCC {
+			if we.devConfig.Format != mjpeg.FourCC {
 				return errors.New("format not supported")
 			}
 
@@ -134,7 +133,7 @@ func (we *Webcam) Stop() error {
 	return nil
 }
 
-func (we *Webcam) GetImage() (typemd.MoImage, error) {
+func (we *Webcam) GetImage() (mdimg.MDImage, error) {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -142,18 +141,21 @@ func (we *Webcam) GetImage() (typemd.MoImage, error) {
 	return we.getImage()
 }
 
-func (we *Webcam) getImage() (typemd.MoImage, error) {
+func (we *Webcam) getImage() (mdimg.MDImage, error) {
 
 	var (
 		err error
-		ret typemd.MoImage
-		buf *v4l.Buffer
-		b   []byte
+		ret mdimg.MDImage
 	)
 
 	func() {
 
-		for i := 0; i <= 3; i++ {
+		var (
+			buf *v4l.Buffer
+			b   []byte
+		)
+
+		for i := 0; i <= 2; i++ {
 
 			switch i {
 			case 0:
@@ -164,11 +166,10 @@ func (we *Webcam) getImage() (typemd.MoImage, error) {
 				buf.ReadAt(b, 0)
 
 			case 2:
-				b, err = mjpegavi1.Decode(b)
-
-			case 3:
+				ret.Jpeg, err = mjpegavi1.Decode(b)
 				ret.Captured = time.Now()
-				ret.Img, err = jpeg.Decode(bytes.NewReader(b))
+				ret.Width = we.devConfig.Width
+				ret.Height = we.devConfig.Height
 			}
 
 			if err != nil {
@@ -199,20 +200,20 @@ func (we *Webcam) ListConfigs() ([]acquireconfig.DeviceConfig, error) {
 			}
 
 		case 1:
-			if len(we.listconfigs) == 0 {
+			if len(we.listConfigs) == 0 {
 				return ret, nil
 			}
 
-			for i := range we.listconfigs {
+			for i := range we.listConfigs {
 
-				if we.listconfigs[i].Format != mjpeg.FourCC {
+				if we.listConfigs[i].Format != mjpeg.FourCC {
 					continue
 				}
 
 				var n acquireconfig.DeviceConfig
-				n.Width = we.listconfigs[i].Width
-				n.Height = we.listconfigs[i].Height
-				n.FPS = int(we.listconfigs[i].FPS.N)
+				n.Width = we.listConfigs[i].Width
+				n.Height = we.listConfigs[i].Height
+				n.FPS = int(we.listConfigs[i].FPS.N)
 
 				ret = append(ret, n)
 			}
@@ -246,7 +247,7 @@ func (we *Webcam) devListConfigs() error {
 			we.dev, err = v4l.Open(we.config.Source)
 
 		case 2:
-			we.listconfigs, err = we.dev.ListConfigs()
+			we.listConfigs, err = we.dev.ListConfigs()
 
 		case 3:
 			we.dev.Close()

@@ -1,23 +1,22 @@
 package uirequest
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"image/jpeg"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/dekoch/gouniversal/module/monmotion/typemd"
+	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/token"
 )
 
 type UIRequest struct {
 	tokens      token.Token
-	latestImage typemd.MoImage
+	latestImage mdimg.MDImage
 	active      bool
 }
 
@@ -32,7 +31,7 @@ func (rt *UIRequest) LoadConfig(device string) error {
 		return nil
 	}
 
-	http.HandleFunc("/monmotion/"+device+"/", rt.serve)
+	http.HandleFunc("/monmotion/"+device+"/live/", rt.serve)
 
 	rt.active = true
 
@@ -44,7 +43,7 @@ func (rt *UIRequest) GetNewToken(uid string) string {
 	return rt.tokens.New(uid)
 }
 
-func (rt *UIRequest) SetLatestImage(img typemd.MoImage) {
+func (rt *UIRequest) SetLatestImage(img mdimg.MDImage) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -52,7 +51,7 @@ func (rt *UIRequest) SetLatestImage(img typemd.MoImage) {
 	rt.latestImage = img
 }
 
-func (rt *UIRequest) getLatestImage() typemd.MoImage {
+func (rt *UIRequest) getLatestImage() mdimg.MDImage {
 
 	mut.RLock()
 	defer mut.RUnlock()
@@ -148,25 +147,19 @@ func (rt *UIRequest) getImage() (string, error) {
 
 	img := rt.getLatestImage()
 
-	if img.Img == nil {
-		return "", nil
+	if img.Jpeg == nil {
+		return "", errors.New("")
 	}
 
-	buf := &bytes.Buffer{}
-	err := jpeg.Encode(buf, img.Img, nil)
-	if err != nil {
-		return "", err
-	}
-
-	return string(buf.Bytes()), nil
+	return string(img.Jpeg), nil
 }
 
 func (rt *UIRequest) getInfo() (string, error) {
 
 	img := rt.getLatestImage()
 
-	if img.Img == nil {
-		return "", nil
+	if img.Jpeg == nil {
+		return "", errors.New("")
 	}
 
 	type jsonInfo struct {
@@ -176,7 +169,7 @@ func (rt *UIRequest) getInfo() (string, error) {
 
 	var jn jsonInfo
 	jn.Captured = img.Captured.Format("15:04:05.0000")
-	jn.Size = strconv.Itoa(img.Img.Bounds().Size().X) + "x" + strconv.Itoa(img.Img.Bounds().Size().Y)
+	jn.Size = strconv.Itoa(img.Width) + "x" + strconv.Itoa(img.Height)
 
 	b, err := json.Marshal(jn)
 	if err != nil {
