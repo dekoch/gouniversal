@@ -185,6 +185,12 @@ func (sq *SQLite) DropTable(tableName string) error {
 	return err
 }
 
+func (sq *SQLite) Vacuum() error {
+
+	_, err := sq.DB.Exec("VACUUM")
+	return err
+}
+
 func (sq *SQLite) Lock() {
 
 	mut.Lock()
