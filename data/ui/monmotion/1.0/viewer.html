@@ -1,6 +1,8 @@
 <form method="post">
-    {{.CmbTrigger}}
-    <button class="btn btn-default fa fa-check" type="submit" name="edit" value="apply" title=""></button><br>
+    <button class="btn btn-default fa fa-sync" type="submit" name="edit" value="refresh" title="{{.Lang.Refresh}}"></button>
+    {{.CmbTrigger}} ({{.Counter}})
+    <button class="btn btn-default fa fa-eye" type="submit" name="edit" value="view" title="{{.Lang.View}}"></button>
+    <button class="btn btn-default fa fa-trash" type="submit" name="edit" value="delete" title="{{.Lang.Delete}}"></button><br>
 </form>
 
 <head>

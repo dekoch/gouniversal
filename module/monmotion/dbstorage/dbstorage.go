@@ -14,7 +14,7 @@ import (
 const DBFILE = "data/monmotion/storage.db3"
 const TableName = "images"
 
-var mut sync.Mutex
+var mut sync.RWMutex
 
 type SequenceImage struct {
 	ID       string
@@ -93,8 +93,8 @@ func SaveImages(images []mdimg.MDImage) error {
 
 func LoadImage(id string) (mdimg.MDImage, error) {
 
-	mut.Lock()
-	defer mut.Unlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	var (
 		err error
@@ -226,8 +226,8 @@ func SetStateToImages(device string, state mdimg.ImageState, fromdate, todate ti
 
 func GetTriggerIDs() ([]string, error) {
 
-	mut.Lock()
-	defer mut.Unlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	var (
 		err error
@@ -236,12 +236,9 @@ func GetTriggerIDs() ([]string, error) {
 
 	func() {
 
-		var (
-			dbconn sqlite3.SQLite
-			rows   *sql.Rows
-		)
+		var dbconn sqlite3.SQLite
 
-		for i := 0; i <= 4; i++ {
+		for i := 0; i <= 2; i++ {
 
 			switch i {
 			case 0:
@@ -251,12 +248,39 @@ func GetTriggerIDs() ([]string, error) {
 				defer dbconn.Close()
 
 			case 2:
-				rows, err = dbconn.DB.Query("SELECT id FROM `"+TableName+"` WHERE trigger=1 AND state=?", mdimg.SAVED)
+				ret, err = getTriggerIDs(&dbconn)
+			}
 
-			case 3:
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	return ret, err
+}
+
+func getTriggerIDs(dbconn *sqlite3.SQLite) ([]string, error) {
+
+	var (
+		err error
+		ret []string
+	)
+
+	func() {
+
+		var rows *sql.Rows
+
+		for i := 0; i <= 2; i++ {
+
+			switch i {
+			case 0:
+				rows, err = dbconn.DB.Query("SELECT id FROM `"+TableName+"` WHERE `trigger`=1 AND state=?", mdimg.SAVED)
+
+			case 1:
 				defer rows.Close()
 
-			case 4:
+			case 2:
 				var id string
 
 				for rows.Next() {
@@ -281,8 +305,8 @@ func GetTriggerIDs() ([]string, error) {
 
 func GetSequenceInfos(id string) ([]SequenceImage, error) {
 
-	mut.Lock()
-	defer mut.Unlock()
+	mut.RLock()
+	defer mut.RUnlock()
 
 	var (
 		err error
@@ -319,10 +343,6 @@ func GetSequenceInfos(id string) ([]SequenceImage, error) {
 				fromDate = triggerImg.Captured.Add(-time.Duration(triggerImg.PreRecoding) * time.Second)
 				toDate = triggerImg.Captured.Add(time.Duration(triggerImg.Overrun) * time.Second)
 
-				/*fmt.Println(fromDate)
-				fmt.Println(triggerImg.Captured)
-				fmt.Println(toDate)*/
-
 				rows, err = dbconn.DB.Query("SELECT id, captured FROM `"+TableName+"` WHERE device=? AND state=? AND captured BETWEEN ? AND ?", triggerImg.Device, mdimg.SAVED, fromDate, toDate)
 
 			case 4:
@@ -351,10 +371,128 @@ func GetSequenceInfos(id string) ([]SequenceImage, error) {
 	return ret, err
 }
 
-func ExportSequence(triggerid string, ids []string, path string) error {
+func DeleteSequence(triggerid string) error {
 
 	mut.Lock()
 	defer mut.Unlock()
+
+	var err error
+
+	func() {
+
+		var (
+			dbconn     sqlite3.SQLite
+			triggerIDs []string
+		)
+
+		for i := 0; i <= 9; i++ {
+
+			switch i {
+			case 0:
+				err = dbconn.Open(DBFILE)
+
+			case 1:
+				defer dbconn.Close()
+
+			case 2:
+				err = setSelected(triggerid, true, &dbconn)
+
+			case 3:
+				triggerIDs, err = getTriggerIDs(&dbconn)
+
+			case 4:
+				for _, id := range triggerIDs {
+
+					if id == triggerid {
+						continue
+					}
+
+					err = setSelected(id, false, &dbconn)
+				}
+
+			case 5:
+				dbconn.Tx, err = dbconn.DB.Begin()
+
+			case 6:
+				defer func() {
+					if err != nil {
+						dbconn.Tx.Rollback()
+					}
+				}()
+
+			case 7:
+				// delete selected
+				_, err = dbconn.Tx.Exec("DELETE FROM `" + TableName + "` WHERE selected=1")
+
+			case 8:
+				err = dbconn.Tx.Commit()
+
+			case 9:
+				err = dbconn.Vacuum()
+			}
+
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	return err
+}
+
+func setSelected(triggerid string, selected bool, dbconn *sqlite3.SQLite) error {
+
+	var err error
+
+	func() {
+
+		var triggerImg mdimg.MDImage
+
+		for i := 0; i <= 4; i++ {
+
+			switch i {
+			case 0:
+				var found bool
+				found, err = triggerImg.Load(triggerid, dbconn)
+
+				if found == false {
+					err = errors.New("triggerid not found")
+				}
+
+			case 1:
+				dbconn.Tx, err = dbconn.DB.Begin()
+
+			case 2:
+				defer func() {
+					if err != nil {
+						dbconn.Tx.Rollback()
+					}
+				}()
+
+			case 3:
+				var fromDate, toDate time.Time
+				fromDate = triggerImg.Captured.Add(-time.Duration(triggerImg.PreRecoding) * time.Second)
+				toDate = triggerImg.Captured.Add(time.Duration(triggerImg.Overrun) * time.Second)
+
+				_, err = dbconn.Tx.Exec("UPDATE `"+TableName+"` SET selected=? WHERE device=? AND captured BETWEEN ? AND ?", selected, triggerImg.Device, fromDate, toDate)
+
+			case 4:
+				err = dbconn.Tx.Commit()
+			}
+
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	return err
+}
+
+func ExportSequence(triggerid string, ids []string, path string) error {
+
+	mut.RLock()
+	defer mut.RUnlock()
 
 	var err error
 

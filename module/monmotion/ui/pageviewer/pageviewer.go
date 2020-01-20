@@ -25,6 +25,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 		Lang       lang.Viewer
 		UUID       template.HTML
 		Token      template.HTML
+		Counter    template.HTML
 		CmbTrigger template.HTML
 		Pictures   template.HTML
 		Interval   template.JS
@@ -36,7 +37,8 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	c.UUID = template.HTML(nav.User.UUID)
 
 	var (
-		err error
+		err      error
+		redirect bool
 	)
 
 	func() {
@@ -46,14 +48,14 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 			seqInfos []dbstorage.SequenceImage
 		)
 
-		for i := 0; i <= 5; i++ {
+		for i := 0; i <= 6; i++ {
 
 			switch i {
 			case 0:
 				selID, err = functions.CheckFormInput("trigger", r)
 
 			case 1:
-				c.CmbTrigger, err = cmbTrigger(selID)
+				c.CmbTrigger, c.Counter, err = cmbTrigger(selID)
 
 			case 2:
 				if functions.IsEmpty(selID) {
@@ -61,12 +63,30 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 				}
 
 			case 3:
-				seqInfos, err = dbstorage.GetSequenceInfos(selID)
+				switch r.FormValue("edit") {
+				case "refresh":
+					redirect = true
+
+				case "view":
+					// continue
+
+				case "delete":
+					err = dbstorage.DeleteSequence(selID)
+					if err == nil {
+						redirect = true
+					}
+
+				default:
+					return
+				}
 
 			case 4:
-				c.Pictures, err = pictures(seqInfos, nav.User.UUID, global.UIRequest.GetNewToken(nav.User.UUID))
+				seqInfos, err = dbstorage.GetSequenceInfos(selID)
 
 			case 5:
+				c.Pictures, err = pictures(seqInfos, nav.User.UUID, global.UIRequest.GetNewToken(nav.User.UUID))
+
+			case 6:
 				c.Interval, err = getInterval(seqInfos)
 			}
 
@@ -74,8 +94,19 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 				alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
 				return
 			}
+
+			if redirect {
+				return
+			}
 		}
 	}()
+
+	if err == nil {
+		if redirect {
+			nav.RedirectPath("App:MonMotion:Viewer", false)
+			return
+		}
+	}
 
 	p, err := functions.PageToString(global.Config.UIFileRoot+"viewer.html", c)
 	if err == nil {
@@ -85,26 +116,32 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	}
 }
 
-func cmbTrigger(selid string) (template.HTML, error) {
+func cmbTrigger(selid string) (template.HTML, template.HTML, error) {
 
 	ids, err := dbstorage.GetTriggerIDs()
 	if err != nil {
-		return template.HTML(""), err
+		return template.HTML(""), template.HTML(""), err
 	}
 
 	tag := "<select name=\"trigger\">"
-	// empty
-	tag += "<option value=\"\""
-	if functions.IsEmpty(selid) {
-		tag += " selected"
+
+	if len(ids) == 0 {
+		// empty
+		tag += "<option value=\"\""
+		if functions.IsEmpty(selid) {
+			tag += " selected"
+		}
+		tag += "></option>"
+	} else if functions.IsEmpty(selid) {
+		// select latest
+		selid = ids[len(ids)-1]
 	}
-	tag += "></option>"
 
 	for _, id := range ids {
 
 		img, err := dbstorage.LoadImage(id)
 		if err != nil {
-			return template.HTML(""), err
+			return template.HTML(""), template.HTML(""), err
 		}
 
 		tag += "<option value=\"" + id + "\""
@@ -116,7 +153,7 @@ func cmbTrigger(selid string) (template.HTML, error) {
 
 	tag += "</select>"
 
-	return template.HTML(tag), nil
+	return template.HTML(tag), template.HTML(strconv.Itoa(len(ids))), nil
 }
 
 func pictures(seqinfos []dbstorage.SequenceImage, uuid, token string) (template.HTML, error) {
@@ -151,28 +188,4 @@ func getInterval(seqinfos []dbstorage.SequenceImage) (template.JS, error) {
 	}
 
 	return template.JS(strconv.FormatFloat(interval, 'f', 0, 64)), nil
-}
-
-func edit(r *http.Request) error {
-
-	var err error
-
-	func() {
-
-		for i := 0; i <= 2; i++ {
-
-			switch i {
-			case 0:
-
-			case 1:
-
-			}
-
-			if err != nil {
-				return
-			}
-		}
-	}()
-
-	return err
 }

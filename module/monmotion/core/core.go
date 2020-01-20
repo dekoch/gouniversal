@@ -17,7 +17,6 @@ import (
 	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 	"github.com/dekoch/gouniversal/module/monmotion/typemd"
 	"github.com/dekoch/gouniversal/shared/console"
-	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/sbool"
 
 	"github.com/jinzhu/copier"
@@ -121,14 +120,9 @@ func (co *Core) start() error {
 	}
 
 	co.images.SetRAMSettings(co.config.Trigger.Motion.GetTimeSpan())
-	co.images.SetDBSettings(co.config.GetRecodingDuration()+co.config.Trigger.GetTimeOut(), 60)
+	co.images.SetDBSettings(co.config.GetRecodingDuration()+co.config.Trigger.GetTimeOut(), co.config.GetCacheBlockSize())
 
 	err := co.acquire.Start(co.config.Acquire)
-	if err != nil {
-		return err
-	}
-
-	err = functions.CreateDir(co.config.GetFileRoot())
 	if err != nil {
 		return err
 	}

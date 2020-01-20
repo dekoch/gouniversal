@@ -59,8 +59,11 @@ type Device struct {
 }
 
 type Viewer struct {
-	Menu  string
-	Title string
+	Menu    string
+	Title   string
+	Refresh string
+	View    string
+	Delete  string
 }
 
 type Alert struct {
@@ -127,6 +130,9 @@ func DefaultEn() LangFile {
 
 	l.Viewer.Menu = l.DeviceList.Menu
 	l.Viewer.Title = "Viewer"
+	l.Viewer.Refresh = "Refresh"
+	l.Viewer.View = "View Sequence"
+	l.Viewer.Delete = "Delete Sequence"
 
 	l.Alert.Success = "Success"
 	l.Alert.Info = "Info"

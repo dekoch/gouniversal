@@ -11,16 +11,17 @@ import (
 )
 
 type CoreConfig struct {
-	UUID        string
-	Name        string
-	Enabled     bool
-	Record      bool
-	FileRoot    string
-	PreRecoding int // second
-	Overrun     int // second
-	Setup       int // second
-	Acquire     acquireconfig.AcquireConfig
-	Trigger     triggerconfig.TriggerConfig
+	UUID           string
+	Name           string
+	Enabled        bool
+	Record         bool
+	FileRoot       string
+	PreRecoding    int // second
+	Overrun        int // second
+	Setup          int // second
+	CacheBlockSize int
+	Acquire        acquireconfig.AcquireConfig
+	Trigger        triggerconfig.TriggerConfig
 }
 
 var mut sync.RWMutex
@@ -49,6 +50,7 @@ func (hc *CoreConfig) LoadDefaults() {
 	hc.PreRecoding = 3
 	hc.Overrun = 3
 	hc.Setup = 3
+	hc.CacheBlockSize = 60
 	hc.Acquire.LoadDefaults()
 	hc.Trigger.LoadDefaults()
 }
@@ -187,4 +189,20 @@ func (hc *CoreConfig) GetRecodingDuration() time.Duration {
 	defer mut.RUnlock()
 
 	return time.Duration(hc.PreRecoding+hc.Overrun) * time.Second
+}
+
+func (hc *CoreConfig) SetCacheBlockSize(size int) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.CacheBlockSize = size
+}
+
+func (hc *CoreConfig) GetCacheBlockSize() int {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.CacheBlockSize
 }

@@ -44,6 +44,7 @@ func LoadConfig(dbconn *sqlite3.SQLite) error {
 	lyt.AddField("trigger", sqlite3.TypeNUMERIC, false, false)
 	lyt.AddField("prerecoding", sqlite3.TypeREAL, false, false)
 	lyt.AddField("overrun", sqlite3.TypeREAL, false, false)
+	lyt.AddField("selected", sqlite3.TypeNUMERIC, false, false)
 	lyt.AddField("jpeg", sqlite3.TypeBLOB, false, false)
 
 	return dbconn.CreateTableFromLayout(lyt)
