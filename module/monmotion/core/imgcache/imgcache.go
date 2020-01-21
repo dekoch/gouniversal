@@ -105,9 +105,7 @@ func (ic *ImgCache) addToDB(img mdimg.MDImage) {
 
 		go func(images []mdimg.MDImage) {
 
-			t := images[len(images)-1].Captured.Add(-ic.dbMaxAge)
-			dbstorage.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), t)
-			ic.saveImagesToDB(images, mdimg.CACHE, t)
+			ic.saveImagesToDB(images, mdimg.CACHE)
 		}(ic.dbImages)
 
 		var n []mdimg.MDImage
@@ -189,25 +187,25 @@ func (ic *ImgCache) getFPS() float32 {
 	return fps
 }
 
-func (ic *ImgCache) SaveImages(trigger time.Time, delay time.Time) error {
+func (ic *ImgCache) SaveImages(trigger time.Time, prerecoding, overrun time.Duration) error {
 
 	ic.mut.Lock()
 	defer ic.mut.Unlock()
 
 	console.Output("saving images", "MonMotion")
 
-	go func(images []mdimg.MDImage, trigger time.Time, delay time.Time) {
+	go func(images []mdimg.MDImage, trigger time.Time, prerecoding, overrun time.Duration) {
 
-		ic.saveImagesToDB(images, mdimg.SAVED, trigger.Add(-ic.dbMaxAge))
-		dbstorage.SetStateToImages(ic.device, mdimg.SAVED, trigger.Add(-ic.dbMaxAge), delay)
-	}(ic.dbImages, trigger, delay)
+		ic.saveImagesToDB(images, mdimg.CACHE)
+		dbstorage.SetStateToImages(ic.device, mdimg.SAVED, trigger.Add(-prerecoding), trigger.Add(overrun))
+	}(ic.dbImages, trigger, prerecoding, overrun)
 
 	ic.dbImages = []mdimg.MDImage{}
 
 	return nil
 }
 
-func (ic *ImgCache) saveImagesToDB(images []mdimg.MDImage, state mdimg.ImageState, deletetodate time.Time) error {
+func (ic *ImgCache) saveImagesToDB(images []mdimg.MDImage, state mdimg.ImageState) error {
 
 	if len(images) == 0 {
 		return errors.New("no image available")
@@ -215,6 +213,9 @@ func (ic *ImgCache) saveImagesToDB(images []mdimg.MDImage, state mdimg.ImageStat
 
 	ic.mutSave.Lock()
 	defer ic.mutSave.Unlock()
+
+	t := images[len(images)-1].Captured.Add(-ic.dbMaxAge)
+	dbstorage.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), t)
 
 	for i := range images {
 

@@ -358,7 +358,7 @@ func (co *Core) jobGetImage() {
 							}
 
 							if record {
-								go co.record(co.config.GetOverrun())
+								go co.record(img.Captured, co.config.GetPreRecoding(), co.config.GetOverrun())
 							}
 
 							co.images.AddImage(img, true)
@@ -378,15 +378,13 @@ func (co *Core) jobGetImage() {
 	}
 }
 
-func (co *Core) record(delay time.Duration) {
+func (co *Core) record(trigger time.Time, prerecoding, overrun time.Duration) {
 
 	console.Output("record", "MonMotion")
 
-	trigger := time.Now()
+	time.Sleep(overrun)
 
-	time.Sleep(delay)
-
-	err := co.images.SaveImages(trigger, trigger.Add(delay))
+	err := co.images.SaveImages(trigger, prerecoding, overrun)
 	if err != nil {
 		console.Log(err, "MonMotion")
 	}
