@@ -122,7 +122,7 @@ func consoleOutput(message interface{}, sender string) string {
 	}
 
 	t := time.Now()
-	return t.Format("2006/01/02") + " " + t.Format("15:04:05") + " " + s
+	return t.Format("2006/01/02") + " " + t.Format("15:04:05.000") + " " + s
 }
 
 func Output(message interface{}, sender string) {
