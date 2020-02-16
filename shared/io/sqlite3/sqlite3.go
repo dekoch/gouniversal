@@ -26,6 +26,7 @@ const (
 type SQLite struct {
 	DB       *sql.DB
 	Tx       *sql.Tx
+	Rows     *sql.Rows
 	dbIsOpen sbool.Sbool
 }
 
