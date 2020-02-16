@@ -10,6 +10,7 @@ import (
 
 	"github.com/dekoch/gouniversal/module/monmotion/typemd"
 	"github.com/dekoch/gouniversal/shared/io/sqlite3"
+	"github.com/dekoch/gouniversal/shared/mjpegavi1"
 )
 
 const TableName = "images"
@@ -65,21 +66,54 @@ func (md *MDImage) Load(id string, dbconn *sqlite3.SQLite) (bool, error) {
 
 	func() {
 
-		var rows *sql.Rows
+		for i := 0; i <= 2; i++ {
+
+			switch i {
+			case 0:
+				dbconn.Rows, err = dbconn.DB.Query("SELECT device, state, captured, trigger, prerecoding, overrun, jpeg FROM `"+TableName+"` WHERE id=?", id)
+
+			case 1:
+				defer dbconn.Rows.Close()
+
+			case 2:
+				for dbconn.Rows.Next() {
+
+					err = dbconn.Rows.Scan(&md.Device, &md.State, &md.Captured, &md.Trigger, &md.PreRecoding, &md.Overrun, &md.Jpeg)
+					found = true
+				}
+			}
+
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	return found, err
+}
+
+func (md *MDImage) LoadInfo(id string, dbconn *sqlite3.SQLite) (bool, error) {
+
+	var (
+		err   error
+		found bool
+	)
+
+	func() {
 
 		for i := 0; i <= 2; i++ {
 
 			switch i {
 			case 0:
-				rows, err = dbconn.DB.Query("SELECT device, state, captured, trigger, prerecoding, overrun, jpeg FROM `"+TableName+"` WHERE id=?", id)
+				dbconn.Rows, err = dbconn.DB.Query("SELECT device, state, captured, trigger, prerecoding, overrun FROM `"+TableName+"` WHERE id=?", id)
 
 			case 1:
-				defer rows.Close()
+				defer dbconn.Rows.Close()
 
 			case 2:
-				for rows.Next() {
+				for dbconn.Rows.Next() {
 
-					err = rows.Scan(&md.Device, &md.State, &md.Captured, &md.Trigger, &md.PreRecoding, &md.Overrun, &md.Jpeg)
+					err = dbconn.Rows.Scan(&md.Device, &md.State, &md.Captured, &md.Trigger, &md.PreRecoding, &md.Overrun)
 					found = true
 				}
 			}
@@ -108,7 +142,13 @@ func (md *MDImage) EncodeImage(img image.Image) error {
 
 func (md *MDImage) GetImage() (image.Image, error) {
 
-	return jpeg.Decode(bytes.NewReader(md.Jpeg))
+	b, err := mjpegavi1.Decode(md.Jpeg)
+	if err != nil {
+		var ret image.Image
+		return ret, err
+	}
+
+	return jpeg.Decode(bytes.NewReader(b))
 }
 
 func GetCaptureTime(id string, dbconn *sqlite3.SQLite) (time.Time, error) {
@@ -120,24 +160,21 @@ func GetCaptureTime(id string, dbconn *sqlite3.SQLite) (time.Time, error) {
 
 	func() {
 
-		var (
-			rows  *sql.Rows
-			found bool
-		)
+		var found bool
 
 		for i := 0; i <= 3; i++ {
 
 			switch i {
 			case 0:
-				rows, err = dbconn.DB.Query("SELECT captured FROM `"+TableName+"` WHERE id=?", id)
+				dbconn.Rows, err = dbconn.DB.Query("SELECT captured FROM `"+TableName+"` WHERE id=?", id)
 
 			case 1:
-				defer rows.Close()
+				defer dbconn.Rows.Close()
 
 			case 2:
-				for rows.Next() {
+				for dbconn.Rows.Next() {
 
-					err = rows.Scan(&ret)
+					err = dbconn.Rows.Scan(&ret)
 					found = true
 				}
 

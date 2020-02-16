@@ -7,7 +7,6 @@ import (
 
 	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/acquireconfig"
 	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
-	"github.com/dekoch/gouniversal/shared/mjpegavi1"
 
 	"github.com/jinzhu/copier"
 	"github.com/korandiz/v4l"
@@ -102,7 +101,8 @@ func (we *Webcam) Start(conf acquireconfig.DeviceConfig) error {
 			}
 
 		case 7:
-			_, err = we.getImage()
+			var img mdimg.MDImage
+			err = we.getImage(&img)
 		}
 
 		if err != nil {
@@ -133,20 +133,17 @@ func (we *Webcam) Stop() error {
 	return nil
 }
 
-func (we *Webcam) GetImage() (mdimg.MDImage, error) {
+func (we *Webcam) GetImage(image *mdimg.MDImage) error {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return we.getImage()
+	return we.getImage(image)
 }
 
-func (we *Webcam) getImage() (mdimg.MDImage, error) {
+func (we *Webcam) getImage(image *mdimg.MDImage) error {
 
-	var (
-		err error
-		ret mdimg.MDImage
-	)
+	var err error
 
 	func() {
 
@@ -166,10 +163,10 @@ func (we *Webcam) getImage() (mdimg.MDImage, error) {
 				buf.ReadAt(b, 0)
 
 			case 2:
-				ret.Jpeg, err = mjpegavi1.Decode(b)
-				ret.Captured = time.Now()
-				ret.Width = we.devConfig.Width
-				ret.Height = we.devConfig.Height
+				image.Jpeg = b
+				image.Captured = time.Now()
+				image.Width = we.devConfig.Width
+				image.Height = we.devConfig.Height
 			}
 
 			if err != nil {
@@ -178,7 +175,7 @@ func (we *Webcam) getImage() (mdimg.MDImage, error) {
 		}
 	}()
 
-	return ret, err
+	return err
 }
 
 func (we *Webcam) ListConfigs() ([]acquireconfig.DeviceConfig, error) {

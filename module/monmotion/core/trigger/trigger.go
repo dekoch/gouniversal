@@ -200,13 +200,15 @@ func (tr *Trigger) jobDetectMotion() {
 						}
 
 					case 1:
-						oldImg, err = tr.images.GetOldImage(time.Duration(config.TimeSpan) * time.Millisecond)
+						if motionState == READY {
+							err = tr.images.GetOldImage(time.Duration(config.TimeSpan)*time.Millisecond, &oldImg)
+						}
 
 					case 2:
-						newImg, err = tr.images.GetLatestImage()
+						err = tr.images.GetLatestImage(&newImg)
 
 					case 3:
-						res, err = tr.analyse.AnalyseImage(oldImg, newImg, config.Threshold)
+						res, err = tr.analyse.AnalyseImage(&oldImg, &newImg, config.Threshold)
 
 					case 4:
 						if res.Threshold > config.Threshold {

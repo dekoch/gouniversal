@@ -95,7 +95,7 @@ func (rt *UIRequest) serve(w http.ResponseWriter, r *http.Request) {
 
 			case 4:
 				var img mdimg.MDImage
-				img, resp.Err = dbstorage.LoadImage(req.ImageID)
+				resp.Err = dbstorage.Stor.LoadImage(req.ImageID, &img)
 				resp.Content = img.Jpeg
 			}
 		}

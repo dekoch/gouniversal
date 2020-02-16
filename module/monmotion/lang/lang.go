@@ -63,6 +63,7 @@ type Viewer struct {
 	Title   string
 	Refresh string
 	View    string
+	Export  string
 	Delete  string
 }
 
@@ -132,6 +133,7 @@ func DefaultEn() LangFile {
 	l.Viewer.Title = "Viewer"
 	l.Viewer.Refresh = "Refresh"
 	l.Viewer.View = "View Sequence"
+	l.Viewer.Export = "Export Sequence"
 	l.Viewer.Delete = "Delete Sequence"
 
 	l.Alert.Success = "Success"

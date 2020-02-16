@@ -6,6 +6,7 @@ import (
 
 	"github.com/dekoch/gouniversal/module/monmotion/core/acquire/webcam"
 	"github.com/dekoch/gouniversal/module/monmotion/core/coreconfig"
+	"github.com/dekoch/gouniversal/module/monmotion/dbcache"
 	"github.com/dekoch/gouniversal/module/monmotion/dbstorage"
 	"github.com/dekoch/gouniversal/module/monmotion/global"
 	"github.com/dekoch/gouniversal/module/monmotion/lang"
@@ -22,6 +23,18 @@ func LoadConfig() {
 
 	en := lang.DefaultEn()
 	global.Lang = language.New(global.Config.LangFileRoot, en, "en")
+
+	err := dbcache.Cache.Open()
+	if err != nil {
+		console.Log(err, "")
+		return
+	}
+
+	err = dbstorage.Stor.Open()
+	if err != nil {
+		console.Log(err, "")
+		return
+	}
 
 	for _, dev := range webcam.FindDevices() {
 
@@ -103,7 +116,12 @@ func Exit(em *types.ExitMessage) {
 		}
 	}
 
-	err = dbstorage.Vacuum()
+	err = dbstorage.Stor.Close()
+	if err != nil {
+		console.Log(err, "")
+	}
+
+	err = dbcache.Cache.Close()
 	if err != nil {
 		console.Log(err, "")
 	}

@@ -337,7 +337,11 @@ func (co *Core) jobGetImage() {
 
 					switch i {
 					case 0:
-						img, err = co.acquire.GetImage()
+						img.Trigger = false
+						img.PreRecoding = 0
+						img.Overrun = 0
+
+						err = co.acquire.GetImage(&img)
 
 					case 1:
 						if recordEnabled {
@@ -357,13 +361,13 @@ func (co *Core) jobGetImage() {
 								}
 							}
 
+							co.images.AddImage(&img, true)
+
 							if record {
 								go co.record(img.Captured, co.config.GetPreRecoding(), co.config.GetOverrun())
 							}
-
-							co.images.AddImage(img, true)
 						} else {
-							co.images.AddImage(img, false)
+							co.images.AddImage(&img, false)
 						}
 
 						co.request.SetLatestImage(img)

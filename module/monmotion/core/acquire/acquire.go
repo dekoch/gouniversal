@@ -73,26 +73,20 @@ func (ac *Acquire) Stop() error {
 	return nil
 }
 
-func (ac *Acquire) GetImage() (mdimg.MDImage, error) {
+func (ac *Acquire) GetImage(image *mdimg.MDImage) error {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
-	var (
-		err error
-		ret mdimg.MDImage
-	)
-
 	if ac.useWebcam {
-		ret, err = ac.webcam.GetImage()
-	} else {
-		ret, err = ac.fromWebsever()
+		return ac.webcam.GetImage(image)
 	}
 
-	return ret, err
+	return ac.fromWebsever(image)
+
 }
 
-func (ac *Acquire) fromWebsever() (mdimg.MDImage, error) {
+func (ac *Acquire) fromWebsever(image *mdimg.MDImage) error {
 
 	pause := time.Duration(1000/ac.config.Device.FPS)*time.Millisecond - time.Since(ac.webserverChecked)
 
@@ -100,7 +94,6 @@ func (ac *Acquire) fromWebsever() (mdimg.MDImage, error) {
 
 	var (
 		err error
-		ret mdimg.MDImage
 		b   []byte
 	)
 
@@ -113,8 +106,8 @@ func (ac *Acquire) fromWebsever() (mdimg.MDImage, error) {
 				b, err = download(ac.config.Device.Source)
 
 			case 1:
-				ret.Captured = time.Now()
-				ret.Jpeg = b
+				image.Captured = time.Now()
+				image.Jpeg = b
 
 			case 2:
 				ac.webserverChecked = time.Now()
@@ -126,7 +119,7 @@ func (ac *Acquire) fromWebsever() (mdimg.MDImage, error) {
 		}
 	}()
 
-	return ret, err
+	return err
 }
 
 func download(url string) ([]byte, error) {

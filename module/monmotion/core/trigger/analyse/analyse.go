@@ -47,7 +47,7 @@ func (an *Analyse) EnableAutoTune(timeout int, tunestep uint32) {
 	an.tuneTimeOut.Start(timeout)
 }
 
-func (an *Analyse) AnalyseImage(oldMDImg, newMDImg mdimg.MDImage, threshold uint32) (Result, error) {
+func (an *Analyse) AnalyseImage(oldMDImg, newMDImg *mdimg.MDImage, threshold uint32) (Result, error) {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -75,13 +75,6 @@ func (an *Analyse) AnalyseImage(oldMDImg, newMDImg mdimg.MDImage, threshold uint
 
 			switch i {
 			case 0:
-				if newMDImg.Width != oldMDImg.Width ||
-					newMDImg.Height != oldMDImg.Height {
-
-					return
-				}
-
-			case 1:
 				go func() {
 
 					var r resultConvert
@@ -90,7 +83,7 @@ func (an *Analyse) AnalyseImage(oldMDImg, newMDImg mdimg.MDImage, threshold uint
 					chanConvert <- r
 				}()
 
-			case 2:
+			case 1:
 				newImg, err = newMDImg.GetImage()
 				if err != nil {
 					return
@@ -100,17 +93,24 @@ func (an *Analyse) AnalyseImage(oldMDImg, newMDImg mdimg.MDImage, threshold uint
 				err = r.Err
 				oldImg = r.Img
 
+			case 2:
+				if newImg.Bounds().Max.X != oldImg.Bounds().Max.X ||
+					newImg.Bounds().Max.Y != oldImg.Bounds().Max.Y {
+
+					return
+				}
+
 			case 3:
 				an.chanResult = make(chan Result, workerCnt)
 
-				partY := newMDImg.Height / workerCnt
+				partY := newImg.Bounds().Max.X / workerCnt
 
 				for n := 0; n < workerCnt; n++ {
 
 					var w work
 					w.startX = 0
 					w.startY = n * partY
-					w.endX = newMDImg.Width
+					w.endX = newImg.Bounds().Max.Y
 					w.endY = (n + 1) * partY
 
 					if an.tuneEnabled {

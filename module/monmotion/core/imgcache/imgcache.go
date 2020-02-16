@@ -2,27 +2,28 @@ package imgcache
 
 import (
 	"errors"
-	"image"
 	"sync"
 	"time"
 
+	"github.com/dekoch/gouniversal/module/monmotion/dbcache"
 	"github.com/dekoch/gouniversal/module/monmotion/dbstorage"
 	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 	"github.com/dekoch/gouniversal/shared/console"
+	"github.com/dekoch/gouniversal/shared/sbool"
 )
 
 type ImgCache struct {
 	device string
 
-	ramImages []mdimg.MDImage
 	ramMaxAge time.Duration
 
-	dbImages    []mdimg.MDImage
 	dbMaxAge    time.Duration
 	dbBlockSize int
 
-	mut     sync.RWMutex
-	mutSave sync.Mutex
+	saving     sbool.Sbool
+	dropFrames sbool.Sbool
+	mut        sync.RWMutex
+	mutSave    sync.RWMutex
 }
 
 func (ic *ImgCache) LoadConfig(device string) error {
@@ -32,12 +33,7 @@ func (ic *ImgCache) LoadConfig(device string) error {
 
 	ic.device = device
 
-	err := dbstorage.LoadConfig()
-	if err != nil {
-		return err
-	}
-
-	return dbstorage.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), time.Now())
+	return dbstorage.Stor.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), time.Now())
 }
 
 func (ic *ImgCache) Exit() error {
@@ -45,10 +41,7 @@ func (ic *ImgCache) Exit() error {
 	ic.mut.Lock()
 	defer ic.mut.Unlock()
 
-	ic.ramImages = []mdimg.MDImage{}
-	ic.dbImages = []mdimg.MDImage{}
-
-	return dbstorage.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), time.Now())
+	return dbstorage.Stor.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), time.Now())
 }
 
 func (ic *ImgCache) SetRAMSettings(maxage time.Duration) {
@@ -68,52 +61,58 @@ func (ic *ImgCache) SetDBSettings(maxage time.Duration, blocksize int) {
 	ic.dbBlockSize = blocksize
 }
 
-func (ic *ImgCache) AddImage(img mdimg.MDImage, todb bool) {
+func (ic *ImgCache) AddImage(img *mdimg.MDImage, todb bool) error {
 
-	ic.mut.Lock()
-	defer ic.mut.Unlock()
+	ic.mut.RLock()
+	defer ic.mut.RUnlock()
 
-	ic.addToCache(img)
+	img.Device = ic.device
+	img.State = mdimg.CACHE
 
-	if todb {
-		ic.addToDB(img)
+	if ic.dropFrames.IsSet() && ic.saving.IsSet() && img.Trigger == false {
+		return nil
 	}
-}
 
-func (ic *ImgCache) addToCache(img mdimg.MDImage) {
+	err := dbcache.Cache.SaveImage(img)
+	if err != nil {
+		return err
+	}
 
-	var n []mdimg.MDImage
-	n = append(n, img)
+	if todb == false {
 
-	for i := range ic.ramImages {
+		toDate := img.Captured.Add(-ic.ramMaxAge)
+		return dbcache.Cache.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), toDate)
+	}
 
-		if time.Since(ic.ramImages[i].Captured) > ic.ramMaxAge {
+	if ic.saving.IsSet() {
+		return nil
+	}
 
-			if i >= 1 {
-				ic.ramImages = append(n, ic.ramImages[:i-1]...)
+	go func() {
+
+		ic.mut.RLock()
+		defer ic.mut.RUnlock()
+
+		ids, err := dbcache.Cache.GetImageIDsWithState(ic.device, mdimg.CACHE)
+		if err != nil {
+			console.Log(err, "")
+			return
+		}
+
+		if len(ids) >= ic.dbBlockSize {
+
+			ic.saving.Set()
+			defer ic.saving.UnSet()
+
+			err := ic.saveBlock()
+			if err != nil {
+				console.Log(err, "")
 				return
 			}
 		}
-	}
+	}()
 
-	ic.ramImages = append(n, ic.ramImages...)
-}
-
-func (ic *ImgCache) addToDB(img mdimg.MDImage) {
-
-	if len(ic.dbImages) >= ic.dbBlockSize {
-
-		go func(images []mdimg.MDImage) {
-
-			ic.saveImagesToDB(images, mdimg.CACHE)
-		}(ic.dbImages)
-
-		var n []mdimg.MDImage
-		ic.dbImages = append(n, img)
-		return
-	}
-
-	ic.dbImages = append(ic.dbImages, img)
+	return nil
 }
 
 func (ic *ImgCache) GetImageCnt() int {
@@ -121,107 +120,147 @@ func (ic *ImgCache) GetImageCnt() int {
 	ic.mut.RLock()
 	defer ic.mut.RUnlock()
 
-	return len(ic.ramImages)
+	ids, err := dbcache.Cache.GetImageIDs(ic.device)
+	if err != nil {
+		return 0
+	}
+
+	return len(ids)
 }
 
-func (ic *ImgCache) GetLatestImage() (mdimg.MDImage, error) {
+func (ic *ImgCache) GetLatestImage(img *mdimg.MDImage) error {
 
 	ic.mut.RLock()
 	defer ic.mut.RUnlock()
 
-	if len(ic.ramImages) == 0 {
-		var nw mdimg.MDImage
-		nw.Captured = time.Now()
+	var err error
 
-		upLeft := image.Point{0, 0}
-		lowRight := image.Point{100, 100}
+	func() {
 
-		nw.EncodeImage(image.NewRGBA(image.Rectangle{upLeft, lowRight}))
+		var ids []string
 
-		return nw, nil
-	}
+		for i := 0; i <= 2; i++ {
 
-	return ic.ramImages[0], nil
-}
+			switch i {
+			case 0:
+				ids, err = dbcache.Cache.GetImageIDs(ic.device)
 
-func (ic *ImgCache) GetOldImage(d time.Duration) (mdimg.MDImage, error) {
+			case 1:
+				if len(ids) == 0 {
+					err = errors.New("no image available")
+					return
+				}
 
-	ic.mut.RLock()
-	defer ic.mut.RUnlock()
+			case 2:
+				err = dbcache.Cache.LoadImage(ids[len(ids)-1], img)
+			}
 
-	if len(ic.ramImages) == 0 {
-		var nw mdimg.MDImage
-		return nw, errors.New("no image available")
-	}
-
-	for i := range ic.ramImages {
-
-		if time.Since(ic.ramImages[i].Captured) > d {
-			return ic.ramImages[i], nil
+			if err != nil {
+				return
+			}
 		}
-	}
+	}()
 
-	return ic.ramImages[0], nil
+	return err
 }
 
-func (ic *ImgCache) GetFPS() float32 {
+func (ic *ImgCache) GetOldImage(d time.Duration, img *mdimg.MDImage) error {
 
 	ic.mut.RLock()
 	defer ic.mut.RUnlock()
 
-	return ic.getFPS()
-}
+	var err error
 
-func (ic *ImgCache) getFPS() float32 {
+	func() {
 
-	l := len(ic.ramImages)
+		var ids []string
 
-	if l <= 1 {
-		return 0.0
-	}
+		for i := 0; i <= 2; i++ {
 
-	t := ic.ramImages[0].Captured.Sub(ic.ramImages[l-1].Captured).Milliseconds()
+			switch i {
+			case 0:
+				ids, err = dbcache.Cache.GetImageIDsBetween(ic.device, time.Now().AddDate(-999, 0, 0), time.Now().Add(-d))
 
-	fps := float32(l) / float32(t) * 1000.0
+			case 1:
+				if len(ids) == 0 {
+					err = errors.New("no image available")
+					return
+				}
 
-	return fps
+			case 2:
+				err = dbcache.Cache.LoadImage(ids[len(ids)-1], img)
+			}
+
+			if err != nil {
+				return
+			}
+		}
+	}()
+
+	return err
 }
 
 func (ic *ImgCache) SaveImages(trigger time.Time, prerecoding, overrun time.Duration) error {
 
-	ic.mut.Lock()
-	defer ic.mut.Unlock()
-
 	console.Output("saving images", "MonMotion")
 
-	go func(images []mdimg.MDImage, trigger time.Time, prerecoding, overrun time.Duration) {
+	err := dbstorage.Stor.DeleteOldSequences(1)
+	if err != nil {
+		return err
+	}
 
-		ic.saveImagesToDB(images, mdimg.CACHE)
-		dbstorage.SetStateToImages(ic.device, mdimg.SAVED, trigger.Add(-prerecoding), trigger.Add(overrun))
-	}(ic.dbImages, trigger, prerecoding, overrun)
+	ic.saving.Set()
+	defer ic.saving.UnSet()
 
-	ic.dbImages = []mdimg.MDImage{}
+	err = ic.saveBlock()
+	if err != nil {
+		return err
+	}
 
-	return nil
+	ic.mut.RLock()
+	defer ic.mut.RUnlock()
+
+	triggerID, err := dbstorage.Stor.GetIDByTime(ic.device, trigger)
+	if err != nil {
+		return err
+	}
+
+	return dbstorage.Stor.SetStateToSequence(triggerID, mdimg.SAVED)
 }
 
-func (ic *ImgCache) saveImagesToDB(images []mdimg.MDImage, state mdimg.ImageState) error {
-
-	if len(images) == 0 {
-		return errors.New("no image available")
-	}
+func (ic *ImgCache) saveBlock() error {
 
 	ic.mutSave.Lock()
 	defer ic.mutSave.Unlock()
 
-	t := images[len(images)-1].Captured.Add(-ic.dbMaxAge)
-	dbstorage.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), t)
+	ic.mut.RLock()
+	defer ic.mut.RUnlock()
 
-	for i := range images {
-
-		images[i].Device = ic.device
-		images[i].State = state
+	ids, err := dbcache.Cache.GetImageIDsWithState(ic.device, mdimg.CACHE)
+	if err != nil {
+		return err
 	}
 
-	return dbstorage.SaveImages(images)
+	if len(ids) == 0 {
+		return nil
+	}
+
+	err = dbstorage.Stor.SaveBlock(ic.device, ids, ic.ramMaxAge, ic.dbMaxAge)
+	if err != nil {
+		return err
+	}
+
+	ids, err = dbcache.Cache.GetImageIDsWithState(ic.device, mdimg.CACHE)
+	if err != nil {
+		return err
+	}
+
+	if len(ids) > ic.dbBlockSize {
+		ic.dropFrames.Set()
+		console.Log("slow disk writing speed", "MonMotion")
+	} else {
+		ic.dropFrames.UnSet()
+	}
+
+	return nil
 }

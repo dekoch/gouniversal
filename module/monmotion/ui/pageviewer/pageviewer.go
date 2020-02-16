@@ -8,6 +8,7 @@ import (
 	"github.com/dekoch/gouniversal/module/monmotion/dbstorage"
 	"github.com/dekoch/gouniversal/module/monmotion/global"
 	"github.com/dekoch/gouniversal/module/monmotion/lang"
+	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
 	"github.com/dekoch/gouniversal/module/monmotion/typemd"
 	"github.com/dekoch/gouniversal/shared/alert"
 	"github.com/dekoch/gouniversal/shared/functions"
@@ -70,8 +71,11 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 				case "view":
 					// continue
 
+				case "export":
+					err = dbstorage.Stor.ExportSequence(selID, "data/monmotion/")
+
 				case "delete":
-					err = dbstorage.DeleteSequence(selID)
+					err = dbstorage.Stor.DeleteSequence(selID)
 					if err == nil {
 						redirect = true
 					}
@@ -81,7 +85,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 				}
 
 			case 4:
-				seqInfos, err = dbstorage.GetSequenceInfos(selID)
+				seqInfos, err = dbstorage.Stor.GetSequenceInfos(selID, mdimg.SAVED)
 
 			case 5:
 				c.Pictures, err = pictures(seqInfos, nav.User.UUID, global.UIRequest.GetNewToken(nav.User.UUID))
@@ -118,14 +122,14 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 
 func cmbTrigger(selid string) (template.HTML, template.HTML, error) {
 
-	ids, err := dbstorage.GetTriggerIDs()
+	sis, err := dbstorage.Stor.GetTriggerSI()
 	if err != nil {
 		return template.HTML(""), template.HTML(""), err
 	}
 
 	tag := "<select name=\"trigger\">"
 
-	if len(ids) == 0 {
+	if len(sis) == 0 {
 		// empty
 		tag += "<option value=\"\""
 		if functions.IsEmpty(selid) {
@@ -134,26 +138,21 @@ func cmbTrigger(selid string) (template.HTML, template.HTML, error) {
 		tag += "></option>"
 	} else if functions.IsEmpty(selid) {
 		// select latest
-		selid = ids[len(ids)-1]
+		selid = sis[len(sis)-1].ID
 	}
 
-	for _, id := range ids {
+	for _, si := range sis {
 
-		img, err := dbstorage.LoadImage(id)
-		if err != nil {
-			return template.HTML(""), template.HTML(""), err
-		}
-
-		tag += "<option value=\"" + id + "\""
-		if selid == id {
+		tag += "<option value=\"" + si.ID + "\""
+		if selid == si.ID {
 			tag += " selected"
 		}
-		tag += ">" + img.Captured.Format("2006.01.02 15:04:05.0000") + "</option>"
+		tag += ">" + si.Captured.Format("2006.01.02 15:04:05.0000") + "</option>"
 	}
 
 	tag += "</select>"
 
-	return template.HTML(tag), template.HTML(strconv.Itoa(len(ids))), nil
+	return template.HTML(tag), template.HTML(strconv.Itoa(len(sis))), nil
 }
 
 func pictures(seqinfos []dbstorage.SequenceImage, uuid, token string) (template.HTML, error) {
