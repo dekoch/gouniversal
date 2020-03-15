@@ -1,13 +1,20 @@
 <form method="post">
-    <table class="table">
+    <table class="table text-right">
         <tr>
-            <td>
-                {{.Lang.Source}}: {{.CmbSource}}
-                <button class="btn btn-default fa fa-check" type="submit" name="editsource" value="apply" title="{{.Lang.Apply}}"></button>
-            </td>
+            <th>{{.Lang.Source}}:</th>
+            <td class="text-left">{{.CmbSource}}</td>
+        </tr>
+        <tr>
+            <th>{{.Lang.TriggerAfterEvent}}:</th>
+            <td class="text-left"><input type="checkbox" name="chbtriggerafterevent" value="checked" {{.ChbTriggerAfterEvent}}></td>
+            <td></td>
         </tr>
     </table>
+    <button class="btn btn-default fa fa-check" type="submit" name="editsource" value="apply" title="{{.Lang.Apply}}"></button>
+    <br>
+    <br>
     <div class="card">
+        <div class="card-header">{{.CardTitle}}</div>
         <div class="card-body">
             <div {{.IntervalHidden}}>
                 <table class="table text-right">

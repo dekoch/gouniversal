@@ -80,7 +80,7 @@ func (ic *ImgCache) AddImage(img *mdimg.MDImage, todb bool) error {
 
 	if todb == false {
 
-		toDate := img.Captured.Add(-ic.ramMaxAge)
+		toDate := img.Captured.Add(-ic.ramMaxAge * 2)
 		return dbcache.Cache.DeleteImages(ic.device, mdimg.CACHE, time.Now().AddDate(-999, 0, 0), toDate)
 	}
 

@@ -2,7 +2,6 @@ package trigger
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -195,14 +194,16 @@ func (tr *Trigger) jobDetectMotion() {
 
 					switch i {
 					case 0:
-						if tr.images.GetImageCnt() < 2 {
+						cnt := tr.images.GetImageCnt()
+
+						//console.Output(cnt, " ")
+
+						if cnt < 2 {
 							return
 						}
 
 					case 1:
-						if motionState == READY {
-							err = tr.images.GetOldImage(time.Duration(config.TimeSpan)*time.Millisecond, &oldImg)
-						}
+						err = tr.images.GetOldImage(time.Duration(config.TimeSpan)*time.Millisecond, &oldImg)
 
 					case 2:
 						err = tr.images.GetLatestImage(&newImg)
@@ -264,7 +265,7 @@ func (tr *Trigger) jobDetectMotion() {
 					}
 
 					if err != nil {
-						fmt.Println(err)
+						console.Output(err, "")
 						return
 					}
 				}

@@ -106,7 +106,6 @@ func Exit(em *types.ExitMessage) {
 
 		dev, err := global.GetCore(config.UUID)
 		if err != nil {
-			console.Log(err, "")
 			continue
 		}
 

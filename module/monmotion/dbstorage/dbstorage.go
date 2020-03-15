@@ -7,7 +7,6 @@ import (
 
 	"github.com/dekoch/gouniversal/module/monmotion/dbcache"
 	"github.com/dekoch/gouniversal/module/monmotion/mdimg"
-	"github.com/dekoch/gouniversal/shared/console"
 	"github.com/dekoch/gouniversal/shared/io/file"
 	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 )
@@ -234,8 +233,6 @@ func (ds *DBStorage) DeleteOldSequences(cnt int) error {
 			if err != nil {
 				return
 			}
-
-			console.Output(i, " ")
 		}
 	}()
 

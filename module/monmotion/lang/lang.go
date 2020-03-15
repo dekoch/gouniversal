@@ -36,18 +36,19 @@ type DeviceAcquire struct {
 }
 
 type DeviceTrigger struct {
-	Source         string
-	Apply          string
-	Disabled       string
-	Interval       string
-	Delay          string
-	Motion         string
-	PLC            string
-	Address        string
-	Rack           string
-	Slot           string
-	Variable       string
-	TestConnection string
+	Source            string
+	TriggerAfterEvent string
+	Apply             string
+	Disabled          string
+	Interval          string
+	Delay             string
+	Motion            string
+	PLC               string
+	Address           string
+	Rack              string
+	Slot              string
+	Variable          string
+	TestConnection    string
 }
 
 type Device struct {
@@ -117,6 +118,7 @@ func DefaultEn() LangFile {
 	l.Device.DeviceAcquire.Console = "Console"
 
 	l.Device.DeviceTrigger.Source = "Source"
+	l.Device.DeviceTrigger.TriggerAfterEvent = "Trigger After Event"
 	l.Device.DeviceTrigger.Apply = "Apply"
 	l.Device.DeviceTrigger.Disabled = "disabled"
 	l.Device.DeviceTrigger.Interval = "Interval"

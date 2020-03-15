@@ -35,16 +35,18 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	menu.Render("trigger", page, nav, r)
 
 	type Content struct {
-		Lang           lang.DeviceTrigger
-		CmbSource      template.HTML
-		IntervalHidden template.HTMLAttr
-		Delay          template.HTML
-		MotionHidden   template.HTMLAttr
-		PLCHidden      template.HTMLAttr
-		PLCAddress     template.HTML
-		PLCRack        template.HTML
-		PLCSlot        template.HTML
-		PLCVariable    template.HTML
+		Lang                 lang.DeviceTrigger
+		CmbSource            template.HTML
+		ChbTriggerAfterEvent template.HTMLAttr
+		CardTitle            template.HTML
+		IntervalHidden       template.HTMLAttr
+		Delay                template.HTML
+		MotionHidden         template.HTMLAttr
+		PLCHidden            template.HTMLAttr
+		PLCAddress           template.HTML
+		PLCRack              template.HTML
+		PLCSlot              template.HTML
+		PLCVariable          template.HTML
 	}
 	var c Content
 
@@ -131,7 +133,15 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 			case 6:
 				c.CmbSource, err = cmbSource(config, c.Lang)
 
+				if config.Trigger.GetTriggerAfterEvent() {
+					c.ChbTriggerAfterEvent = template.HTMLAttr("checked")
+				} else {
+					c.ChbTriggerAfterEvent = template.HTMLAttr("")
+				}
+
 			case 7:
+				c.CardTitle = template.HTML(config.Trigger.GetSource())
+
 				c.IntervalHidden = template.HTMLAttr("hidden")
 				c.PLCHidden = template.HTMLAttr("hidden")
 				c.MotionHidden = template.HTMLAttr("hidden")
@@ -195,11 +205,11 @@ func cmbSource(config *coreconfig.CoreConfig, lang lang.DeviceTrigger) (template
 	}
 	tag += ">" + lang.PLC + "</option>"
 
-	/*tag += "<option value=\"motion\""
+	tag += "<option value=\"motion\""
 	if opt == triggerconfig.MOTION {
 		tag += " selected"
 	}
-	tag += ">" + lang.Motion + "</option>"*/
+	tag += ">" + lang.Motion + "</option>"
 
 	tag += "</select>"
 
@@ -217,7 +227,7 @@ func editSource(config *coreconfig.CoreConfig, r *http.Request) error {
 			src       triggerconfig.Source
 		)
 
-		for i := 0; i <= 3; i++ {
+		for i := 0; i <= 4; i++ {
 
 			switch i {
 			case 0:
@@ -248,6 +258,13 @@ func editSource(config *coreconfig.CoreConfig, r *http.Request) error {
 
 			case 3:
 				err = config.Trigger.SetSource(src)
+
+			case 4:
+				if r.FormValue("chbtriggerafterevent") == "checked" {
+					config.Trigger.SetTrigger(true)
+				} else {
+					config.Trigger.SetTrigger(false)
+				}
 			}
 
 			if err != nil {
