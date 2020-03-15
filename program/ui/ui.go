@@ -58,6 +58,42 @@ func internalError(message interface{}, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
+func isHTTPS(r *http.Request) bool {
+	return r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
+}
+
+func redirectToApp(w http.ResponseWriter, r *http.Request) bool {
+
+	host := strings.Split(r.Host, ":")
+	hostName := ""
+
+	if len(host) > 0 {
+		hostName = host[0]
+	}
+
+	// redirect to HTTPS if enabled
+	if (isHTTPS(r) == false && global.UIConfig.HTTPS.Enabled) ||
+		strings.HasPrefix(hostName, "www.") ||
+		strings.HasPrefix(r.URL.Path, "/app/") == false {
+
+		hostName = strings.Replace(hostName, "www.", "", 1)
+		hostRedi := "http://" + hostName
+		port := strconv.Itoa(global.UIConfig.HTTP.Port)
+
+		if global.UIConfig.HTTPS.Enabled {
+
+			port = strconv.Itoa(global.UIConfig.HTTPS.Port)
+			hostRedi = "https://" + hostName
+		}
+
+		http.Redirect(w, r, hostRedi+":"+port+"/app/", http.StatusSeeOther)
+
+		return true
+	}
+
+	return false
+}
+
 func setCookie(parameter string, value string, w http.ResponseWriter, r *http.Request) error {
 
 	session, err := store.Get(r, cookieName)
@@ -377,19 +413,12 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 			console.Output(newPath, "app")
 		}
 
-		// redirect to HTTPS if enabled
-		if global.UIConfig.HTTPS.Enabled {
-			host := strings.Split(r.Host, ":")
-			port := strconv.Itoa(global.UIConfig.HTTPS.Port)
-
-			http.Redirect(w, r, "https://"+host[0]+":"+port+"/app/", http.StatusSeeOther)
-		} else {
-			http.Redirect(w, r, "/app/", http.StatusSeeOther)
-		}
+		redirectToApp(w, r)
 
 		return
+	}
 
-	} else if r.URL.Path == "/favicon.ico" {
+	if r.URL.Path == "/favicon.ico" {
 
 		icon := global.UIConfig.StaticFileRoot + "favicon.ico"
 
@@ -398,12 +427,21 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, icon)
 			return
 		}
+	} else {
+
+		if redirectToApp(w, r) {
+			return
+		}
 	}
 
 	notFound("\""+r.URL.Path+"\" ("+clientinfo.String(r)+")", w)
 }
 
 func handleApp(w http.ResponseWriter, r *http.Request) {
+
+	if redirectToApp(w, r) {
+		return
+	}
 
 	start := time.Now()
 
