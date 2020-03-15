@@ -224,6 +224,7 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 		UUID      template.HTML
 		Token     template.HTML
 		Content   template.HTML
+		Link      template.HTML
 	}
 	var c content
 
@@ -374,6 +375,17 @@ func renderProgram(page *types.Page, nav *navigation.Navigation) []byte {
 
 	alert.Tokens.SetMaxTokens(global.UserConfig.GetUserCnt() + global.UIConfig.MaxGuests)
 	c.Token = template.HTML(alert.Tokens.New(nav.User.UUID))
+
+	link := ""
+
+	if nav.UIConfig.HTTPS.Enabled {
+		link = "https://"
+	} else {
+		link = "http://"
+	}
+
+	link += nav.Server.Host + "?path=" + nav.Path
+	c.Link = template.HTML("<!-- " + link + " -->")
 
 	p, err := functions.PageToString(global.UIConfig.ProgramFileRoot+"program.html", c)
 	if err != nil {
