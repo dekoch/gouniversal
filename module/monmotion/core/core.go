@@ -210,6 +210,20 @@ func (co *Core) Restart(conf coreconfig.CoreConfig) error {
 	return co.start()
 }
 
+func (co *Core) ManualTrigger() error {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	if co.active == false {
+		return nil
+	}
+
+	co.chanTrigger <- true
+
+	return nil
+}
+
 func (co *Core) Exit() error {
 
 	mut.Lock()
@@ -319,7 +333,6 @@ func (co *Core) jobGetImage() {
 	)
 
 	recordEnabled := co.config.GetRecord()
-	triggerEnabled := co.config.Trigger.GetSource() != triggerconfig.DISABLED
 
 	for {
 
@@ -349,16 +362,14 @@ func (co *Core) jobGetImage() {
 
 							var record bool
 
-							if triggerEnabled {
-								if img.Trigger {
+							if img.Trigger {
 
-									co.triggerState.UnSet()
+								co.triggerState.UnSet()
 
-									img.PreRecoding = co.config.GetPreRecoding().Seconds()
-									img.Overrun = co.config.GetOverrun().Seconds()
+								img.PreRecoding = co.config.GetPreRecoding().Seconds()
+								img.Overrun = co.config.GetOverrun().Seconds()
 
-									record = true
-								}
+								record = true
 							}
 
 							co.images.AddImage(&img, true)

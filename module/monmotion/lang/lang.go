@@ -23,6 +23,7 @@ type DeviceAcquire struct {
 	Live               string
 	Start              string
 	Stop               string
+	Trigger            string
 	Settings           string
 	Record             string
 	PreRecodingPeriod  string
@@ -106,6 +107,7 @@ func DefaultEn() LangFile {
 	l.Device.DeviceAcquire.Live = "Live"
 	l.Device.DeviceAcquire.Start = "Start"
 	l.Device.DeviceAcquire.Stop = "Stop"
+	l.Device.DeviceAcquire.Trigger = "Trigger"
 	l.Device.DeviceAcquire.Settings = "Settings"
 	l.Device.DeviceAcquire.Record = "Record"
 	l.Device.DeviceAcquire.PreRecodingPeriod = "Pre Recoding Period"

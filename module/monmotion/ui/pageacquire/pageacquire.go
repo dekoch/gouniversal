@@ -89,6 +89,9 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 
 				case "stop":
 					err = dev.Stop()
+
+				case "trigger":
+					err = dev.ManualTrigger()
 				}
 
 			case 4:
