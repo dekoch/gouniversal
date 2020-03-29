@@ -200,19 +200,22 @@ func (ic *ImgCache) GetOldImage(d time.Duration, img *mdimg.MDImage) error {
 	return err
 }
 
-func (ic *ImgCache) SaveImages(trigger time.Time, prerecoding, overrun time.Duration) error {
+func (ic *ImgCache) SaveImages(trigger time.Time, prerecoding, overrun time.Duration, keepallseq bool) error {
 
 	console.Output("saving images", "MonMotion")
 
-	err := dbstorage.Stor.DeleteOldSequences(1)
-	if err != nil {
-		return err
+	if keepallseq == false {
+
+		err := dbstorage.Stor.DeleteOldSequences(0)
+		if err != nil {
+			return err
+		}
 	}
 
 	ic.saving.Set()
 	defer ic.saving.UnSet()
 
-	err = ic.saveBlock()
+	err := ic.saveBlock()
 	if err != nil {
 		return err
 	}

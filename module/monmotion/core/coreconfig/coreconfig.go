@@ -15,6 +15,7 @@ type CoreConfig struct {
 	Name           string
 	Enabled        bool
 	Record         bool
+	KeepAllSeq     bool
 	FileRoot       string
 	PreRecoding    int // second
 	Overrun        int // second
@@ -46,6 +47,7 @@ func (hc *CoreConfig) LoadDefaults() {
 	hc.Name = u.String()
 	hc.Enabled = false
 	hc.Record = false
+	hc.KeepAllSeq = false
 	hc.FileRoot = "data/monmotion/"
 	hc.PreRecoding = 3
 	hc.Overrun = 3
@@ -117,6 +119,22 @@ func (hc *CoreConfig) GetRecord() bool {
 	defer mut.RUnlock()
 
 	return hc.Record
+}
+
+func (hc *CoreConfig) SetKeepAllSeq(keep bool) {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	hc.KeepAllSeq = keep
+}
+
+func (hc *CoreConfig) GetKeepAllSeq() bool {
+
+	mut.RLock()
+	defer mut.RUnlock()
+
+	return hc.KeepAllSeq
 }
 
 func (hc *CoreConfig) SetFileRoot(path string) {

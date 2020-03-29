@@ -26,6 +26,7 @@ type DeviceAcquire struct {
 	Trigger            string
 	Settings           string
 	Record             string
+	KeepAllSequences   string
 	PreRecodingPeriod  string
 	OverrunPeriod      string
 	SetupPeriod        string
@@ -110,6 +111,7 @@ func DefaultEn() LangFile {
 	l.Device.DeviceAcquire.Trigger = "Trigger"
 	l.Device.DeviceAcquire.Settings = "Settings"
 	l.Device.DeviceAcquire.Record = "Record"
+	l.Device.DeviceAcquire.KeepAllSequences = "Keep all Sequences"
 	l.Device.DeviceAcquire.PreRecodingPeriod = "Pre Recoding Period"
 	l.Device.DeviceAcquire.OverrunPeriod = "Overrun Period"
 	l.Device.DeviceAcquire.SetupPeriod = "Setup Period"

@@ -33,15 +33,16 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	menu.Render("acquire", page, nav, r)
 
 	type Content struct {
-		Lang              lang.DeviceAcquire
-		UUID              template.HTML
-		Token             template.HTML
-		Device            template.HTML
-		ChbRecordChecked  template.HTMLAttr
-		PreRecodingPeriod template.HTML
-		OverrunPeriod     template.HTML
-		SetupPeriod       template.HTML
-		CmbDeviceConfig   template.HTML
+		Lang                 lang.DeviceAcquire
+		UUID                 template.HTML
+		Token                template.HTML
+		Device               template.HTML
+		ChbRecordChecked     template.HTMLAttr
+		ChbKeepAllSeqChecked template.HTMLAttr
+		PreRecodingPeriod    template.HTML
+		OverrunPeriod        template.HTML
+		SetupPeriod          template.HTML
+		CmbDeviceConfig      template.HTML
 	}
 	var c Content
 
@@ -114,6 +115,12 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 					c.ChbRecordChecked = template.HTMLAttr("checked")
 				} else {
 					c.ChbRecordChecked = template.HTMLAttr("")
+				}
+
+				if config.GetKeepAllSeq() {
+					c.ChbKeepAllSeqChecked = template.HTMLAttr("checked")
+				} else {
+					c.ChbKeepAllSeqChecked = template.HTMLAttr("")
 				}
 			}
 
@@ -224,6 +231,12 @@ func edit(config *coreconfig.CoreConfig, dev *core.Core, r *http.Request) error 
 					config.SetRecord(true)
 				} else {
 					config.SetRecord(false)
+				}
+
+				if r.FormValue("chbkeepallseq") == "checked" {
+					config.SetKeepAllSeq(true)
+				} else {
+					config.SetKeepAllSeq(false)
 				}
 
 				config.SetPreRecoding(intPreRecoding)
