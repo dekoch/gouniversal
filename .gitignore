@@ -25,6 +25,7 @@ i386
 data/config/backup/
 data/config/gasprice/
 data/config/instabackup/
+data/config/instafollowbot/
 data/config/mesh/mesh
 data/config/mesh/network
 data/config/mesh/network.key
@@ -35,6 +36,7 @@ data/gasprice/
 data/gpsnav/
 data/homepage/dekoch.net/static/
 data/instabackup/
+data/instafollowbot/
 data/log/
 data/mediadownloader/
 data/meshfilesync/

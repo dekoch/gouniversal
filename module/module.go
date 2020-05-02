@@ -12,6 +12,7 @@ import (
 	"github.com/dekoch/gouniversal/module/heatingmath"
 	"github.com/dekoch/gouniversal/module/homepage"
 	"github.com/dekoch/gouniversal/module/instabackup"
+	"github.com/dekoch/gouniversal/module/instafollowbot"
 	"github.com/dekoch/gouniversal/module/iptracker"
 	"github.com/dekoch/gouniversal/module/logviewer"
 	"github.com/dekoch/gouniversal/module/mark"
@@ -103,6 +104,11 @@ func LoadConfig() {
 	if build.ModuleInstaBackup {
 		sharedConsole.Log("InstaBackup enabled", "Module")
 		instabackup.LoadConfig()
+	}
+
+	if build.ModuleInstaFollowBot {
+		sharedConsole.Log("InstaFollowBot enabled", "Module")
+		instafollowbot.LoadConfig()
 	}
 
 	if build.ModuleMonMotion {
@@ -352,6 +358,10 @@ func Exit(em *types.ExitMessage) {
 
 	if build.ModuleInstaBackup {
 		instabackup.Exit(em)
+	}
+
+	if build.ModuleInstaFollowBot {
+		instafollowbot.Exit(em)
 	}
 
 	if build.ModuleMonMotion {
