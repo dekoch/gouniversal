@@ -68,6 +68,7 @@ func Send(tagname, queryhash string, first int, after string, ic *instaclient.In
 			case 2:
 				var g instaclient.Get
 				g.URL = ur
+				g.SetCookies = false
 
 				resp, err = ic.SendGet(g)
 

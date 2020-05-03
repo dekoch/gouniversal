@@ -42,6 +42,7 @@ func Send(id, username string, follow bool, ic *instaclient.InstaClient) ([]byte
 			var p instaclient.Post
 			p.URL = followURL
 			p.Referer = userURL
+			p.SetCookies = true
 
 			resp, err = ic.SendPost(p)
 

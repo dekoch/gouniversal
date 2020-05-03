@@ -21,12 +21,14 @@ type Cookies struct {
 }
 
 type Post struct {
-	URL     string
-	Referer string
+	URL        string
+	Referer    string
+	SetCookies bool
 }
 
 type Get struct {
-	URL string
+	URL        string
+	SetCookies bool
 }
 
 var mut sync.Mutex
@@ -117,6 +119,14 @@ func (ic *InstaClient) getCookies() (Cookies, error) {
 	return ret, err
 }
 
+func (ic *InstaClient) DeleteCookies() {
+
+	mut.Lock()
+	defer mut.Unlock()
+
+	ic.cookies = []*http.Cookie{}
+}
+
 func (ic *InstaClient) SendPost(p Post) (*http.Response, error) {
 
 	mut.Lock()
@@ -126,7 +136,7 @@ func (ic *InstaClient) SendPost(p Post) (*http.Response, error) {
 
 	var ret *http.Response
 
-	client, err := ic.newClient()
+	client, err := ic.newClient(p.SetCookies)
 	if err != nil {
 		return ret, err
 	}
@@ -170,7 +180,7 @@ func (ic *InstaClient) SendGet(g Get) (*http.Response, error) {
 
 	var ret *http.Response
 
-	client, err := ic.newClient()
+	client, err := ic.newClient(g.SetCookies)
 	if err != nil {
 		return ret, err
 	}
@@ -194,7 +204,7 @@ func (ic *InstaClient) SendGet(g Get) (*http.Response, error) {
 	return ret, nil
 }
 
-func (ic *InstaClient) newClient() (*http.Client, error) {
+func (ic *InstaClient) newClient(setcookies bool) (*http.Client, error) {
 
 	var client *http.Client
 
@@ -212,7 +222,9 @@ func (ic *InstaClient) newClient() (*http.Client, error) {
 		Jar: jar,
 	}
 
-	client.Jar.SetCookies(u, ic.cookies)
+	if setcookies {
+		client.Jar.SetCookies(u, ic.cookies)
+	}
 
 	return client, nil
 }

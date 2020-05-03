@@ -34,6 +34,7 @@ func Send(username string, ic *instaclient.InstaClient) ([]byte, error) {
 		case 2:
 			var g instaclient.Get
 			g.URL = ur
+			g.SetCookies = false
 
 			resp, err = ic.SendGet(g)
 
