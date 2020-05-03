@@ -46,26 +46,6 @@ func LoadConfig() {
 	}
 
 	go job()
-
-	intvl := global.Config.GetCheckInterval()
-
-	if intvl == time.Duration(-1*time.Minute) ||
-		(time.Since(global.Config.GetUnfollowTime()) > intvl && intvl > time.Duration(0)) {
-
-		go func() {
-			chanUnfollowFinished <- unfollow(global.Config.GetUnfollowCount())
-		}()
-
-		return
-	}
-
-	if intvl == time.Duration(-1*time.Minute) ||
-		(time.Since(global.Config.GetFollowTime()) > intvl && intvl > time.Duration(0)) {
-
-		go func() {
-			chanFollowFinished <- follow(global.Config.GetFollowCount())
-		}()
-	}
 }
 
 func Exit() {
@@ -77,7 +57,7 @@ func job() {
 	var unfollowFollow bool
 
 	intvlCheck := global.Config.GetCheckInterval()
-	tCheck := time.NewTimer(intvlCheck)
+	tCheck := time.NewTimer(1 * time.Second)
 
 	for {
 
@@ -88,21 +68,31 @@ func job() {
 			if intvlCheck > 0 {
 				if unfollowFollow {
 
-					go func() {
-						chanFollowFinished <- follow(global.Config.GetFollowCount())
-					}()
+					if time.Since(global.Config.GetFollowTime()) > intvlCheck {
+
+						go func() {
+							chanFollowFinished <- follow(global.Config.GetFollowCount())
+						}()
+					} else {
+						tCheck.Reset(10 * time.Second)
+					}
 				} else {
 
-					go func() {
-						chanUnfollowFinished <- unfollow(global.Config.GetUnfollowCount())
-					}()
+					if time.Since(global.Config.GetUnfollowTime()) > intvlCheck {
+
+						go func() {
+							chanUnfollowFinished <- unfollow(global.Config.GetUnfollowCount())
+						}()
+					} else {
+						tCheck.Reset(10 * time.Second)
+					}
 				}
 			} else {
 				intvlCheck = global.Config.GetCheckInterval()
 				if intvlCheck > 0 {
 					tCheck.Reset(intvlCheck)
 				} else {
-					tCheck.Reset(time.Duration(10) * time.Second)
+					tCheck.Reset(10 * time.Second)
 				}
 			}
 
