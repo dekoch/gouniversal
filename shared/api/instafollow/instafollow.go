@@ -3,14 +3,16 @@ package instafollow
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/dekoch/gouniversal/shared/api/instaclient"
 	"github.com/dekoch/gouniversal/shared/api/instafollow/query"
 )
 
 type response struct {
-	Result string `json:"result"`
-	Status string `json:"status"`
+	Result  string `json:"result"`
+	Message string `json:"message"`
+	Status  string `json:"status"`
 }
 
 func Follow(id, username string, ic *instaclient.InstaClient) error {
@@ -45,7 +47,15 @@ func send(id, username string, follow bool, ic *instaclient.InstaClient) error {
 
 		case 2:
 			if resp.Status != "ok" {
-				err = errors.New(resp.Status)
+				// if response json contains empty message tag, user is already unfollowed
+				if strings.Contains(string(b), "\"message\":") {
+
+					if resp.Message != "" {
+						err = errors.New(resp.Status)
+					}
+				} else {
+					err = errors.New(resp.Status)
+				}
 			}
 		}
 
