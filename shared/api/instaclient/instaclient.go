@@ -21,9 +21,10 @@ type Cookies struct {
 }
 
 type Post struct {
-	URL        string
-	Referer    string
-	SetCookies bool
+	URL            string
+	Referer        string
+	SetCookies     bool
+	XInstagramAJAX string
 }
 
 type Get struct {
@@ -156,7 +157,7 @@ func (ic *InstaClient) SendPost(p Post) (*http.Response, error) {
 	req.Header.Add("Content-Length", "0")
 	req.Header.Add("Host", "www.instagram.com")
 	req.Header.Add("Referer", p.Referer)
-	req.Header.Add("X-Instagram-AJAX", "f875f4c886d7")
+	req.Header.Add("X-Instagram-AJAX", p.XInstagramAJAX)
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("X-Requested-With", "XMLHttpRequest")
 	req.Header.Add("X-CSRFToken", co.CsrfToken)

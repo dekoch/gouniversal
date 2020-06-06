@@ -10,7 +10,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/api/instaclient"
 )
 
-func Send(id, username string, follow bool, ic *instaclient.InstaClient) ([]byte, error) {
+func Send(id, username, xinstagramajax string, follow bool, ic *instaclient.InstaClient) ([]byte, error) {
 
 	var (
 		err       error
@@ -43,6 +43,7 @@ func Send(id, username string, follow bool, ic *instaclient.InstaClient) ([]byte
 			p.URL = followURL
 			p.Referer = userURL
 			p.SetCookies = true
+			p.XInstagramAJAX = xinstagramajax
 
 			resp, err = ic.SendPost(p)
 

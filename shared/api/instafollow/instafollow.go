@@ -15,17 +15,17 @@ type response struct {
 	Status  string `json:"status"`
 }
 
-func Follow(id, username string, ic *instaclient.InstaClient) error {
+func Follow(id, username, xinstagramajax string, ic *instaclient.InstaClient) error {
 
-	return send(id, username, true, ic)
+	return send(id, username, xinstagramajax, true, ic)
 }
 
-func Unfollow(id, username string, ic *instaclient.InstaClient) error {
+func Unfollow(id, username, xinstagramajax string, ic *instaclient.InstaClient) error {
 
-	return send(id, username, false, ic)
+	return send(id, username, xinstagramajax, false, ic)
 }
 
-func send(id, username string, follow bool, ic *instaclient.InstaClient) error {
+func send(id, username, xinstagramajax string, follow bool, ic *instaclient.InstaClient) error {
 
 	var (
 		err  error
@@ -37,13 +37,10 @@ func send(id, username string, follow bool, ic *instaclient.InstaClient) error {
 
 		switch i {
 		case 0:
-			b, err = query.Send(id, username, follow, ic)
+			b, err = query.Send(id, username, xinstagramajax, follow, ic)
 
 		case 1:
 			err = json.Unmarshal(b, &resp)
-			if err != nil {
-				err = errors.New(err.Error() + " \"" + string(b) + "\"")
-			}
 
 		case 2:
 			if resp.Status != "ok" {
@@ -60,7 +57,7 @@ func send(id, username string, follow bool, ic *instaclient.InstaClient) error {
 		}
 
 		if err != nil {
-			return err
+			return errors.New(err.Error() + " \"" + string(b) + "\"")
 		}
 	}
 
