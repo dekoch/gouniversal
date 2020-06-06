@@ -108,9 +108,6 @@ func GetResponse(tagname, queryhash string, first int, after string, ic *instacl
 
 				case 1:
 					err = json.Unmarshal(b, &ir)
-					if err != nil {
-						err = errors.New(err.Error() + " \"" + string(b) + "\"")
-					}
 
 				case 2:
 					if ir.Status != "ok" {
@@ -147,11 +144,12 @@ func GetResponse(tagname, queryhash string, first int, after string, ic *instacl
 				}
 
 				if err != nil {
+					err = errors.New(err.Error() + " \"" + string(b) + "\"")
 					return
 				}
 			}
 		}
 	}()
 
-	return ret, nil
+	return ret, err
 }
