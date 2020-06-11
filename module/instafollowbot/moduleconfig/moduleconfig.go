@@ -5,14 +5,13 @@ import (
 	"errors"
 	"os"
 	"sync"
-	"time"
 
-	"github.com/dekoch/gouniversal/shared/api/instaclient"
+	"github.com/dekoch/gouniversal/module/instafollowbot/core/coreconfig"
 	"github.com/dekoch/gouniversal/shared/config"
 	"github.com/dekoch/gouniversal/shared/console"
-	"github.com/dekoch/gouniversal/shared/hashstor"
 	"github.com/dekoch/gouniversal/shared/io/file"
 	"github.com/dekoch/gouniversal/shared/types"
+	"github.com/google/uuid"
 )
 
 const configFilePath = "data/config/instafollowbot/"
@@ -24,16 +23,7 @@ type ModuleConfig struct {
 	LangFileRoot   string
 	FileRoot       string
 	DBFile         string
-	CheckInterv    int // minutes (0=disabled)
-	FollowCnt      int
-	UnfollowCnt    int
-	UnfollowAfter  int // hours
-	Tags           []string
-	TagQueryHash   hashstor.HashStor
-	MediaQueryHash hashstor.HashStor
-	Cookies        instaclient.Cookies
-	FollowTime     time.Time
-	UnfollowTime   time.Time
+	Cores          []coreconfig.CoreConfig
 }
 
 var (
@@ -56,15 +46,7 @@ func (hc *ModuleConfig) loadDefaults() {
 	hc.FileRoot = "data/instafollowbot/"
 	hc.DBFile = "data/instafollowbot/instafollowbot.db"
 
-	hc.CheckInterv = -1
-	hc.FollowCnt = 15
-	hc.UnfollowCnt = 15
-	hc.UnfollowAfter = 24
-
-	hc.Tags = append(hc.Tags, "")
-
-	hc.TagQueryHash.Add("")
-	hc.MediaQueryHash.Add("")
+	hc.addCore()
 }
 
 func (hc ModuleConfig) SaveConfig() error {
@@ -122,8 +104,9 @@ func (hc *ModuleConfig) LoadConfig() error {
 		hc.loadDefaults()
 	}
 
-	hc.TagQueryHash.Init()
-	hc.MediaQueryHash.Init()
+	for i := range hc.Cores {
+		hc.Cores[i].LoadConfig()
+	}
 
 	return err
 }
@@ -144,130 +127,70 @@ func (hc *ModuleConfig) GetDBFile() string {
 	return hc.DBFile
 }
 
-func (hc *ModuleConfig) SetCheckInterval(minutes int) {
+func (hc *ModuleConfig) AddCore() (string, error) {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	hc.CheckInterv = minutes
+	return hc.addCore()
 }
 
-func (hc *ModuleConfig) GetCheckInterval() time.Duration {
+func (hc *ModuleConfig) addCore() (string, error) {
+
+	var co coreconfig.CoreConfig
+	co.CoreUUID = uuid.Must(uuid.NewRandom()).String()
+	co.LoadDefaults()
+	co.LoadConfig()
+
+	hc.Cores = append(hc.Cores, co)
+
+	return co.CoreUUID, nil
+}
+
+func (hc *ModuleConfig) GetCoreList() []string {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return time.Duration(hc.CheckInterv) * time.Minute
+	var ret []string
+
+	for i := range hc.Cores {
+		ret = append(ret, hc.Cores[i].CoreUUID)
+	}
+
+	return ret
 }
 
-func (hc *ModuleConfig) SetFollowCount(cnt int) {
+func (hc *ModuleConfig) SetCoreConfig(co coreconfig.CoreConfig) error {
 
 	mut.Lock()
 	defer mut.Unlock()
 
-	hc.FollowCnt = cnt
+	for i := range hc.Cores {
+
+		if hc.Cores[i].CoreUUID == co.CoreUUID {
+
+			hc.Cores[i] = co
+			return nil
+		}
+	}
+
+	return errors.New("uuid not found")
 }
 
-func (hc *ModuleConfig) GetFollowCount() int {
+func (hc *ModuleConfig) GetCoreConfig(uid string) (coreconfig.CoreConfig, error) {
 
 	mut.RLock()
 	defer mut.RUnlock()
 
-	return hc.FollowCnt
-}
+	for i := range hc.Cores {
 
-func (hc *ModuleConfig) SetUnfollowCount(cnt int) {
+		if hc.Cores[i].CoreUUID == uid {
 
-	mut.Lock()
-	defer mut.Unlock()
+			return hc.Cores[i], nil
+		}
+	}
 
-	hc.UnfollowCnt = cnt
-}
-
-func (hc *ModuleConfig) GetUnfollowCount() int {
-
-	mut.RLock()
-	defer mut.RUnlock()
-
-	return hc.UnfollowCnt
-}
-
-func (hc *ModuleConfig) SetUnfollowAfter(hours int) {
-
-	mut.Lock()
-	defer mut.Unlock()
-
-	hc.UnfollowAfter = hours
-}
-
-func (hc *ModuleConfig) GetUnfollowAfter() time.Duration {
-
-	mut.RLock()
-	defer mut.RUnlock()
-
-	return time.Duration(hc.UnfollowAfter) * time.Hour
-}
-
-func (hc *ModuleConfig) SetTags(tags []string) {
-
-	mut.Lock()
-	defer mut.Unlock()
-
-	hc.Tags = tags
-}
-
-func (hc *ModuleConfig) GetTags() []string {
-
-	mut.RLock()
-	defer mut.RUnlock()
-
-	return hc.Tags
-}
-
-func (hc *ModuleConfig) SetCookies(co instaclient.Cookies) {
-
-	mut.Lock()
-	defer mut.Unlock()
-
-	hc.Cookies = co
-}
-
-func (hc *ModuleConfig) GetCookies() instaclient.Cookies {
-
-	mut.RLock()
-	defer mut.RUnlock()
-
-	return hc.Cookies
-}
-
-func (hc *ModuleConfig) SetFollowTime(t time.Time) {
-
-	mut.Lock()
-	defer mut.Unlock()
-
-	hc.FollowTime = t
-}
-
-func (hc *ModuleConfig) GetFollowTime() time.Time {
-
-	mut.RLock()
-	defer mut.RUnlock()
-
-	return hc.FollowTime
-}
-
-func (hc *ModuleConfig) SetUnfollowTime(t time.Time) {
-
-	mut.Lock()
-	defer mut.Unlock()
-
-	hc.UnfollowTime = t
-}
-
-func (hc *ModuleConfig) GetUnfollowTime() time.Time {
-
-	mut.RLock()
-	defer mut.RUnlock()
-
-	return hc.UnfollowTime
+	var co coreconfig.CoreConfig
+	return co, errors.New("uuid not found")
 }

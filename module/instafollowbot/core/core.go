@@ -4,8 +4,10 @@ import (
 	"errors"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/dekoch/gouniversal/module/instafollowbot/core/coreconfig"
 	"github.com/dekoch/gouniversal/module/instafollowbot/global"
 	"github.com/dekoch/gouniversal/module/instafollowbot/instauser"
 	"github.com/dekoch/gouniversal/shared/api/instaclient"
@@ -14,8 +16,14 @@ import (
 	"github.com/dekoch/gouniversal/shared/api/instashareddata"
 	"github.com/dekoch/gouniversal/shared/api/instatag"
 	"github.com/dekoch/gouniversal/shared/console"
+	"github.com/dekoch/gouniversal/shared/functions"
 	"github.com/dekoch/gouniversal/shared/io/sqlite3"
 )
+
+type Core struct {
+	Config      coreconfig.CoreConfig
+	instaClient instaclient.InstaClient
+}
 
 type jobRet struct {
 	err error
@@ -27,11 +35,13 @@ var (
 	chanUnfollowFinished = make(chan jobRet)
 )
 
-func LoadConfig() {
+func (co *Core) LoadConfig(conf coreconfig.CoreConfig) {
+
+	co.Config = conf
 
 	var dbconn sqlite3.SQLite
 
-	err := dbconn.Open(global.Config.DBFile)
+	err := dbconn.Open(global.Config.GetDBFile())
 	if err != nil {
 		console.Log(err, "InstaFollowBot")
 		return
@@ -45,18 +55,24 @@ func LoadConfig() {
 		return
 	}
 
-	go job()
+	err = co.instaClient.SetCookies(co.Config.GetCookies())
+	if err != nil {
+		console.Log(err, "InstaFollowBot")
+		return
+	}
+
+	go co.job()
 }
 
-func Exit() {
+func (co *Core) Exit() {
 
 }
 
-func job() {
+func (co *Core) job() {
 
 	var unfollowFollow bool
 
-	intvlCheck := global.Config.GetCheckInterval()
+	intvlCheck := co.Config.GetCheckInterval()
 	tCheck := time.NewTimer(1 * time.Second)
 
 	for {
@@ -68,27 +84,27 @@ func job() {
 			if intvlCheck > 0 {
 				if unfollowFollow {
 
-					if time.Since(global.Config.GetFollowTime()) > intvlCheck {
+					if time.Since(co.Config.GetFollowTime()) > intvlCheck {
 
 						go func() {
-							chanFollowFinished <- follow(global.Config.GetFollowCount())
+							chanFollowFinished <- co.follow()
 						}()
 					} else {
 						tCheck.Reset(10 * time.Second)
 					}
 				} else {
 
-					if time.Since(global.Config.GetUnfollowTime()) > intvlCheck {
+					if time.Since(co.Config.GetUnfollowTime()) > intvlCheck {
 
 						go func() {
-							chanUnfollowFinished <- unfollow(global.Config.GetUnfollowCount())
+							chanUnfollowFinished <- co.unfollow()
 						}()
 					} else {
 						tCheck.Reset(10 * time.Second)
 					}
 				}
 			} else {
-				intvlCheck = global.Config.GetCheckInterval()
+				intvlCheck = co.Config.GetCheckInterval()
 				if intvlCheck > 0 {
 					tCheck.Reset(intvlCheck)
 				} else {
@@ -97,14 +113,13 @@ func job() {
 			}
 
 		case ret := <-chanFollowFinished:
-			if ret.err != nil {
-				console.Log(ret.err, "InstaFollowBot follow")
-			}
-
 			unfollowFollow = false
 			tCheck.Reset(intvlCheck)
 
-			if ret.cnt == 0 {
+			if ret.err != nil {
+				console.Log(ret.err, "InstaFollowBot follow")
+
+			} else if ret.cnt == 0 {
 				tCheck.Reset(1 * time.Second)
 			}
 
@@ -126,19 +141,23 @@ func job() {
 	}
 }
 
-func follow(cnt int) jobRet {
+func (co *Core) follow() jobRet {
 
 	var ret jobRet
 
-	for i := 0; i <= 2; i++ {
+	for i := 0; i <= 4; i++ {
 
 		switch i {
 		case 0:
 			ret.err = global.Config.LoadConfig()
 
 		case 1:
+			co.Config, ret.err = global.Config.GetCoreConfig(co.Config.CoreUUID)
+
+		case 2:
 			var retTag jobRet
-			tags := global.Config.GetTags()
+			tags := co.Config.GetTags()
+			cnt := co.Config.GetFollowCount()
 
 			rand.Seed(time.Now().UnixNano())
 			rand.Shuffle(len(tags), func(i, j int) { tags[i], tags[j] = tags[j], tags[i] })
@@ -149,16 +168,24 @@ func follow(cnt int) jobRet {
 					continue
 				}
 
-				retTag = checkTag(tag, cnt-ret.cnt)
-				if ret.err != nil {
+				if functions.IsEmpty(tag) {
+					continue
+				}
+
+				retTag = co.checkTag(tag, cnt-ret.cnt)
+				if retTag.err != nil {
+					ret.err = retTag.err
 					return ret
 				}
 
 				ret.cnt += retTag.cnt
 			}
 
-		case 2:
-			global.Config.SetFollowTime(time.Now())
+		case 3:
+			co.Config.SetFollowTime(time.Now())
+			ret.err = global.Config.SetCoreConfig(co.Config)
+
+		case 4:
 			ret.err = global.Config.SaveConfig()
 		}
 
@@ -170,13 +197,12 @@ func follow(cnt int) jobRet {
 	return ret
 }
 
-func checkTag(tagname string, first int) jobRet {
+func (co *Core) checkTag(tagname string, first int) jobRet {
 
 	var (
 		ret    jobRet
 		dbconn sqlite3.SQLite
-		ic     instaclient.InstaClient
-		co     instaclient.Cookies
+		coo    instaclient.Cookies
 		users  []instauser.InstaUser
 	)
 
@@ -184,22 +210,19 @@ func checkTag(tagname string, first int) jobRet {
 
 		switch i {
 		case 0:
-			co = global.Config.GetCookies()
-			ret.err = ic.SetCookies(co)
+			users, ret.err = co.getUserFromTag(tagname, first*5, &co.instaClient)
 
 		case 1:
-			users, ret.err = getUserFromTag(tagname, first*2, &ic)
-
-		case 2:
 			ret.err = dbconn.Open(global.Config.GetDBFile())
 
-		case 3:
+		case 2:
 			defer dbconn.Close()
 
-		case 4:
+		case 3:
 			var (
 				exists bool
 				resp   instashareddata.Response
+				n      int
 			)
 
 			for i := range users {
@@ -217,57 +240,68 @@ func checkTag(tagname string, first int) jobRet {
 					continue
 				}
 
-				users[i].UserName, ret.err = getUserName(users[i].UserID, &ic)
+				users[i].UserName, ret.err = co.getUserName(users[i].UserID, &co.instaClient)
 				if ret.err != nil {
 					return ret
 				}
 
-				resp, ret.err = instashareddata.GetResponse(users[i].UserName, &ic)
+				resp, ret.err = instashareddata.GetResponse(users[i].UserName, &co.instaClient)
 				if ret.err != nil {
 					console.Log(ret.err, "")
 					continue
-				}
-
-				if len(resp.Config.CsrfToken) > 0 {
-
-					co.CsrfToken = resp.Config.CsrfToken
-
-					ret.err = ic.SetCookies(co)
-					if ret.err != nil {
-						return ret
-					}
 				}
 
 				if len(resp.EntryData.ProfilePage) == 0 {
 					continue
 				}
 
-				if resp.EntryData.ProfilePage[0].GraphQL.User.IsBusinessAccount == true {
+				if co.Config.GetFollowBusinessAccount() == false &&
+					resp.EntryData.ProfilePage[0].GraphQL.User.IsBusinessAccount {
 					continue
 				}
 
-				if resp.EntryData.ProfilePage[0].GraphQL.User.IsVerified == true {
+				if co.Config.GetFollowVerified() == false &&
+					resp.EntryData.ProfilePage[0].GraphQL.User.IsVerified {
 					continue
 				}
 
-				if resp.EntryData.ProfilePage[0].GraphQL.User.IsPrivate == true {
+				if co.Config.GetFollowPrivate() == false &&
+					resp.EntryData.ProfilePage[0].GraphQL.User.IsPrivate {
 					continue
 				}
 
-				if resp.EntryData.ProfilePage[0].GraphQL.User.EdgeFollowedBy.Count > 5000 {
+				n = co.Config.GetMaxFollow()
+
+				if resp.EntryData.ProfilePage[0].GraphQL.User.EdgeFollow.Count > n && n > 0 {
 					continue
 				}
 
-				ret.err = followUser(users[i], tagname, &ic, &dbconn)
-				if ret.err != nil {
-					return ret
+				n = co.Config.GetMaxFollowedBy()
+
+				if resp.EntryData.ProfilePage[0].GraphQL.User.EdgeFollowedBy.Count > n && n > 0 {
+					continue
+				}
+
+				if len(resp.RolloutHash) > 0 {
+
+					ret.err = co.followUser(users[i], tagname, resp.RolloutHash, &co.instaClient, &dbconn)
+					if ret.err != nil {
+						return ret
+					}
+
+					if co.Config.GetAddNewTags() {
+						co.Config.AddTags(users[i].NewTags)
+					}
 				}
 
 				ret.cnt++
 			}
 
+		case 4:
+			coo, ret.err = co.instaClient.GetCookies()
+
 		case 5:
-			global.Config.SetCookies(co)
+			co.Config.SetCookies(coo)
 		}
 
 		if ret.err != nil {
@@ -279,7 +313,7 @@ func checkTag(tagname string, first int) jobRet {
 	return ret
 }
 
-func getUserFromTag(tagname string, first int, ic *instaclient.InstaClient) ([]instauser.InstaUser, error) {
+func (co *Core) getUserFromTag(tagname string, first int, ic *instaclient.InstaClient) ([]instauser.InstaUser, error) {
 
 	var (
 		err  error
@@ -292,20 +326,25 @@ func getUserFromTag(tagname string, first int, ic *instaclient.InstaClient) ([]i
 
 		switch i {
 		case 0:
-			hash, err = global.Config.TagQueryHash.GetHash()
+			hash, err = co.Config.TagQueryHash.GetHash()
 
 		case 1:
 			resp, err = instatag.GetResponse(tagname, hash, first, "", ic)
 
 		case 2:
-			co := global.Config.GetCookies()
+			coo := co.Config.GetCookies()
 
 			var n instauser.InstaUser
-			n.AccountID = co.DsUserID
+			n.AccountID = coo.DsUserID
 
 			for _, edge := range resp.Data.Hashtag.EhtMedia.Edges {
 
 				n.UserID = edge.Node.Owner.ID
+
+				if len(edge.Node.EmtCaption.Edges) > 0 {
+					n.NewTags, err = co.getTagsFromString(edge.Node.EmtCaption.Edges[0].Node.Text)
+				}
+
 				ret = append(ret, n)
 			}
 		}
@@ -318,7 +357,7 @@ func getUserFromTag(tagname string, first int, ic *instaclient.InstaClient) ([]i
 	return ret, nil
 }
 
-func getUserName(userid string, ic *instaclient.InstaClient) (string, error) {
+func (co *Core) getUserName(userid string, ic *instaclient.InstaClient) (string, error) {
 
 	var (
 		err  error
@@ -330,7 +369,7 @@ func getUserName(userid string, ic *instaclient.InstaClient) (string, error) {
 
 		switch i {
 		case 0:
-			hash, err = global.Config.MediaQueryHash.GetHash()
+			hash, err = co.Config.MediaQueryHash.GetHash()
 
 		case 1:
 			resp, err = instamedia.GetResponse(userid, hash, 10, "", ic)
@@ -352,7 +391,7 @@ func getUserName(userid string, ic *instaclient.InstaClient) (string, error) {
 	return "", errors.New("username not found")
 }
 
-func followUser(user instauser.InstaUser, tagname string, ic *instaclient.InstaClient, dbconn *sqlite3.SQLite) error {
+func (co *Core) followUser(user instauser.InstaUser, tagname, xinstagramajax string, ic *instaclient.InstaClient, dbconn *sqlite3.SQLite) error {
 
 	var err error
 
@@ -370,7 +409,7 @@ func followUser(user instauser.InstaUser, tagname string, ic *instaclient.InstaC
 			}()
 
 		case 2:
-			err = instafollow.Follow(user.UserID, user.UserName, ic)
+			err = instafollow.Follow(user.UserID, user.UserName, xinstagramajax, ic)
 
 			user.Tag = tagname
 			user.Following = true
@@ -391,31 +430,33 @@ func followUser(user instauser.InstaUser, tagname string, ic *instaclient.InstaC
 	return nil
 }
 
-func unfollow(cnt int) jobRet {
+func (co *Core) unfollow() jobRet {
 
 	var (
 		ret    jobRet
 		dbconn sqlite3.SQLite
-		ic     instaclient.InstaClient
-		co     instaclient.Cookies
+		coo    instaclient.Cookies
 		users  []instauser.InstaUser
 	)
 
-	for i := 0; i <= 6; i++ {
+	for i := 0; i <= 8; i++ {
 
 		switch i {
 		case 0:
 			ret.err = global.Config.LoadConfig()
 
 		case 1:
-			ret.err = dbconn.Open(global.Config.GetDBFile())
+			co.Config, ret.err = global.Config.GetCoreConfig(co.Config.CoreUUID)
 
 		case 2:
-			defer dbconn.Close()
+			ret.err = dbconn.Open(global.Config.GetDBFile())
 
 		case 3:
+			defer dbconn.Close()
+
+		case 4:
 			fromDate := time.Now().AddDate(-999, 0, 0)
-			toDate := time.Now().Add(-global.Config.GetUnfollowAfter())
+			toDate := time.Now().Add(-co.Config.GetUnfollowAfter())
 
 			users, ret.err = instauser.GetUsersFollowingBetween(fromDate, toDate, &dbconn)
 
@@ -423,15 +464,13 @@ func unfollow(cnt int) jobRet {
 				return ret
 			}
 
-		case 4:
-			co = global.Config.GetCookies()
-			ret.err = ic.SetCookies(co)
-
 		case 5:
 			var (
 				resp     instashareddata.Response
 				userName string
 			)
+
+			cnt := co.Config.GetUnfollowCount()
 
 			for i := range users {
 
@@ -439,33 +478,37 @@ func unfollow(cnt int) jobRet {
 					continue
 				}
 
-				userName, _ = getUserName(users[i].UserID, &ic)
+				userName, _ = co.getUserName(users[i].UserID, &co.instaClient)
 				if len(userName) > 0 {
 					users[i].UserName = userName
 				}
 
-				resp, _ = instashareddata.GetResponse(users[i].UserName, &ic)
-				if len(resp.Config.CsrfToken) > 0 {
+				resp, ret.err = instashareddata.GetResponse(users[i].UserName, &co.instaClient)
+				if ret.err != nil {
+					console.Log(ret.err, "")
+					continue
+				}
 
-					co.CsrfToken = resp.Config.CsrfToken
+				if len(resp.RolloutHash) > 0 {
 
-					ret.err = ic.SetCookies(co)
+					ret.err = co.unfollowUser(users[i], resp.RolloutHash, &co.instaClient, &dbconn)
 					if ret.err != nil {
 						return ret
 					}
-				}
-
-				ret.err = unfollowUser(users[i], &ic, &dbconn)
-				if ret.err != nil {
-					return ret
 				}
 
 				ret.cnt++
 			}
 
 		case 6:
-			global.Config.SetCookies(co)
-			global.Config.SetUnfollowTime(time.Now())
+			coo, ret.err = co.instaClient.GetCookies()
+
+		case 7:
+			co.Config.SetCookies(coo)
+			co.Config.SetUnfollowTime(time.Now())
+			ret.err = global.Config.SetCoreConfig(co.Config)
+
+		case 8:
 			ret.err = global.Config.SaveConfig()
 		}
 
@@ -478,7 +521,7 @@ func unfollow(cnt int) jobRet {
 	return ret
 }
 
-func unfollowUser(user instauser.InstaUser, ic *instaclient.InstaClient, dbconn *sqlite3.SQLite) error {
+func (co *Core) unfollowUser(user instauser.InstaUser, xinstagramajax string, ic *instaclient.InstaClient, dbconn *sqlite3.SQLite) error {
 
 	var err error
 
@@ -496,7 +539,7 @@ func unfollowUser(user instauser.InstaUser, ic *instaclient.InstaClient, dbconn 
 			}()
 
 		case 2:
-			err = instafollow.Unfollow(user.UserID, user.UserName, ic)
+			err = instafollow.Unfollow(user.UserID, user.UserName, xinstagramajax, ic)
 
 			user.Following = false
 			user.Unfollow = time.Now()
@@ -514,4 +557,39 @@ func unfollowUser(user instauser.InstaUser, ic *instaclient.InstaClient, dbconn 
 	}
 
 	return nil
+}
+
+func (co *Core) getTagsFromString(s string) ([]string, error) {
+
+	var (
+		err error
+		ret []string
+	)
+
+	s = strings.Replace(s, "\r", " ", -1)
+	s = strings.Replace(s, "\n", " ", -1)
+
+	splitSuffix := strings.SplitAfter(s, " ")
+
+	for i := range splitSuffix {
+
+		if strings.Contains(splitSuffix[i], "#") == false {
+			continue
+		}
+
+		splitPrefix := strings.Split(splitSuffix[i], "#")
+
+		for ii := range splitPrefix {
+
+			tag := strings.TrimSpace(splitPrefix[ii])
+
+			if len(tag) == 0 {
+				continue
+			}
+
+			ret = append(ret, tag)
+		}
+	}
+
+	return ret, err
 }

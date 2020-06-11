@@ -14,6 +14,7 @@ type InstaUser struct {
 	UserName  string
 	AccountID string
 	Tag       string
+	NewTags   []string
 	Following bool
 	Follow    time.Time
 	Unfollow  time.Time

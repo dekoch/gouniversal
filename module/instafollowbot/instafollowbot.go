@@ -14,7 +14,21 @@ func LoadConfig() {
 
 	global.Config.LoadConfig()
 
-	core.LoadConfig()
+	coreIDs := global.Config.GetCoreList()
+
+	for i := range coreIDs {
+
+		go func(uid string) {
+
+			conf, err := global.Config.GetCoreConfig(uid)
+			if err != nil {
+				return
+			}
+
+			var co core.Core
+			co.LoadConfig(conf)
+		}(coreIDs[i])
+	}
 }
 
 func RegisterPage(page *types.Page, nav *navigation.Navigation) {
