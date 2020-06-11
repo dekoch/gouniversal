@@ -10,7 +10,8 @@ import (
 )
 
 type Response struct {
-	EntryData EntryData `json:"entry_data"`
+	EntryData   EntryData `json:"entry_data"`
+	RolloutHash string    `json:"rollout_hash"`
 }
 
 type EntryData struct {

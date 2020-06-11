@@ -40,6 +40,7 @@ type MediaEdge struct {
 
 type MediaNode struct {
 	ID          string      `json:"id"`
+	EmtCaption  EmtCaption  `json:"edge_media_to_caption"`
 	DisplayURL  string      `json:"display_url"`
 	IsVideo     bool        `json:"is_video"`
 	VideoURL    string      `json:"video_url"`

@@ -1,12 +1,16 @@
 package instaclient
 
 import (
+	"errors"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"sync"
 	"time"
+
+	"github.com/dekoch/gouniversal/shared/functions"
 )
 
 type InstaClient struct {
@@ -35,6 +39,18 @@ type Get struct {
 var mut sync.Mutex
 
 func (ic *InstaClient) SetCookies(src Cookies) error {
+
+	if functions.IsEmpty(src.DsUserID) {
+		return errors.New("DsUserID not set")
+	}
+
+	if functions.IsEmpty(src.CsrfToken) {
+		return errors.New("CsrfToken not set")
+	}
+
+	if functions.IsEmpty(src.SessionID) {
+		return errors.New("SessionID not set")
+	}
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -117,7 +133,59 @@ func (ic *InstaClient) getCookies() (Cookies, error) {
 		}
 	}
 
+	if functions.IsEmpty(ret.DsUserID) {
+		return ret, errors.New("DsUserID not set")
+	}
+
+	if functions.IsEmpty(ret.CsrfToken) {
+		return ret, errors.New("CsrfToken not set")
+	}
+
+	if functions.IsEmpty(ret.SessionID) {
+		return ret, errors.New("SessionID not set")
+	}
+
 	return ret, err
+}
+
+func (ic *InstaClient) AddCookies(cookies []*http.Cookie) error {
+
+	for i := range cookies {
+
+		err := ic.AddCookie(cookies[i])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ic *InstaClient) AddCookie(c *http.Cookie) error {
+
+	for i := range ic.cookies {
+
+		if ic.cookies[i].Name == c.Name {
+
+			if ic.cookies[i].Value != c.Value {
+				fmt.Println(c.Name+" = "+ic.cookies[i].Value+" --> "+c.Value, " ")
+			}
+
+			ic.cookies[i] = c
+			return nil
+		}
+	}
+
+	cookies := make([]*http.Cookie, 0, len(ic.cookies)+1)
+
+	for i := range ic.cookies {
+		cookies = append(cookies, ic.cookies[i])
+	}
+
+	cookies = append(cookies, c)
+	ic.cookies = cookies
+
+	return nil
 }
 
 func (ic *InstaClient) DeleteCookies() {
@@ -130,12 +198,24 @@ func (ic *InstaClient) DeleteCookies() {
 
 func (ic *InstaClient) SendPost(p Post) (*http.Response, error) {
 
+	var ret *http.Response
+
+	if functions.IsEmpty(p.URL) {
+		return ret, errors.New("URL not set")
+	}
+
+	if functions.IsEmpty(p.Referer) {
+		return ret, errors.New("Referer not set")
+	}
+
+	if functions.IsEmpty(p.XInstagramAJAX) {
+		return ret, errors.New("XInstagramAJAX not set")
+	}
+
 	mut.Lock()
 	defer mut.Unlock()
 
 	ic.delayClient()
-
-	var ret *http.Response
 
 	client, err := ic.newClient(p.SetCookies)
 	if err != nil {
@@ -167,19 +247,29 @@ func (ic *InstaClient) SendPost(p Post) (*http.Response, error) {
 		return ret, err
 	}
 
-	ic.cookies = req.Cookies()
+	if p.SetCookies {
+
+		err = ic.AddCookies(ret.Cookies())
+		if err != nil {
+			return ret, err
+		}
+	}
 
 	return ret, nil
 }
 
 func (ic *InstaClient) SendGet(g Get) (*http.Response, error) {
 
+	var ret *http.Response
+
+	if functions.IsEmpty(g.URL) {
+		return ret, errors.New("URL not set")
+	}
+
 	mut.Lock()
 	defer mut.Unlock()
 
 	ic.delayClient()
-
-	var ret *http.Response
 
 	client, err := ic.newClient(g.SetCookies)
 	if err != nil {
@@ -200,7 +290,13 @@ func (ic *InstaClient) SendGet(g Get) (*http.Response, error) {
 		return ret, err
 	}
 
-	ic.cookies = req.Cookies()
+	if g.SetCookies {
+
+		err = ic.AddCookies(ret.Cookies())
+		if err != nil {
+			return ret, err
+		}
+	}
 
 	return ret, nil
 }
@@ -208,6 +304,13 @@ func (ic *InstaClient) SendGet(g Get) (*http.Response, error) {
 func (ic *InstaClient) newClient(setcookies bool) (*http.Client, error) {
 
 	var client *http.Client
+
+	if setcookies {
+		_, err := ic.getCookies()
+		if err != nil {
+			return client, err
+		}
+	}
 
 	u, err := url.Parse("https://www.instagram.com")
 	if err != nil {

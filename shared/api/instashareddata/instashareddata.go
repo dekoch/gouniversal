@@ -11,8 +11,9 @@ import (
 )
 
 type Response struct {
-	Config    Config    `json:"config"`
-	EntryData EntryData `json:"entry_data"`
+	Config      Config    `json:"config"`
+	EntryData   EntryData `json:"entry_data"`
+	RolloutHash string    `json:"rollout_hash"`
 }
 
 type Config struct {
