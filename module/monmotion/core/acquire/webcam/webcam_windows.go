@@ -29,14 +29,11 @@ func (we *Webcam) Stop() error {
 	return nil
 }
 
-func (we *Webcam) GetImage() (mdimg.MDImage, error) {
+func (we *Webcam) GetImage(image *mdimg.MDImage) error {
 
-	var (
-		err error
-		ret mdimg.MDImage
-	)
+	var err error
 
-	return ret, err
+	return err
 }
 
 func (we *Webcam) ListConfigs() ([]acquireconfig.DeviceConfig, error) {
