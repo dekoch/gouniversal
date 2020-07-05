@@ -1,0 +1,49 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th class="text-right">{{.Lang.Name}}:</th>
+                <td class="text-left">{{.PLCName}}</td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.Address}}:</th>
+                <td class="text-left">{{.PLCAddress}}</td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.Rack}}:</th>
+                <td class="text-left">{{.PLCRack}}</td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.Slot}}:</th>
+                <td class="text-left">{{.PLCSlot}}</td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.MaxBackupCnt}}:</th>
+                <td class="text-left">{{.PLCMaxBackupCnt}}</td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.UUID}}:</th>
+                <td class="text-left">{{.PLCUUID}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div id="accordion">
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{.Lang.Name}}</th>
+                            <th scope="col">{{.Lang.DBNo}}</th>
+                            <th scope="col">{{.Lang.DBByteLength}}</th>
+                            <th scope="col">{{.BTNPLC}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{.DBList}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</form>

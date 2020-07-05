@@ -1,0 +1,17 @@
+<form method="post">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">{{.Lang.Name}}</th>
+                <th scope="col">{{.Lang.PLC}}</th>
+                <th scope="col">
+                    {{.CmbPLC}}
+                    <button class="btn btn-default fa fa-plus" type="submit" name="edit" value="addschedule" title="{{.Lang.AddSchedule}}"{{.AddScheduleDisabled}}></button>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {{.ScheduleList}}
+        </tbody>
+    </table>
+</form>

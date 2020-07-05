@@ -1,0 +1,58 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th class="text-right">{{.Lang.Name}}:</th>
+                <td><input type="text" class="form-control" name="schedulename" value="{{.ScheduleName}}"></td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.PLC}}:</th>
+                <td class="text-left">{{.PLCName}}</td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.ActiveDay}}:</th>
+                <td>
+                    <table class="table">
+                        <tr>
+                            <td class="text-left"><input type="checkbox" name="selectedday" value="1"{{.CheckedMo}}> {{.Lang.Monday}}</td>
+                            <td class="text-left"><input type="checkbox" name="selectedday" value="2"{{.CheckedTu}}> {{.Lang.Tuesday}}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-left"><input type="checkbox" name="selectedday" value="3"{{.CheckedWe}}> {{.Lang.Wednesday}}</td>
+                            <td class="text-left"><input type="checkbox" name="selectedday" value="4"{{.CheckedTh}}> {{.Lang.Thursday}}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-left"><input type="checkbox" name="selectedday" value="5"{{.CheckedFr}}> {{.Lang.Friday}}</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="text-left"><input type="checkbox" name="selectedday" value="6"{{.CheckedSa}}> {{.Lang.Saturday}}</td>
+                            <td class="text-left"><input type="checkbox" name="selectedday" value="0"{{.CheckedSu}}> {{.Lang.Sunday}}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div id="accordion">
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col"></th>
+                            <th scope="col">{{.Lang.Name}}</th>
+                            <th scope="col">{{.Lang.DBNo}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{.DBList}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+    <button class="btn btn-danger fa fa-trash" type="submit" name="edit" value="delete" title="{{.Lang.Delete}}"></button>
+</form>

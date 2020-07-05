@@ -25,6 +25,7 @@ import (
 	"github.com/dekoch/gouniversal/module/openespm"
 	"github.com/dekoch/gouniversal/module/paratest"
 	"github.com/dekoch/gouniversal/module/picturex"
+	"github.com/dekoch/gouniversal/module/s7backup"
 	"github.com/dekoch/gouniversal/shared/navigation"
 	"github.com/dekoch/gouniversal/shared/types"
 
@@ -99,6 +100,11 @@ func LoadConfig() {
 	if build.ModulePictureX {
 		sharedConsole.Log("PictureX enabled", "Module")
 		picturex.LoadConfig()
+	}
+
+	if build.ModuleS7Backup {
+		sharedConsole.Log("S7Backup enabled", "Module")
+		s7backup.LoadConfig()
 	}
 
 	if build.ModuleInstaBackup {
@@ -199,6 +205,10 @@ func RegisterPage(page *types.Page, nav *navigation.Navigation) {
 		picturex.RegisterPage(page, nav)
 	}
 
+	if build.ModuleS7Backup {
+		s7backup.RegisterPage(page, nav)
+	}
+
 	if build.ModuleInstaBackup {
 		instabackup.RegisterPage(page, nav)
 	}
@@ -291,6 +301,12 @@ func Render(page *types.Page, nav *navigation.Navigation, r *http.Request) {
 			return
 		}
 
+	case "S7Backup":
+		if build.ModuleS7Backup {
+			s7backup.Render(page, nav, r)
+			return
+		}
+
 	case "InstaBackup":
 		if build.ModuleInstaBackup {
 			instabackup.Render(page, nav, r)
@@ -354,6 +370,10 @@ func Exit(em *types.ExitMessage) {
 
 	if build.ModulePictureX {
 		picturex.Exit()
+	}
+
+	if build.ModuleS7Backup {
+		s7backup.Exit(em)
 	}
 
 	if build.ModuleInstaBackup {

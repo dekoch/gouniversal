@@ -1,0 +1,57 @@
+<form method="post">
+    <table class="table">
+        <tbody>
+            <tr>
+                <th class="text-right">{{.Lang.Name}}:</th>
+                <td class="text-left"><input type="text" class="form-control" name="plcname" value="{{.PLCName}}"></td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.Address}}:</th>
+                <td class="text-left"><input type="text" class="form-control" name="plcaddress" value="{{.PLCAddress}}"></td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.Rack}}:</th>
+                <td class="text-left"><input type="text" class="form-control" name="plcrack" value="{{.PLCRack}}"></td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.Slot}}:</th>
+                <td class="text-left"><input type="text" class="form-control" name="plcslot" value="{{.PLCSlot}}"></td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.MaxBackupCnt}}:</th>
+                <td class="text-left"><input type="text" class="form-control" name="plcmaxbackupcnt" value="{{.PLCMaxBackupCnt}}"></td>
+            </tr>
+            <tr>
+                <th class="text-right">{{.Lang.UUID}}:</th>
+                <td class="text-left">{{.PLCUUID}}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div id="accordion">
+        <div class="card">
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{.Lang.Name}}</th>
+                            <th scope="col">{{.Lang.DBNo}}</th>
+                            <th scope="col">{{.Lang.DBByteLength}}</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{.DBList}}
+                        <tr>
+                            <td><button class="btn btn-default fa fa-plus" type="submit" name="edit" value="adddb" title="{{.Lang.AddDB}}"></button></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <br>
+    <button class="btn btn-success fa fa-check" type="submit" name="edit" value="apply" title="{{.Lang.Apply}}"></button>
+    <button class="btn btn-danger fa fa-trash" type="submit" name="edit" value="delete" title="{{.Lang.Delete}}"></button>
+</form>

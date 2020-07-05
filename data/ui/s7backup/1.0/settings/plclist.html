@@ -1,0 +1,13 @@
+<form method="post">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">{{.Lang.Name}}</th>
+                <th scope="col"><button class="btn btn-default fa fa-plus" type="submit" name="navigation" value="App:S7Backup:Settings:PLC:Edit$UUID=new" title="{{.Lang.AddPLC}}"></button></th>
+            </tr>
+        </thead>
+        <tbody>
+            {{.PLCList}}
+        </tbody>
+    </table>
+</form>
