@@ -25,6 +25,10 @@
                 <th class="text-right">{{.Lang.UUID}}:</th>
                 <td class="text-left">{{.PLCUUID}}</td>
             </tr>
+            <tr {{.CommentHidden}}>
+                <th class="text-right">{{.Lang.Comment}}:</th>
+                <td class="text-left"><input type="text" class="form-control" name="comment" value="{{.Comment}}"></td>
+            </tr>
         </tbody>
     </table>
     <div id="accordion">

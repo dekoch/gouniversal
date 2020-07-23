@@ -1,6 +1,7 @@
 package pagebackup
 
 import (
+	"html"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -32,6 +33,8 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 		PLCRack         template.HTML
 		PLCSlot         template.HTML
 		PLCMaxBackupCnt template.HTML
+		Comment         template.HTML
+		CommentHidden   template.HTMLAttr
 		DBList          template.HTML
 		BTNPLC          template.HTML
 	}
@@ -55,12 +58,15 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 		alert.Message(alert.ERROR, page.Lang.Alert.Error, err, "", nav.User.UUID)
 	}
 
+	comment := html.EscapeString(r.FormValue("comment"))
+	c.Comment = template.HTML(comment)
+
 	// Form input
 	backup := r.FormValue("backup")
 
 	switch backup {
 	case "plc":
-		err = s7.BackupPLC(&pc)
+		err = s7.BackupPLC(comment, &pc)
 		if err == nil {
 			alert.Message(alert.SUCCESS, page.Lang.Alert.Success, page.Lang.Backup.SavedToDatabase, " ", nav.User.UUID)
 		} else {
@@ -75,7 +81,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 				var l []string
 				l = append(l, pc.DB[i].UUID)
 
-				err = s7.BackupDB(l, &pc)
+				err = s7.BackupDB(l, comment, &pc)
 				if err == nil {
 					alert.Message(alert.SUCCESS, page.Lang.Alert.Success, "DB"+strconv.Itoa(pc.DB[i].DBNo)+" "+page.Lang.Backup.SavedToDatabase, " ", nav.User.UUID)
 				} else {
@@ -131,8 +137,10 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 	c.PLCUUID = template.HTML(pc.UUID)
 
 	if restoreView {
+		c.CommentHidden = template.HTMLAttr(" hidden")
 		c.BTNPLC = template.HTML("<button class=\"btn btn-default fa fa-microchip\" type=\"submit\" name=\"restore\" value=\"plc\" title=\"" + c.Lang.RestorePLC + "\"></button>")
 	} else {
+		c.CommentHidden = template.HTMLAttr("")
 		c.BTNPLC = template.HTML("<button class=\"btn btn-default fa fa-database\" type=\"submit\" name=\"backup\" value=\"plc\" title=\"" + c.Lang.BackupPLC + "\"></button>")
 	}
 
@@ -162,7 +170,7 @@ func Render(page *typemd.Page, nav *navigation.Navigation, r *http.Request) {
 			dbList += "<td>"
 
 			for i := range dcs {
-				dbList += "<button class=\"btn btn-default fa fa-microchip\" type=\"submit\" name=\"restore\" value=\"db" + strconv.Itoa(dcs[i].ID) + "\" title=\"" + c.Lang.RestoreDB + "\">" + dcs[i].Backup.Format("2006-01-02 15:04:05") + "</button><br>"
+				dbList += "<button class=\"btn btn-default fa fa-microchip\" type=\"submit\" name=\"restore\" value=\"db" + strconv.Itoa(dcs[i].ID) + "\" title=\"" + c.Lang.RestoreDB + "\">" + dcs[i].Backup.Format("2006-01-02 15:04:05") + "<br>" + dcs[i].Comment + "</button><br>"
 			}
 
 			dbList += "</td>"

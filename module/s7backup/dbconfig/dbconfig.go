@@ -16,6 +16,7 @@ type DBConfig struct {
 	DBNo         int
 	DBByteLength int
 	Name         string
+	Comment      string
 	Created      time.Time
 	Saved        time.Time
 	Backup       time.Time
@@ -40,6 +41,7 @@ func LoadConfig(dbconn *sqlite3.SQLite) error {
 	lyt.AddField("dbno", sqlite3.TypeINTEGER, false, false)
 	lyt.AddField("dbbytelenght", sqlite3.TypeINTEGER, false, false)
 	lyt.AddField("name", sqlite3.TypeTEXT, false, false)
+	lyt.AddField("comment", sqlite3.TypeTEXT, false, false)
 	lyt.AddField("created", sqlite3.TypeDATE, false, false)
 	lyt.AddField("saved", sqlite3.TypeDATE, false, false)
 	lyt.AddField("backup", sqlite3.TypeDATE, false, false)
@@ -58,7 +60,7 @@ func (dc *DBConfig) SaveToDB(tx *sql.Tx) error {
 
 	dc.Backup = time.Now()
 
-	_, err := tx.Exec("INSERT OR REPLACE INTO `"+TableName+"` (uuid, dbno, dbbytelenght, name, created, saved, backup, dbdata) values(?,?,?,?,?,?,?,?)", dc.UUID, dc.DBNo, dc.DBByteLength, dc.Name, dc.Created, dc.Saved, dc.Backup, dc.DBData)
+	_, err := tx.Exec("INSERT OR REPLACE INTO `"+TableName+"` (uuid, dbno, dbbytelenght, name, comment, created, saved, backup, dbdata) values(?,?,?,?,?,?,?,?,?)", dc.UUID, dc.DBNo, dc.DBByteLength, dc.Name, dc.Comment, dc.Created, dc.Saved, dc.Backup, dc.DBData)
 	return err
 }
 
@@ -76,9 +78,9 @@ func (dc *DBConfig) LoadFromDB(id int, withdata bool, dbconn *sqlite3.SQLite) (b
 			switch i {
 			case 0:
 				if withdata {
-					dbconn.Rows, err = dbconn.DB.Query("SELECT id, uuid, dbno, dbbytelenght, name, created, saved, backup, dbdata FROM `"+TableName+"` WHERE id=?", id)
+					dbconn.Rows, err = dbconn.DB.Query("SELECT id, uuid, dbno, dbbytelenght, name, comment, created, saved, backup, dbdata FROM `"+TableName+"` WHERE id=?", id)
 				} else {
-					dbconn.Rows, err = dbconn.DB.Query("SELECT id, uuid, dbno, dbbytelenght, name, created, saved, backup FROM `"+TableName+"` WHERE id=?", id)
+					dbconn.Rows, err = dbconn.DB.Query("SELECT id, uuid, dbno, dbbytelenght, name, comment, created, saved, backup FROM `"+TableName+"` WHERE id=?", id)
 				}
 
 			case 1:
@@ -88,9 +90,9 @@ func (dc *DBConfig) LoadFromDB(id int, withdata bool, dbconn *sqlite3.SQLite) (b
 				for dbconn.Rows.Next() {
 
 					if withdata {
-						err = dbconn.Rows.Scan(&dc.ID, &dc.UUID, &dc.DBNo, &dc.DBByteLength, &dc.Name, &dc.Created, &dc.Saved, &dc.Backup, &dc.DBData)
+						err = dbconn.Rows.Scan(&dc.ID, &dc.UUID, &dc.DBNo, &dc.DBByteLength, &dc.Name, &dc.Comment, &dc.Created, &dc.Saved, &dc.Backup, &dc.DBData)
 					} else {
-						err = dbconn.Rows.Scan(&dc.ID, &dc.UUID, &dc.DBNo, &dc.DBByteLength, &dc.Name, &dc.Created, &dc.Saved, &dc.Backup)
+						err = dbconn.Rows.Scan(&dc.ID, &dc.UUID, &dc.DBNo, &dc.DBByteLength, &dc.Name, &dc.Comment, &dc.Created, &dc.Saved, &dc.Backup)
 					}
 
 					found = true

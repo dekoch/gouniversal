@@ -106,7 +106,7 @@ func backupPLC(bs *scheduleconfig.BackupSchedule) error {
 				_, err = pc.Load(global.Config.GetFileRoot(), bs.PLC)
 
 			case 3:
-				err = s7.BackupDB(bs.DB, &pc)
+				err = s7.BackupDB(bs.DB, "auto", &pc)
 
 			case 4:
 				err = global.Config.Schedule.SetBackup(bs.UUID, time.Now())

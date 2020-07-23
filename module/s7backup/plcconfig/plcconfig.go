@@ -253,7 +253,7 @@ func (pc *PLCConfig) deleteDB(uid string) error {
 	return nil
 }
 
-func (pc *PLCConfig) SaveDB(path, uid string, b []byte) error {
+func (pc *PLCConfig) SaveDB(path, uid, comment string, b []byte) error {
 
 	mut.Lock()
 	defer mut.Unlock()
@@ -317,6 +317,7 @@ func (pc *PLCConfig) SaveDB(path, uid string, b []byte) error {
 
 					if pc.DB[i].UUID == uid {
 
+						pc.DB[i].Comment = comment
 						pc.DB[i].DBData = b
 						err = pc.DB[i].SaveToDB(dbconn.Tx)
 						if err != nil {

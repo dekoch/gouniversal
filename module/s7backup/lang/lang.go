@@ -21,6 +21,7 @@ type Backup struct {
 	Slot                 string
 	MaxBackupCnt         string
 	UUID                 string
+	Comment              string
 	BackupPLC            string
 	BackupDB             string
 	RestorePLC           string
@@ -122,6 +123,7 @@ func DefaultEn() LangFile {
 	l.Backup.Slot = "Slot"
 	l.Backup.MaxBackupCnt = "Max. Backup Cnt"
 	l.Backup.UUID = "UUID"
+	l.Backup.Comment = "Comment"
 	l.Backup.BackupPLC = "Backup PLC"
 	l.Backup.BackupDB = "Backup DB"
 	l.Backup.RestorePLC = "Restore PLC"

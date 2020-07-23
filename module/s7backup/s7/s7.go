@@ -9,7 +9,7 @@ import (
 	"github.com/dekoch/gouniversal/shared/io/s7conn"
 )
 
-func BackupPLC(pc *plcconfig.PLCConfig) error {
+func BackupPLC(comment string, pc *plcconfig.PLCConfig) error {
 
 	var l []string
 
@@ -17,10 +17,10 @@ func BackupPLC(pc *plcconfig.PLCConfig) error {
 		l = append(l, pc.DB[i].UUID)
 	}
 
-	return BackupDB(l, pc)
+	return BackupDB(l, comment, pc)
 }
 
-func BackupDB(uid []string, pc *plcconfig.PLCConfig) error {
+func BackupDB(uid []string, comment string, pc *plcconfig.PLCConfig) error {
 
 	var err error
 
@@ -46,7 +46,7 @@ func BackupDB(uid []string, pc *plcconfig.PLCConfig) error {
 			case 4:
 				for i := range uid {
 
-					err = backupDB(uid[i], conn, pc)
+					err = backupDB(uid[i], comment, conn, pc)
 					if err != nil {
 						return
 					}
@@ -62,7 +62,7 @@ func BackupDB(uid []string, pc *plcconfig.PLCConfig) error {
 	return err
 }
 
-func backupDB(uid string, conn *s7conn.Connection, pc *plcconfig.PLCConfig) error {
+func backupDB(uid, comment string, conn *s7conn.Connection, pc *plcconfig.PLCConfig) error {
 
 	var err error
 
@@ -89,7 +89,7 @@ func backupDB(uid string, conn *s7conn.Connection, pc *plcconfig.PLCConfig) erro
 				err = conn.Client.AGReadDB(dc.DBNo, 0, dc.DBByteLength, buf)
 
 			case 2:
-				err = pc.SaveDB(global.Config.GetFileRoot(), uid, buf)
+				err = pc.SaveDB(global.Config.GetFileRoot(), uid, comment, buf)
 			}
 
 			if err != nil {
